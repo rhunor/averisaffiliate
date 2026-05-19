@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 const KORA_BASE_URL = "https://api.korapay.com/merchant/api/v1";
-const KORA_SECRET_KEY = process.env.KORA_SECRET_KEY!;
+const KORA_SECRET_KEY = process.env.KORAPAY_SECRET_KEY!;
 
 export interface KoraBank {
   name: string;

@@ -6,8 +6,9 @@ import Lesson from "@/models/Lesson";
 import Progress from "@/models/Progress";
 import mongoose from "mongoose";
 
-export async function GET(req: NextRequest, { params }: { params: { courseId: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ courseId: string }> }) {
   try {
+    const { courseId } = await params;
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
@@ -16,10 +17,10 @@ export async function GET(req: NextRequest, { params }: { params: { courseId: st
 
     await dbConnect();
 
-    const course = await Course.findOne({ _id: params.courseId, isPublished: true }).lean();
+    const course = await Course.findOne({ _id: courseId, isPublished: true }).lean();
     if (!course) return NextResponse.json({ error: "Course not found." }, { status: 404 });
 
-    const lessons = await Lesson.find({ courseId: params.courseId, isPublished: true })
+    const lessons = await Lesson.find({ courseId, isPublished: true })
       .sort({ sortOrder: 1 })
       .lean();
 

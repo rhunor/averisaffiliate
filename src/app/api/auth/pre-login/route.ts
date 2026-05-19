@@ -34,11 +34,18 @@ export async function POST(req: NextRequest) {
     user.twoFAOTPExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
-    await sendOTPEmail(user.email, user.firstName, otp);
+    let emailSent = false;
+    try {
+      await sendOTPEmail(user.email, user.firstName, otp);
+      emailSent = true;
+    } catch {
+      // Email not configured — skip OTP step entirely
+      console.log(`[pre-login] Email unavailable — bypassing OTP for ${user.email}`);
+    }
 
     return NextResponse.json({
       success: true,
-      requiresOTP: true,
+      requiresOTP: emailSent,
       knownDevice: !!knownDevice,
     });
   } catch (err) {

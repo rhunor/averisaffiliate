@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match");
@@ -43,17 +43,58 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
-        <div className="glass rounded-2xl p-8 text-center max-w-md w-full">
-          <p className="text-danger mb-4">Invalid or missing reset token.</p>
-          <Link href="/forgot-password" className="text-secondary-bright hover:underline text-sm">
-            Request a new link
-          </Link>
-        </div>
+      <div className="glass rounded-2xl p-8 text-center">
+        <p className="text-danger mb-4">Invalid or missing reset token.</p>
+        <Link href="/forgot-password" className="text-secondary-bright hover:underline text-sm">
+          Request a new link
+        </Link>
       </div>
     );
   }
 
+  return (
+    <div className="glass rounded-2xl p-6">
+      {error && (
+        <div className="bg-danger/10 border border-danger/20 text-danger text-sm rounded-xl px-4 py-3 mb-4">
+          {error}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="New Password"
+          type={showPass ? "text" : "password"}
+          placeholder="Min. 8 chars with uppercase & number"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          leftIcon={<Lock className="h-4 w-4" />}
+          rightIcon={
+            <button type="button" onClick={() => setShowPass(!showPass)}>
+              {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          }
+          required
+        />
+        <Input
+          label="Confirm Password"
+          type={showPass ? "text" : "password"}
+          placeholder="Repeat your password"
+          value={form.confirmPassword}
+          onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+          leftIcon={<Lock className="h-4 w-4" />}
+          required
+        />
+        <Button type="submit" size="lg" loading={loading} className="w-full">
+          Reset Password
+        </Button>
+      </form>
+      <Link href="/login" className="block text-center mt-4 text-sm text-white/60 hover:text-white">
+        ← Back to login
+      </Link>
+    </div>
+  );
+}
+
+export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -70,45 +111,9 @@ export default function ResetPasswordPage() {
           <h1 className="text-2xl font-bold text-white">Set new password</h1>
           <p className="text-white/60 text-sm mt-1">Choose a strong password for your account</p>
         </div>
-
-        <div className="glass rounded-2xl p-6">
-          {error && (
-            <div className="bg-danger/10 border border-danger/20 text-danger text-sm rounded-xl px-4 py-3 mb-4">
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="New Password"
-              type={showPass ? "text" : "password"}
-              placeholder="Min. 8 chars with uppercase & number"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              leftIcon={<Lock className="h-4 w-4" />}
-              rightIcon={
-                <button type="button" onClick={() => setShowPass(!showPass)}>
-                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              }
-              required
-            />
-            <Input
-              label="Confirm Password"
-              type={showPass ? "text" : "password"}
-              placeholder="Repeat your password"
-              value={form.confirmPassword}
-              onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-              leftIcon={<Lock className="h-4 w-4" />}
-              required
-            />
-            <Button type="submit" size="lg" loading={loading} className="w-full">
-              Reset Password
-            </Button>
-          </form>
-          <Link href="/login" className="block text-center mt-4 text-sm text-white/60 hover:text-white">
-            ← Back to login
-          </Link>
-        </div>
+        <Suspense fallback={<div className="glass rounded-2xl p-6 text-white/60 text-center">Loading…</div>}>
+          <ResetPasswordForm />
+        </Suspense>
       </div>
     </div>
   );

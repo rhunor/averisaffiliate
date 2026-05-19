@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
-  DollarSign, Users, Wallet, CreditCard, TrendingUp, ArrowRight, CheckCircle,
+  DollarSign, Users, Wallet, TrendingUp, ArrowRight, CheckCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +48,7 @@ function StatCard({ title, value, sub, icon: Icon, color }: { title: string; val
   );
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const activated = searchParams.get("activated") === "1";
@@ -121,7 +121,7 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number) => [formatCurrency(v), "Earnings"]} />
+                <Tooltip formatter={(v) => [formatCurrency(Number(v ?? 0)), "Earnings"]} />
                 <Area type="monotone" dataKey="earnings" stroke="#2d7f8f" fill="url(#grad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -187,5 +187,17 @@ export default function DashboardPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-secondary border-t-transparent" />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }

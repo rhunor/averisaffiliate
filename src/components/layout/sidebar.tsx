@@ -20,10 +20,10 @@ import { siteConfig } from "@/config/site";
 
 const navItems = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard, exact: true },
-  { label: "Products", href: "/dashboard/products", icon: ShoppingBag },
+  { label: "Averis Academy Products", href: "/dashboard/products", icon: ShoppingBag },
   { label: "Academy", href: "/dashboard/academy", icon: GraduationCap },
   { label: "Earnings", href: "/dashboard/earnings", icon: DollarSign },
-  { label: "Referrals", href: "/dashboard/referrals", icon: Users },
+  { label: "Affiliate Sales", href: "/dashboard/referrals", icon: Users },
   { label: "Withdrawals", href: "/dashboard/withdrawals", icon: Wallet },
   { label: "Subscription", href: "/dashboard/subscription", icon: CreditCard },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },

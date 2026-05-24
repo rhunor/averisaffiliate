@@ -8,10 +8,19 @@ interface TopbarProps {
   onMenuClick: () => void;
 }
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good Morning";
+  if (h < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
 export function Topbar({ onMenuClick }: TopbarProps) {
   const { data: session } = useSession();
   const user = session?.user as unknown as Record<string, unknown>;
   const name = (user?.name as string) || "User";
+  const firstName = name.split(" ")[0];
+  const isActive = user?.isActive as boolean;
   const initials = getInitials(name);
 
   return (
@@ -24,10 +33,20 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         <Menu className="h-5 w-5" />
       </button>
 
-      <div className="hidden lg:block">
+      <div className="hidden lg:flex items-center gap-3">
         <p className="text-sm text-muted-foreground">
-          Welcome back, <span className="font-semibold text-foreground">{name.split(" ")[0]}</span>
+          {getGreeting()},{" "}
+          <span className="font-semibold text-foreground">{firstName}</span>
         </p>
+        <span
+          className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+            isActive
+              ? "bg-[#40D457]/15 text-[#2eb847]"
+              : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          {isActive ? "Pro Plan" : "Free Plan"}
+        </span>
       </div>
 
       <div className="flex items-center gap-3 ml-auto">

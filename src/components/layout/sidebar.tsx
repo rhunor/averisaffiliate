@@ -29,6 +29,15 @@ const navItems = [
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
+function AverisLogoMark() {
+  return (
+    <svg width="30" height="26" viewBox="0 0 52 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M44 2H20L4 22L20 42H44V33H26L16 22L26 11H44V2Z" fill="white" />
+      <polygon points="29,2 45,2 37,18" fill="#40D457" />
+    </svg>
+  );
+}
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,14 +51,14 @@ function NavItem({ item }: { item: (typeof navItems)[number] }) {
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
+        "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
         active
-          ? "bg-sidebar-active text-white"
-          : "text-white/60 hover:text-white hover:bg-sidebar-hover"
+          ? "bg-white/10 text-white border-l-[3px] border-[#40D457] pl-[13px]"
+          : "text-white/60 hover:text-white hover:bg-white/5 border-l-[3px] border-transparent pl-[13px]"
       )}
     >
-      <item.icon className="h-4 w-4 shrink-0" />
-      {item.label}
+      <item.icon className={cn("h-4 w-4 shrink-0", active && "text-[#40D457]")} />
+      <span className="truncate">{item.label}</span>
     </Link>
   );
 }
@@ -74,13 +83,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-5 border-b border-white/10">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-teal flex items-center justify-center">
-              <span className="text-white font-bold text-sm">A</span>
-            </div>
-            <div className="leading-tight">
-              <span className="text-secondary-bright font-bold text-sm">Averis</span>
-              <span className="text-white font-semibold text-sm"> Academy</span>
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <AverisLogoMark />
+            <div className="leading-none">
+              <div className="text-white font-black text-[11px] tracking-[0.18em] uppercase">Averis</div>
+              <div className="text-white/70 font-semibold text-[10px] tracking-[0.14em] uppercase mt-0.5">Academy</div>
             </div>
           </Link>
           <button onClick={onClose} className="lg:hidden text-white/60 hover:text-white">
@@ -89,7 +96,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto p-4 space-y-0.5">
           {navItems.map((item) => (
             <NavItem key={item.href} item={item} />
           ))}
@@ -99,12 +106,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-4 border-t border-white/10">
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-sidebar-hover transition-colors"
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-colors"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             Sign Out
           </button>
-          <p className="text-white/30 text-xs text-center mt-3">{siteConfig.name}</p>
+          <p className="text-white/20 text-xs text-center mt-3">{siteConfig.name}</p>
         </div>
       </aside>
     </>

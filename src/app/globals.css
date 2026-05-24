@@ -3,37 +3,37 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Primary — Navy Blue */
-  --color-primary: #1a3a52;
-  --color-primary-dark: #0d2035;
-  --color-primary-darker: #070f1a;
-  --color-primary-light: #254e70;
+  /* Primary — Ocean Ink (Averis brand dark) */
+  --color-primary: #122F38;
+  --color-primary-dark: #0d2028;
+  --color-primary-darker: #091820;
+  --color-primary-light: #1a3f4d;
 
-  /* Secondary — Teal */
-  --color-secondary: #2d7f8f;
-  --color-secondary-dark: #1f5f6e;
-  --color-secondary-light: #3a9db0;
-  --color-secondary-bright: #4dbdd4;
+  /* Secondary — Averis Green (brand accent) */
+  --color-secondary: #40D457;
+  --color-secondary-dark: #2eb847;
+  --color-secondary-light: #6ddf80;
+  --color-secondary-bright: #40D457;
 
   /* Neutrals */
   --color-background: #ffffff;
-  --color-foreground: #1a1a2e;
-  --color-muted: #f5f8fa;
-  --color-muted-foreground: #6b7280;
-  --color-border: #e2e8f0;
+  --color-foreground: #122F38;
+  --color-muted: #f4f8f6;
+  --color-muted-foreground: #5f7268;
+  --color-border: #deeae5;
   --color-card: #ffffff;
-  --color-card-foreground: #1a1a2e;
+  --color-card-foreground: #122F38;
 
   /* Semantic */
   --color-success: #16a34a;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
-  --color-info: #2d7f8f;
+  --color-info: #18A6F5;
 
   /* Sidebar */
-  --color-sidebar: #070f1a;
-  --color-sidebar-hover: #0d2035;
-  --color-sidebar-active: #1a3a52;
+  --color-sidebar: #122F38;
+  --color-sidebar-hover: #1a3f4d;
+  --color-sidebar-active: #1f4d5e;
 
   /* Font families */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -57,26 +57,29 @@ html { scroll-behavior: smooth; }
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-secondary); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-secondary-dark); }
+::-webkit-scrollbar-thumb { background: #40D457; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2eb847; }
 
-::selection { background: rgba(45, 127, 143, 0.2); color: var(--color-primary); }
+::selection { background: rgba(64, 212, 87, 0.2); color: #122F38; }
 
 /* Gradient utilities */
 .gradient-primary {
-  background: linear-gradient(138deg, #070f1a 0%, #1a3a52 48%, #1f5f6e 100%);
+  background: linear-gradient(138deg, #091820 0%, #122F38 48%, #1a3f4d 100%);
 }
 .gradient-teal {
-  background: linear-gradient(95deg, #2d7f8f 20%, #4dbdd4 80%);
+  background: linear-gradient(95deg, #2eb847 20%, #40D457 80%);
 }
 .gradient-hero {
-  background: linear-gradient(138deg, #070f1a 0%, #0d2035 40%, #1a3a52 70%, #1f5f6e 100%);
+  background: linear-gradient(138deg, #091820 0%, #0d2028 40%, #122F38 70%, #1a3f4d 100%);
 }
 .gradient-text {
-  background: linear-gradient(95deg, #2d7f8f 20%, #4dbdd4 80%);
+  background: linear-gradient(95deg, #2eb847 20%, #40D457 80%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+.gradient-averis {
+  background: linear-gradient(135deg, #122F38 0%, #1a3f4d 60%, #1f4d5e 100%);
 }
 
 /* Glass */
@@ -91,8 +94,8 @@ html { scroll-behavior: smooth; }
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px #f5f8fa inset;
-  box-shadow: 0 0 0px 1000px #f5f8fa inset;
+  -webkit-box-shadow: 0 0 0px 1000px #f4f8f6 inset;
+  box-shadow: 0 0 0px 1000px #f4f8f6 inset;
   transition: background-color 5000s ease-in-out 0s;
 }
 

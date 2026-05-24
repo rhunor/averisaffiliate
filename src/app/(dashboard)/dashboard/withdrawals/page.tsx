@@ -196,7 +196,7 @@ export default function WithdrawalsPage() {
               <button
                 type="submit"
                 disabled={submitting || data.availableBalance < siteConfig.minWithdrawal}
-                className="w-full bg-secondary hover:bg-secondary-dark text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm"
+                className="w-full bg-secondary hover:bg-secondary-dark text-primary font-bold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm"
               >
                 {submitting ? "Sending to your bank…" : "Withdraw now"}
               </button>

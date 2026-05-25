@@ -107,7 +107,7 @@ export default function WithdrawalsPage() {
       </div>
 
       {/* Balance card */}
-      <Card className="bg-gradient-to-br from-primary to-primary-light text-white">
+      <Card className="bg-linear-to-br from-primary to-primary-light text-white">
         <CardContent className="pt-6 pb-6">
           <p className="text-white/70 text-sm">Available balance</p>
           <p className="text-4xl font-bold mt-1">{formatCurrency(data.availableBalance)}</p>

@@ -70,7 +70,7 @@ export default function CoursePage() {
 
       {/* Course header */}
       <Card className="overflow-hidden">
-        <div className="relative h-48 bg-gradient-to-br from-primary to-primary-light">
+        <div className="relative h-48 bg-linear-to-br from-primary to-primary-light">
           {course.thumbnailUrl ? (
             <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
           ) : (

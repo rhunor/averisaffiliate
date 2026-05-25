@@ -90,11 +90,14 @@ function DashboardContent() {
         </div>
       )}
 
-      <div>
-        <h1 className="text-xl font-bold text-foreground">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-primary-light px-6 py-5">
+        <img src="/Iconography/Rocket.svg" alt="" aria-hidden className="absolute -right-4 -top-4 h-28 opacity-10 rotate-12 pointer-events-none select-none" />
+        <img src="/Iconography/Up arrow.svg" alt="" aria-hidden className="absolute right-20 bottom-2 h-12 opacity-8 pointer-events-none select-none" />
+        <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">Dashboard</p>
+        <h1 className="text-xl font-bold text-white">
           Welcome, {data.user.firstName}!
         </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Your affiliate dashboard</p>
+        <p className="text-white/60 text-sm mt-0.5">Your affiliate performance at a glance</p>
       </div>
 
       {/* Stats */}

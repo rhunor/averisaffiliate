@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { Copy, ExternalLink, QrCode, CheckCircle, ShoppingBag } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,9 +39,12 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Products</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Promote these products and earn commissions on every sale</p>
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-primary-light px-6 py-5">
+        <img src="/Iconography/Badge.svg" alt="" aria-hidden className="absolute -right-2 -top-3 h-24 opacity-10 pointer-events-none select-none" />
+        <img src="/Iconography/Naira Sign.svg" alt="" aria-hidden className="absolute right-20 bottom-1 h-12 opacity-8 pointer-events-none select-none" />
+        <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">Affiliate Products</p>
+        <h1 className="text-xl font-bold text-white">Averis Academy Products</h1>
+        <p className="text-white/60 text-sm mt-0.5">Promote and earn 50% commission on every sale you close</p>
       </div>
 
       {products.length === 0 ? (
@@ -56,7 +58,7 @@ export default function ProductsPage() {
         <div className="grid gap-6 md:grid-cols-2">
           {products.map((product) => (
             <Card key={product._id} className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-br from-primary to-primary-light pb-4">
+              <CardHeader className="bg-linear-to-br from-primary to-primary-light pb-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-white">{product.name}</CardTitle>

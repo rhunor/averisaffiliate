@@ -7,11 +7,11 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
 function AverisLogoMark({ size = 44 }: { size?: number }) {
-  const h = Math.round(size * 0.85);
+  const h = Math.round(size * (51 / 65));
   return (
-    <svg width={size} height={h} viewBox="0 0 52 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M44 2H20L4 22L20 42H44V33H26L16 22L26 11H44V2Z" fill="#122F38" />
-      <polygon points="29,2 45,2 37,18" fill="#40D457" />
+    <svg width={size} height={h} viewBox="0 0 65 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fillRule="evenodd" clipRule="evenodd" d="M23.6321 39.1078L64.2474 39.1659L44.6646 50.2771L4.34633 50.2697L0 42.891L2.22282 39.3854L20.7427 10.7465L39.9931 0L21.4887 28.6184L19.2659 32.124L23.6321 39.1078Z" fill="#122F38"/>
+      <path fillRule="evenodd" clipRule="evenodd" d="M54.3371 28.6184L44.0985 12.7838L33.8601 28.6184H54.3371Z" fill="#40D457"/>
     </svg>
   );
 }

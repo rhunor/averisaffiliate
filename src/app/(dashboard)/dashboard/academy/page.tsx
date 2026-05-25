@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Play, Clock, CheckCircle, Lock } from "lucide-react";
+import { BookOpen, Play, Clock, CheckCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/utils";
@@ -40,9 +40,12 @@ export default function AcademyPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Academy</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Learn, grow, and earn with our video courses</p>
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-primary-light px-6 py-5">
+        <img src="/Iconography/Mountain top.svg" alt="" aria-hidden className="absolute -right-3 -top-3 h-24 opacity-10 pointer-events-none select-none" />
+        <img src="/Iconography/Rocket.svg" alt="" aria-hidden className="absolute right-20 bottom-1 h-10 opacity-8 pointer-events-none select-none" />
+        <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">Learning</p>
+        <h1 className="text-xl font-bold text-white">Academy</h1>
+        <p className="text-white/60 text-sm mt-0.5">Learn, grow, and earn with our video courses</p>
       </div>
 
       {courses.length === 0 ? (
@@ -62,7 +65,7 @@ export default function AcademyPage() {
               <Link key={course._id} href={`/dashboard/academy/${course._id}`}>
                 <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
                   {/* Thumbnail / gradient header */}
-                  <div className="relative h-40 bg-gradient-to-br from-primary to-primary-light overflow-hidden">
+                  <div className="relative h-40 bg-linear-to-br from-primary to-primary-light overflow-hidden">
                     {course.thumbnailUrl ? (
                       <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
                     ) : (

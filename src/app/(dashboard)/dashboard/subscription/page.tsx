@@ -100,7 +100,7 @@ export default function SubscriptionPage() {
 
       {/* Renewal CTA */}
       {(!data.isActive || data.isExpiringSoon) && (
-        <Card className="bg-gradient-to-br from-primary to-primary-light text-white">
+        <Card className="bg-linear-to-br from-primary to-primary-light text-white">
           <CardContent className="pt-6 pb-6">
             <div className="flex items-center gap-3 mb-4">
               <Zap className="h-6 w-6 text-white" />

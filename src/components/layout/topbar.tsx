@@ -22,6 +22,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const firstName = name.split(" ")[0];
   const isActive = user?.isActive as boolean;
   const initials = getInitials(name);
+  const profileImage = user?.profileImage as string | null;
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur border-b border-border flex items-center justify-between px-4 lg:px-6">
@@ -53,8 +54,11 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
           <Bell className="h-5 w-5" />
         </button>
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-          <span className="text-white text-xs font-bold">{initials}</span>
+        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center overflow-hidden shrink-0">
+          {profileImage
+            ? <img src={profileImage} alt={name} className="w-full h-full object-cover" />
+            : <span className="text-white text-xs font-bold">{initials}</span>
+          }
         </div>
       </div>
     </header>

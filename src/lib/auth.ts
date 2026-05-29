@@ -37,6 +37,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           referralCode: user.referralCode,
           isActive: user.isActive,
           isEmailVerified: !!user.isEmailVerified,
+          profileImage: user.profileImage || null,
         };
       },
     }),
@@ -49,6 +50,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (token as Record<string, unknown>).referralCode = u.referralCode;
         (token as Record<string, unknown>).isActive = u.isActive;
         (token as Record<string, unknown>).isEmailVerified = u.isEmailVerified;
+        (token as Record<string, unknown>).profileImage = u.profileImage ?? null;
       }
       if (trigger === "update") {
         const { default: dbConnect } = await import("@/lib/db");
@@ -61,6 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (dbUser) {
           (token as Record<string, unknown>).isEmailVerified = !!dbUser.isEmailVerified;
           (token as Record<string, unknown>).isActive = dbUser.isActive;
+          (token as Record<string, unknown>).profileImage = (dbUser.profileImage as string) ?? null;
         }
       }
       return token;
@@ -74,6 +77,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         s.referralCode = tok.referralCode as string;
         s.isActive = tok.isActive as boolean;
         s.isEmailVerified = tok.isEmailVerified as boolean;
+        s.profileImage = (tok.profileImage as string) ?? null;
       }
       return session;
     },

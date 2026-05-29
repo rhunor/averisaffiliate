@@ -19,8 +19,9 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
 
     // Earnings stats
-    const [transactions, referrals, withdrawals] = await Promise.all([
-      Transaction.find({ userId, type: "commission", status: "completed" }).lean(),
+    const [transactions, pendingTransactions, referrals, withdrawals] = await Promise.all([
+      Transaction.find({ userId, type: { $in: ["commission", "renewal_commission"] }, status: "completed" }).lean(),
+      Transaction.find({ userId, type: { $in: ["commission", "renewal_commission"] }, status: "pending" }).lean(),
       Referral.find({ referrerId: userId })
         .populate("referredUserId", "firstName lastName email createdAt")
         .sort({ createdAt: -1 })
@@ -30,6 +31,7 @@ export async function GET() {
     ]);
 
     const totalEarnings = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const pendingEarnings = pendingTransactions.reduce((sum, t) => sum + t.amount, 0);
     const pendingWithdrawals = withdrawals
       .filter((w) => w.status === "pending" || w.status === "processing")
       .reduce((sum, w) => sum + w.amount, 0);
@@ -71,6 +73,7 @@ export async function GET() {
         totalWithdrawn,
         totalReferrals: referrals.length,
         activeReferrals: referrals.filter((r: Record<string, unknown>) => r.status === "active").length,
+        pendingEarnings,
       },
       chartData,
       recentReferrals: referrals.slice(0, 10),

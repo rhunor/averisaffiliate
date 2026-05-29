@@ -4,7 +4,7 @@ import User from "@/models/User";
 import Referral from "@/models/Referral";
 import Transaction from "@/models/Transaction";
 import { verifyCharge } from "@/lib/korapay";
-import { sendWelcomeEmail, sendCommissionEmail } from "@/lib/email";
+import { sendWelcomeEmail, sendPendingCommissionEmail } from "@/lib/email";
 import { generateOrderId } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
           userId: referrer._id,
           type: "commission",
           amount: commission,
-          status: "completed",
+          status: "pending",
           referralId: referral._id,
           sourceUserId: user._id,
           paymentReference: reference,
@@ -83,15 +83,14 @@ export async function GET(req: NextRequest) {
           description: `50% commission — ${user.firstName} ${user.lastName} subscribed`,
         });
 
-        // Send commission email to referrer
-        sendCommissionEmail({
+        // Notify referrer: commission is pending, credits tomorrow
+        sendPendingCommissionEmail({
           affiliateEmail: referrer.email,
           affiliateFirstName: referrer.firstName,
           buyerName: `${user.firstName} ${user.lastName}`,
           commissionAmount: commission,
           orderId,
           productName: "Averis Academy Subscription",
-          paymentReference: reference,
         }).catch(console.error);
       }
     }

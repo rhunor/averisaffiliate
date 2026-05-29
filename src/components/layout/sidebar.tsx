@@ -21,7 +21,7 @@ import { siteConfig } from "@/config/site";
 const navItems = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard, exact: true },
   { label: "Averis Academy Products", href: "/dashboard/products", icon: ShoppingBag },
-  { label: "Academy", href: "/dashboard/academy", icon: GraduationCap },
+  { label: "Academy Trainings", href: "/dashboard/academy", icon: GraduationCap },
   { label: "Earnings", href: "/dashboard/earnings", icon: DollarSign },
   { label: "Affiliate Sales", href: "/dashboard/referrals", icon: Users },
   { label: "Withdrawals", href: "/dashboard/withdrawals", icon: Wallet },

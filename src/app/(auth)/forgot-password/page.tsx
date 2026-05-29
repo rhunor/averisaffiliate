@@ -53,13 +53,13 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-[400px]">
         {/* Logo */}
         <div className="flex justify-center mb-10">
-          <div className="flex items-center gap-3">
+          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <AverisLogoMark size={44} />
             <div className="text-left">
               <div className="font-black text-[22px] text-[#122F38] leading-none tracking-[0.18em]">AVERIS</div>
               <div className="font-black text-[22px] text-[#122F38] leading-none tracking-[0.18em] mt-0.5">ACADEMY</div>
             </div>
-          </div>
+          </a>
         </div>
 
         {sent ? (

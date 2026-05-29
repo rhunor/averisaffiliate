@@ -5,6 +5,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { resolveAccount } from "@/lib/korapay";
 import { sendBankDetailsChangedEmail } from "@/lib/email";
+import { uploadImage } from "@/lib/cloudinary";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -18,6 +19,20 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json();
     const { action } = body;
+
+    if (action === "upload_avatar") {
+      const { imageBase64 } = body;
+      if (!imageBase64 || typeof imageBase64 !== "string") {
+        return NextResponse.json({ error: "Image data required." }, { status: 400 });
+      }
+      if (!imageBase64.startsWith("data:image/")) {
+        return NextResponse.json({ error: "Invalid image format." }, { status: 400 });
+      }
+      const result = await uploadImage(imageBase64, "averis-academy/avatars");
+      user.profileImage = result.secure_url;
+      await user.save();
+      return NextResponse.json({ success: true, profileImage: result.secure_url });
+    }
 
     if (action === "update_bank") {
       const { bankCode, bankName, accountNumber } = body;

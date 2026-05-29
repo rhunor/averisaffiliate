@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { User, Lock, CreditCard, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { User, Lock, CreditCard, CheckCircle, AlertCircle, Eye, EyeOff, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInitials } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ interface UserProfile {
   lastName: string;
   email: string;
   referralCode: string;
+  profileImage: string | null;
   bankDetails: { bankName: string; bankCode: string; accountNumber: string; accountName: string } | null;
 }
 
@@ -29,10 +30,15 @@ function Toast({ msg, type }: { msg: string; type: "success" | "error" }) {
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
-  const sessionUser = session?.user as unknown as Record<string, unknown>;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Avatar state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarMsg, setAvatarMsg] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Profile state
   const [firstName, setFirstName] = useState("");
@@ -64,6 +70,7 @@ export default function SettingsPage() {
         setProfile(p);
         setFirstName(p.firstName);
         setLastName(p.lastName);
+        setPreviewUrl(p.profileImage || null);
         if (p.bankDetails) {
           setBankCode(p.bankDetails.bankCode || "");
           setAccountNumber(p.bankDetails.accountNumber || "");
@@ -76,6 +83,48 @@ export default function SettingsPage() {
   function handleBankChange(code: string) {
     setBankCode(code);
     setBankName(banks.find((b) => b.code === code)?.name || "");
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setAvatarMsg({ msg: "Please select an image file.", type: "error" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarMsg({ msg: "Image must be under 5MB.", type: "error" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target?.result as string;
+      setPreviewUrl(base64);
+      setUploadingAvatar(true);
+      setAvatarMsg(null);
+      try {
+        const res = await fetch("/api/dashboard/settings", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "upload_avatar", imageBase64: base64 }),
+        });
+        const json = await res.json();
+        if (res.ok) {
+          setPreviewUrl(json.profileImage);
+          setProfile((prev) => prev ? { ...prev, profileImage: json.profileImage } : prev);
+          setAvatarMsg({ msg: "Profile photo updated.", type: "success" });
+          await update();
+        } else {
+          setAvatarMsg({ msg: json.error || "Upload failed.", type: "error" });
+          setPreviewUrl(profile?.profileImage || null);
+        }
+      } finally {
+        setUploadingAvatar(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   async function saveProfile(e: React.FormEvent) {
@@ -168,15 +217,44 @@ export default function SettingsPage() {
       {/* Avatar + code */}
       <Card>
         <CardContent className="pt-5 flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shrink-0">
-            <span className="text-white text-lg font-bold">{getInitials(`${profile.firstName} ${profile.lastName}`)}</span>
+          <div className="relative shrink-0">
+            <div
+              className="w-14 h-14 rounded-full bg-primary flex items-center justify-center overflow-hidden cursor-pointer group"
+              onClick={() => fileInputRef.current?.click()}
+              title="Click to change photo"
+            >
+              {previewUrl ? (
+                <img src={previewUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white text-lg font-bold">{getInitials(`${profile.firstName} ${profile.lastName}`)}</span>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {uploadingAvatar
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <Camera className="h-4 w-4 text-white" />
+                }
+              </div>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
           </div>
           <div>
             <p className="font-semibold text-foreground">{profile.firstName} {profile.lastName}</p>
             <p className="text-sm text-muted-foreground">{profile.email}</p>
             <p className="text-xs font-mono text-secondary mt-0.5">{profile.referralCode}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Click photo to change</p>
           </div>
         </CardContent>
+        {avatarMsg && (
+          <CardContent className="pt-0 pb-4">
+            <Toast {...avatarMsg} />
+          </CardContent>
+        )}
       </Card>
 
       {/* Profile form */}

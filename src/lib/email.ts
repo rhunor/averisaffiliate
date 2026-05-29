@@ -26,7 +26,7 @@ function footer() {
   `;
 }
 
-const btn = (href: string, label: string, color = "#1a3a52") =>
+const btn = (href: string, label: string) =>
   `<div style="text-align:center;margin:30px 0;">
     <a href="${href}" style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);color:white;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:16px;display:inline-block;">${label}</a>
   </div>`;
@@ -80,6 +80,7 @@ export async function sendPasswordResetEmail(email: string, firstName: string, t
 
 export async function sendWelcomeEmail(email: string, firstName: string) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const communityLink = "https://t.me/averisacademycommunity";
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
@@ -89,31 +90,45 @@ export async function sendWelcomeEmail(email: string, firstName: string) {
       ${header(appUrl)}
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
         <h2 style="color:#fff;margin:0 0 8px;font-size:24px;">Welcome aboard, ${firstName}!</h2>
-        <p style="color:rgba(255,255,255,0.8);margin:0;">Your account is now active. Start learning and earning today.</p>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">Your Averis Academy account is now active. Start learning and earning today.</p>
       </div>
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;font-weight:bold;">Your login details:</p>
+        <div style="background:white;border-radius:8px;padding:16px;margin:12px 0;border:1px solid #e2e8f0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Login URL</td>
+              <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;text-align:right;"><a href="${appUrl}/login" style="color:#2d7f8f;font-size:13px;">${appUrl}/login</a></td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;color:#888;font-size:13px;">Email</td>
+              <td style="padding:8px 0;text-align:right;color:#333;font-size:13px;">${email}</td>
+            </tr>
+          </table>
+        </div>
+        <p style="color:#888;font-size:12px;margin:0 0 20px;">Use the password you set during registration to sign in.</p>
+
         <p style="color:#555;line-height:1.6;margin-top:0;">Share your referral link with others and earn <strong>50% commission</strong> on every subscription — every 6 months.</p>
         <div style="background:white;border-radius:8px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;">
           <p style="color:#1a3a52;margin:0 0 12px;font-weight:bold;">Your commission structure:</p>
           <table style="width:100%;border-collapse:collapse;">
             <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:13px;">New Subscription Referral</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:13px;">New Subscription (₦35,000)</td>
               <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;color:#2d7f8f;font-size:18px;">₦17,500</td>
             </tr>
             <tr>
-              <td style="padding:10px 0;color:#555;font-size:13px;">Renewal Referral (every 6 months)</td>
+              <td style="padding:10px 0;color:#555;font-size:13px;">Renewal every 6 months (₦30,000)</td>
               <td style="padding:10px 0;text-align:right;font-weight:bold;color:#2d7f8f;font-size:18px;">₦15,000</td>
             </tr>
           </table>
         </div>
-        <ul style="color:#555;line-height:2;padding-left:20px;margin:0 0 24px;">
-          <li>Access all 4 learning modules</li>
-          <li>Weekly live coaching calls</li>
-          <li>Private community access</li>
-          <li>Unique affiliate link &amp; QR code</li>
-          <li>Direct bank withdrawals (min ₦10,000)</li>
-        </ul>
+        <p style="color:#555;font-size:13px;line-height:1.6;margin-bottom:8px;"><strong>Note:</strong> Commissions are credited to your wallet the day after a confirmed sale.</p>
         ${btn(`${appUrl}/dashboard`, "Go to Your Dashboard →")}
+        <div style="margin-top:20px;padding:16px;background:#e8f4f8;border-radius:10px;text-align:center;">
+          <p style="color:#1a3a52;font-weight:bold;margin:0 0 8px;font-size:14px;">Join the Averis Academy Community</p>
+          <p style="color:#555;font-size:13px;margin:0 0 12px;">Connect with other affiliates, get tips, and stay updated.</p>
+          <a href="${communityLink}" style="background:#2d7f8f;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">Join Telegram Community →</a>
+        </div>
       </div>
       ${footer()}
     </div>`,
@@ -140,6 +155,56 @@ export async function sendOTPEmail(email: string, firstName: string, otp: string
           </div>
         </div>
         <p style="color:#888;font-size:13px;text-align:center;">Expires in <strong>10 minutes</strong>. If you didn't attempt to log in, change your password immediately.</p>
+      </div>
+      ${footer()}
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
+export async function sendPendingCommissionEmail(params: {
+  affiliateEmail: string;
+  affiliateFirstName: string;
+  buyerName: string;
+  commissionAmount: number;
+  orderId: string;
+  productName: string;
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const { affiliateEmail, affiliateFirstName, buyerName, commissionAmount, orderId, productName } = params;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: affiliateEmail,
+    subject: `Sale Confirmed — ₦${commissionAmount.toLocaleString()} credits tomorrow | ${APP_NAME}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+      ${header(appUrl)}
+      <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:24px;margin:20px 0;text-align:center;">
+        <h2 style="color:#fff;margin:0 0 6px;font-size:22px;">Sale Confirmed!</h2>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">${productName}</p>
+      </div>
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;">Hi ${affiliateFirstName}, great news — a sale was just confirmed through your referral link!</p>
+        <div style="background:white;border-radius:8px;padding:20px;margin:16px 0;border:1px solid #e2e8f0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Order ID</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;font-family:monospace;color:#2d7f8f;">${orderId}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Buyer</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;color:#333;">${buyerName}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;color:#1a3a52;font-weight:bold;">Your Commission</td>
+              <td style="padding:10px 0;text-align:right;font-weight:bold;color:#2d7f8f;font-size:20px;">₦${commissionAmount.toLocaleString()}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px;margin:16px 0;">
+          <p style="color:#856404;font-size:13px;margin:0;">⏰ <strong>Settlement:</strong> Your commission will be credited to your wallet balance <strong>tomorrow</strong>. You can then withdraw it anytime.</p>
+        </div>
+        ${btn(`${appUrl}/dashboard/earnings`, "View Earnings →")}
       </div>
       ${footer()}
     </div>`,
@@ -215,7 +280,7 @@ export async function sendWithdrawalRequestEmail(params: {
       ${header(appUrl)}
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
         <h2 style="color:#1a3a52;margin-top:0;">Withdrawal Request Received</h2>
-        <p style="color:#555;line-height:1.6;">Hi ${firstName}, your withdrawal request has been received and will be processed this Friday.</p>
+        <p style="color:#555;line-height:1.6;">Hi ${firstName}, your withdrawal request has been received and is being processed now via Korapay.</p>
         <div style="background:white;border-radius:8px;padding:20px;margin:16px 0;border:1px solid #e2e8f0;">
           <table style="width:100%;border-collapse:collapse;">
             <tr>
@@ -296,27 +361,48 @@ export async function sendSubscriptionExpiryEmail(params: {
   firstName: string;
   daysLeft: number;
   expiryDate: Date;
+  hoursLeft?: number;
 }) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const { email, firstName, daysLeft, expiryDate } = params;
-  const isExpired = daysLeft <= 0;
+  const { email, firstName, daysLeft, expiryDate, hoursLeft } = params;
+  const isExpired = daysLeft <= 0 && !hoursLeft;
   const formattedDate = expiryDate.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+
+  let timeLabel: string;
+  let subject: string;
+  if (isExpired) {
+    timeLabel = "Subscription Expired";
+    subject = `Your ${APP_NAME} subscription has expired — Renew now`;
+  } else if (hoursLeft) {
+    timeLabel = `Expires in ${hoursLeft} hour${hoursLeft === 1 ? "" : "s"}`;
+    subject = `⚠️ Only ${hoursLeft}h left on your ${APP_NAME} subscription`;
+  } else {
+    timeLabel = `Expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`;
+    subject = `Your subscription expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"} — ${APP_NAME}`;
+  }
+
+  const bannerBg = isExpired ? "#f8d7da" : "#fff3cd";
+  const bannerBorder = isExpired ? "#f5c6cb" : "#ffc107";
+  const bannerColor = isExpired ? "#721c24" : "#856404";
+  const emoji = isExpired ? "🚫" : hoursLeft && hoursLeft <= 6 ? "🔴" : "⏳";
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
-    subject: isExpired
-      ? `Your ${APP_NAME} subscription has expired — Renew now`
-      : `Your subscription expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"} — ${APP_NAME}`,
+    subject,
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
       ${header(appUrl)}
-      <div style="background:${isExpired ? "#f8d7da" : "#fff3cd"};border:2px solid ${isExpired ? "#f5c6cb" : "#ffc107"};border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
-        <p style="font-size:32px;margin:0;">${isExpired ? "🚫" : "⏳"}</p>
-        <h2 style="color:${isExpired ? "#721c24" : "#856404"};margin:8px 0 0;">${isExpired ? "Subscription Expired" : `Expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`}</h2>
-        <p style="color:${isExpired ? "#721c24" : "#856404"};margin:4px 0 0;font-size:14px;">${formattedDate}</p>
+      <div style="background:${bannerBg};border:2px solid ${bannerBorder};border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
+        <p style="font-size:32px;margin:0;">${emoji}</p>
+        <h2 style="color:${bannerColor};margin:8px 0 0;">${timeLabel}</h2>
+        <p style="color:${bannerColor};margin:4px 0 0;font-size:14px;">${formattedDate}</p>
       </div>
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
-        <p style="color:#555;line-height:1.6;margin-top:0;">Hi ${firstName}, ${isExpired ? "your Averis Academy subscription has expired. Renew now to regain access to all courses and your affiliate dashboard." : "renew now to keep your access uninterrupted."}</p>
+        <p style="color:#555;line-height:1.6;margin-top:0;">Hi ${firstName}, ${
+          isExpired
+            ? "your Averis Academy subscription has expired. Renew now to regain access to all courses and your affiliate dashboard."
+            : "renew now to keep your access and affiliate earnings uninterrupted. Renewal is ₦30,000 for another 6 months."
+        }</p>
         ${btn(`${appUrl}/dashboard/subscription`, "Renew Subscription →")}
       </div>
       ${footer()}

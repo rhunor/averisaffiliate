@@ -5,12 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
-  DollarSign, Users, Wallet, TrendingUp, ArrowRight, CheckCircle,
+  DollarSign, Users, Wallet, TrendingUp, ArrowRight, CheckCircle, Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { siteConfig } from "@/config/site";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
@@ -24,6 +23,7 @@ interface DashboardData {
   stats: {
     totalEarnings: number; availableBalance: number; pendingWithdrawals: number;
     totalWithdrawn: number; totalReferrals: number; activeReferrals: number;
+    pendingEarnings: number;
   };
   chartData: { month: string; earnings: number }[];
   recentReferrals: Array<{ referredUserId: { firstName: string; lastName: string; email: string; createdAt: string }; status: string; createdAt: string }>;
@@ -55,11 +55,6 @@ function DashboardContent() {
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const sessionUser = session?.user as unknown as Record<string, unknown>;
-  const referralCode = sessionUser?.referralCode as string;
-  const appUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const referralLink = `${appUrl}/register?ref=${referralCode}`;
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -104,68 +99,47 @@ function DashboardContent() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Earned" value={formatCurrency(data.stats.totalEarnings)} icon={DollarSign} color="bg-secondary/10 text-secondary" />
         <StatCard title="Available" value={formatCurrency(data.stats.availableBalance)} sub="Ready to withdraw" icon={Wallet} color="bg-success/10 text-success" />
-        <StatCard title="Referrals" value={String(data.stats.totalReferrals)} sub={`${data.stats.activeReferrals} active`} icon={Users} color="bg-primary/10 text-primary" />
+        <StatCard title="Affiliate Sales" value={String(data.stats.totalReferrals)} sub={`${data.stats.activeReferrals} active`} icon={Users} color="bg-primary/10 text-primary" />
         <StatCard title="Withdrawn" value={formatCurrency(data.stats.totalWithdrawn)} icon={TrendingUp} color="bg-warning/10 text-warning" />
       </div>
 
-      {/* Chart + Referral Link */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Earnings (6 months)</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={data.chartData}>
-                <defs>
-                  <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#40D457" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#40D457" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v) => [formatCurrency(Number(v ?? 0)), "Earnings"]} />
-                <Area type="monotone" dataKey="earnings" stroke="#40D457" fill="url(#grad)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Pending earnings notice */}
+      {data.stats.pendingEarnings > 0 && (
+        <div className="flex items-center gap-3 bg-warning/10 border border-warning/20 rounded-xl px-5 py-3">
+          <Clock className="h-4 w-4 text-warning shrink-0" />
+          <p className="text-sm text-foreground">
+            <span className="font-semibold text-warning">{formatCurrency(data.stats.pendingEarnings)}</span> in commissions settling tomorrow and will be added to your available balance.
+          </p>
+        </div>
+      )}
 
-        <Card>
-          <CardHeader><CardTitle>Your Referral Link</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-xs text-muted-foreground mb-2">Share this link to earn {siteConfig.commission.rate}% commission</p>
-              <div className="bg-muted rounded-xl p-3">
-                <p className="text-xs font-mono text-foreground break-all">{referralLink}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigator.clipboard.writeText(referralLink)}
-              className="w-full text-sm font-medium text-secondary hover:text-secondary-dark transition-colors"
-            >
-              Copy link
-            </button>
-            <div className="pt-2 border-t border-border">
-              <p className="text-xs text-muted-foreground">Commission per referral</p>
-              <div className="flex justify-between mt-2 text-sm">
-                <span className="text-muted-foreground">New sub</span>
-                <span className="font-semibold text-success">{formatCurrency(siteConfig.commission.newSubscription)}</span>
-              </div>
-              <div className="flex justify-between mt-1 text-sm">
-                <span className="text-muted-foreground">Renewal</span>
-                <span className="font-semibold text-success">{formatCurrency(siteConfig.commission.renewal)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Chart */}
+      <Card>
+        <CardHeader><CardTitle>Earnings (6 months)</CardTitle></CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={data.chartData}>
+              <defs>
+                <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#40D457" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#40D457" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(v) => [formatCurrency(Number(v ?? 0)), "Earnings"]} />
+              <Area type="monotone" dataKey="earnings" stroke="#40D457" fill="url(#grad)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-      {/* Recent referrals */}
+      {/* Recent affiliate sales */}
       {data.recentReferrals.length > 0 && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Recent Referrals</CardTitle>
+            <CardTitle>Recent Affiliate Sales</CardTitle>
             <Link href="/dashboard/referrals" className="text-sm text-secondary hover:underline flex items-center gap-1">
               View all <ArrowRight className="h-3 w-3" />
             </Link>

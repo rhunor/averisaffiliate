@@ -54,8 +54,8 @@ export default function ReferralsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-xl font-bold text-foreground">Referrals</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Everyone you've referred to Averis Academy</p>
+        <h1 className="text-xl font-bold text-foreground">Affiliate Sales</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Everyone you&apos;ve referred to Averis Academy</p>
       </div>
 
       {/* Referral link card */}
@@ -110,7 +110,7 @@ export default function ReferralsPage() {
 
       {/* Referrals table */}
       <Card>
-        <CardHeader><CardTitle>All Referrals</CardTitle></CardHeader>
+        <CardHeader><CardTitle>All Affiliate Sales</CardTitle></CardHeader>
         <CardContent className="p-0">
           {data.referrals.length === 0 ? (
             <div className="py-16 text-center">

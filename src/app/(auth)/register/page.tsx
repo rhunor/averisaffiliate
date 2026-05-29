@@ -37,6 +37,32 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  if (!refCode) {
+    return (
+      <div className="text-center py-6">
+        <div className="w-16 h-16 rounded-full bg-[#122F38]/8 flex items-center justify-center mx-auto mb-5">
+          <svg width="28" height="28" viewBox="0 0 65 51" fill="none"><path fillRule="evenodd" clipRule="evenodd" d="M23.6321 39.1078L64.2474 39.1659L44.6646 50.2771L4.34633 50.2697L0 42.891L2.22282 39.3854L20.7427 10.7465L39.9931 0L21.4887 28.6184L19.2659 32.124L23.6321 39.1078Z" fill="#122F38"/><path fillRule="evenodd" clipRule="evenodd" d="M54.3371 28.6184L44.0985 12.7838L33.8601 28.6184H54.3371Z" fill="#40D457"/></svg>
+        </div>
+        <h2 className="text-lg font-bold text-[#122F38] mb-2">Invitation Required</h2>
+        <p className="text-gray-500 text-sm leading-relaxed mb-6">
+          Averis Academy is sold exclusively through affiliates. You need a valid referral link from an existing affiliate to create an account.
+        </p>
+        <p className="text-gray-400 text-xs mb-6">
+          Already received your account credentials?{" "}
+          <a href="/login" className="text-[#40D457] font-semibold hover:underline">Sign In here</a>
+        </p>
+        <a
+          href="https://wa.me/2348085300040"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block bg-[#122F38] text-white rounded-xl py-3 px-6 font-semibold text-sm hover:bg-[#1a4050] transition-colors"
+        >
+          Contact Support for Access
+        </a>
+      </div>
+    );
+  }
+
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     setLoading(true);
@@ -158,13 +184,13 @@ export default function RegisterPage() {
       <div className="w-full max-w-[400px]">
         {/* Logo */}
         <div className="flex justify-center mb-10">
-          <div className="flex items-center gap-3">
+          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <AverisLogoMark size={44} />
             <div className="text-left">
               <div className="font-black text-[22px] text-[#122F38] leading-none tracking-[0.18em]">AVERIS</div>
               <div className="font-black text-[22px] text-[#122F38] leading-none tracking-[0.18em] mt-0.5">ACADEMY</div>
             </div>
-          </div>
+          </a>
         </div>
 
         {/* Heading */}

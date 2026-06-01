@@ -26,6 +26,7 @@ export interface IUser extends Document {
     accountNumber: string;
     accountName: string;
   } | null;
+  signupProductSlug: string | null;
   isSpecialAffiliate: boolean;
   knownDevices: { ip: string; lastSeen: Date }[];
   twoFAOTP: string | null;
@@ -64,6 +65,7 @@ const UserSchema = new Schema<IUser>(
       },
       default: null,
     },
+    signupProductSlug: { type: String, default: null },
     isSpecialAffiliate: { type: Boolean, default: false },
     knownDevices: { type: [{ ip: String, lastSeen: Date }], default: [] },
     twoFAOTP: { type: String, default: null },

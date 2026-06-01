@@ -3,6 +3,8 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import Referral from "@/models/Referral";
 import Transaction from "@/models/Transaction";
+import Product from "@/models/Product";
+import AverisSubscriber from "@/models/AverisSubscriber";
 import { verifyCharge } from "@/lib/korapay";
 import { sendWelcomeEmail, sendPendingCommissionEmail } from "@/lib/email";
 import { generateOrderId } from "@/lib/utils";
@@ -20,6 +22,7 @@ export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
+    // Idempotency: already processed
     const existing = await Transaction.findOne({ paymentReference: reference });
     if (existing) {
       return NextResponse.redirect(new URL("/dashboard?activated=1", appUrl));
@@ -35,24 +38,115 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL("/pending-payment?error=user_not_found", appUrl));
     }
 
+    // Read payment context from Korapay metadata
+    const meta = (verify.data as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
+    const isRenewal = meta?.paymentType === "renewal";
+    const productSlug = (meta?.productSlug as string) || user.signupProductSlug || "averis-academy";
+    const productId = meta?.productId as string | null;
+
+    // Look up product for commission amounts
+    let productRecord: Record<string, unknown> | null = null;
+    if (productSlug && productSlug !== "averis-academy") {
+      productRecord = (await Product.findOne({ slug: productSlug }).lean()) as Record<string, unknown> | null;
+    }
+
+    const commissionAmount = isRenewal
+      ? ((productRecord?.renewalCommissionAmount as number) ?? siteConfig.commission.renewal)
+      : ((productRecord?.commissionAmount as number) ?? siteConfig.commission.newSubscription);
+
+    const sixMonths = 180 * 24 * 60 * 60 * 1000;
+
+    // ── RENEWAL ─────────────────────────────────────────────────────────────
+    if (isRenewal) {
+      const now = new Date();
+      const currentExpiry = user.subscriptionExpiresAt
+        ? new Date(Math.max(user.subscriptionExpiresAt.getTime(), now.getTime()))
+        : now;
+      const newExpiry = new Date(currentExpiry.getTime() + sixMonths);
+
+      user.isActive = true;
+      user.subscriptionExpiresAt = newExpiry;
+      await user.save();
+
+      // Record renewal transaction
+      await Transaction.create({
+        userId: user._id,
+        type: "subscription",
+        amount: isRenewal
+          ? ((productRecord?.renewalPrice as number) ?? siteConfig.renewalFee)
+          : siteConfig.signupFee,
+        status: "completed",
+        paymentReference: reference,
+        orderId,
+        description: "Averis Academy 6-Month Renewal",
+      });
+
+      // Sync bot AverisSubscriber record
+      await AverisSubscriber.findOneAndUpdate(
+        { averisUserId: user._id.toString() },
+        {
+          expiryDate: newExpiry,
+          status: "active",
+          removedAt: null,
+          remindersSent: [],
+        }
+      ).catch(() => {});
+
+      // Credit renewal commission to referrer (pending → settles next day)
+      if (user.referredBy) {
+        const referrer = await User.findById(user.referredBy);
+        if (referrer) {
+          await Transaction.create({
+            userId: referrer._id,
+            type: "commission",
+            amount: commissionAmount,
+            status: "pending",
+            referralId: null,
+            sourceUserId: user._id,
+            productId: productId || null,
+            paymentReference: reference,
+            orderId,
+            description: `50% renewal commission — ${user.firstName} ${user.lastName} renewed`,
+          });
+
+          // Update referral record to active and store commission
+          await Referral.findOneAndUpdate(
+            { referrerId: referrer._id, referredUserId: user._id },
+            { status: "active", commissionAmount, isRenewal: true },
+          );
+
+          sendPendingCommissionEmail({
+            affiliateEmail: referrer.email,
+            affiliateFirstName: referrer.firstName,
+            buyerName: `${user.firstName} ${user.lastName}`,
+            commissionAmount,
+            orderId,
+            productName: productRecord?.name as string ?? "Averis Academy Renewal",
+          }).catch(console.error);
+        }
+      }
+
+      return NextResponse.redirect(new URL("/dashboard/subscription?renewed=1", appUrl));
+    }
+
+    // ── NEW SUBSCRIPTION ────────────────────────────────────────────────────
     if (user.isActive) {
       return NextResponse.redirect(new URL("/dashboard", appUrl));
     }
 
-    // Activate user — 6 month subscription
-    const sixMonthsFromNow = new Date();
-    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+    const now = new Date();
+    const newExpiry = new Date(now.getTime() + sixMonths);
 
     user.isActive = true;
     user.hasPaidSignup = true;
-    user.subscriptionExpiresAt = sixMonthsFromNow;
+    user.subscriptionExpiresAt = newExpiry;
     await user.save();
 
     // Record subscription transaction
     await Transaction.create({
       userId: user._id,
       type: "subscription",
-      amount: siteConfig.signupFee,
+      amount: (productRecord?.price as number) ?? siteConfig.signupFee,
       status: "completed",
       paymentReference: reference,
       orderId,
@@ -63,34 +157,35 @@ export async function GET(req: NextRequest) {
     if (user.referredBy) {
       const referrer = await User.findById(user.referredBy);
       if (referrer) {
-        const commission = siteConfig.commission.newSubscription;
-
         const referral = await Referral.create({
           referrerId: referrer._id,
           referredUserId: user._id,
+          productId: productId || null,
           status: "active",
+          commissionAmount,
+          isRenewal: false,
         });
 
         await Transaction.create({
           userId: referrer._id,
           type: "commission",
-          amount: commission,
+          amount: commissionAmount,
           status: "pending",
           referralId: referral._id,
           sourceUserId: user._id,
+          productId: productId || null,
           paymentReference: reference,
           orderId,
           description: `50% commission — ${user.firstName} ${user.lastName} subscribed`,
         });
 
-        // Notify referrer: commission is pending, credits tomorrow
         sendPendingCommissionEmail({
           affiliateEmail: referrer.email,
           affiliateFirstName: referrer.firstName,
           buyerName: `${user.firstName} ${user.lastName}`,
-          commissionAmount: commission,
+          commissionAmount,
           orderId,
-          productName: "Averis Academy Subscription",
+          productName: productRecord?.name as string ?? "Averis Academy",
         }).catch(console.error);
       }
     }

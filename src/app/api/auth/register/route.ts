@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ errors }, { status: 400 });
     }
 
-    const { firstName, lastName, email, password, referralCode } = parsed.data;
+    const { firstName, lastName, email, password, referralCode, productSlug } = parsed.data;
     await dbConnect();
 
     const existing = await User.findOne({ email });
@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
       passwordHash,
       referralCode: newReferralCode,
       referredBy: referredByUser?._id || null,
+      signupProductSlug: productSlug || null,
       emailVerificationToken: verificationToken,
       emailVerificationExpires: verificationExpires,
     });

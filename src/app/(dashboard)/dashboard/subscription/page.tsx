@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle, AlertCircle, Clock, CreditCard, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,9 @@ interface SubscriptionData {
   isExpiringSoon: boolean;
 }
 
-export default function SubscriptionPage() {
+function SubscriptionContent() {
+  const searchParams = useSearchParams();
+  const renewed = searchParams.get("renewed") === "1";
   const [data, setData] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [renewing, setRenewing] = useState(false);
@@ -65,6 +68,16 @@ export default function SubscriptionPage() {
         <h1 className="text-xl font-bold text-foreground">Subscription</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Manage your Averis Academy membership</p>
       </div>
+
+      {renewed && (
+        <div className="flex items-center gap-3 bg-success/10 border border-success/20 rounded-xl px-5 py-4">
+          <CheckCircle className="h-5 w-5 text-success shrink-0" />
+          <div>
+            <p className="font-semibold text-success">Subscription renewed!</p>
+            <p className="text-sm text-muted-foreground">Your 6-month access has been extended. Commission will be credited to your referrer tomorrow.</p>
+          </div>
+        </div>
+      )}
 
       {/* Status card */}
       <Card className={`border-2 ${data.isActive ? (data.isExpiringSoon ? "border-warning/30" : "border-success/30") : "border-danger/30"}`}>
@@ -176,5 +189,17 @@ export default function SubscriptionPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SubscriptionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-secondary border-t-transparent" />
+      </div>
+    }>
+      <SubscriptionContent />
+    </Suspense>
   );
 }

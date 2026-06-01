@@ -5,6 +5,8 @@ export interface IReferral extends Document {
   referredUserId: mongoose.Types.ObjectId;
   productId: mongoose.Types.ObjectId | null;
   status: "pending" | "active" | "inactive" | "expired";
+  commissionAmount: number;
+  isRenewal: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +21,8 @@ const ReferralSchema = new Schema<IReferral>(
       enum: ["pending", "active", "inactive", "expired"],
       default: "pending",
     },
+    commissionAmount: { type: Number, default: 0 },
+    isRenewal: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

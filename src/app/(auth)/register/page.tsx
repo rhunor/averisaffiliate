@@ -25,6 +25,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref") || "";
+  const productSlug = searchParams.get("product") || "";
 
   const [form, setForm] = useState({
     firstName: "",
@@ -32,6 +33,7 @@ function RegisterForm() {
     email: "",
     password: "",
     referralCode: refCode,
+    productSlug,
   });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);

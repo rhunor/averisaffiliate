@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    await sendWelcomeEmail(user.email, user.firstName);
+    await sendWelcomeEmail(user.email, user.firstName, user.referralCode);
 
     return NextResponse.redirect(new URL("/dashboard?activated=1", appUrl));
   } catch (err) {

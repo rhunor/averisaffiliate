@@ -78,9 +78,13 @@ export async function sendPasswordResetEmail(email: string, firstName: string, t
   if (error) throw new Error(`Resend: ${error.message}`);
 }
 
-export async function sendWelcomeEmail(email: string, firstName: string) {
+export async function sendWelcomeEmail(email: string, firstName: string, referralCode?: string) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const communityLink = "https://t.me/averisacademycommunity";
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || "primetrexbot";
+  const botDeepLink = referralCode
+    ? `https://t.me/${botUsername}?start=averis_link_${referralCode}`
+    : null;
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
@@ -124,10 +128,17 @@ export async function sendWelcomeEmail(email: string, firstName: string) {
         </div>
         <p style="color:#555;font-size:13px;line-height:1.6;margin-bottom:8px;"><strong>Note:</strong> Commissions are credited to your wallet the day after a confirmed sale.</p>
         ${btn(`${appUrl}/dashboard`, "Go to Your Dashboard →")}
-        <div style="margin-top:20px;padding:16px;background:#e8f4f8;border-radius:10px;text-align:center;">
-          <p style="color:#1a3a52;font-weight:bold;margin:0 0 8px;font-size:14px;">Join the Averis Academy Community</p>
+        ${botDeepLink ? `
+        <div style="margin-top:20px;padding:20px;background:#1a3a52;border-radius:10px;text-align:center;">
+          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Step 2 — Join the Averis Community on Telegram</p>
+          <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:0 0 14px;">Tap the button below to connect your account to the Telegram group. The bot will verify your subscription and send you an invite link instantly.</p>
+          <a href="${botDeepLink}" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">Join Community via Bot →</a>
+          <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:10px 0 0;">Or open Telegram and message: <strong style="color:rgba(255,255,255,0.8);">@${botUsername}</strong> with the command: <code style="color:#40D457;">/start averis_link_${referralCode}</code></p>
+        </div>` : ""}
+        <div style="margin-top:16px;padding:16px;background:#e8f4f8;border-radius:10px;text-align:center;">
+          <p style="color:#1a3a52;font-weight:bold;margin:0 0 8px;font-size:14px;">Averis Academy Affiliate Community</p>
           <p style="color:#555;font-size:13px;margin:0 0 12px;">Connect with other affiliates, get tips, and stay updated.</p>
-          <a href="${communityLink}" style="background:#2d7f8f;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">Join Telegram Community →</a>
+          <a href="${communityLink}" style="background:#2d7f8f;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">Join Telegram Channel →</a>
         </div>
       </div>
       ${footer()}

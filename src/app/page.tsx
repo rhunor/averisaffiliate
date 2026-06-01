@@ -91,7 +91,7 @@ function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {["Features", "How It Works", "Pricing"].map((item) => (
+          {["What We Offer", "How It Works"].map((item) => (
             <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`} className="text-white/60 hover:text-white text-sm font-medium transition-colors">
               {item}
             </a>
@@ -120,7 +120,7 @@ function Navbar() {
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="md:hidden bg-[#091820]/98 border-b border-white/10 px-6 pb-4">
-            {["Features", "How It Works", "Pricing"].map((item) => (
+            {["What We Offer", "How It Works"].map((item) => (
               <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`} onClick={() => setOpen(false)} className="block py-3 text-white/70 text-sm border-b border-white/8">
                 {item}
               </a>
@@ -283,11 +283,11 @@ function SpinBadge() {
 /* ─── Hero ─── */
 function Hero() {
   const tags = [
-    { label: "Learn It", color: "bg-[#40D457]/15 text-[#40D457] border-[#40D457]/20" },
-    { label: "Sell Products", color: "bg-white/8 text-white/70 border-white/10" },
-    { label: "Build Wealth", color: "bg-white/8 text-white/70 border-white/10" },
+    { label: "Phase 1: Make Money", color: "bg-[#40D457]/15 text-[#40D457] border-[#40D457]/20" },
+    { label: "Phase 2: Grow Wealth", color: "bg-white/8 text-white/70 border-white/10" },
     { label: "50% Commission", color: "bg-[#40D457]/15 text-[#40D457] border-[#40D457]/20" },
-    { label: "Earn Daily", color: "bg-white/8 text-white/70 border-white/10" },
+    { label: "6 Months Access", color: "bg-white/8 text-white/70 border-white/10" },
+    { label: "Build a Portfolio", color: "bg-white/8 text-white/70 border-white/10" },
   ];
 
   const toasts = [
@@ -316,7 +316,7 @@ function Hero() {
               className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-6 border border-white/10"
             >
               <span className="w-2 h-2 rounded-full bg-[#40D457] animate-pulse shrink-0" />
-              <span className="text-white/65 text-xs font-semibold uppercase tracking-widest">Nigeria&apos;s #1 Affiliate Academy</span>
+              <span className="text-white/65 text-xs font-semibold uppercase tracking-widest">70+ Nigerians Building Wealth</span>
             </motion.div>
 
             {/* Headline */}
@@ -326,9 +326,9 @@ function Hero() {
               transition={{ duration: 0.75, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               className="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-black text-white leading-[1.0] tracking-tight mb-5"
             >
-              Marketing
+              Your Income Has A Ceiling.
               <br />
-              <span className="gradient-text">Made Easy.</span>
+              <span className="gradient-text">We Don&apos;t.</span>
             </motion.h1>
 
             {/* Sub */}
@@ -338,8 +338,8 @@ function Hero() {
               transition={{ duration: 0.65, delay: 0.2 }}
               className="text-sm sm:text-base md:text-lg text-white/50 leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0"
             >
-              Learn digital marketing, promote premium products, and earn{" "}
-              <span className="text-[#40D457] font-semibold">50% commission</span> on every sale. Join 70+ Nigerians already building real online income.
+              Averis Academy is a wealth creation platform. We teach you to build real income selling digital products online —{" "}
+              <span className="text-[#40D457] font-semibold">then show you how to invest that income</span> to build generational wealth.
             </motion.p>
 
             {/* CTAs */}
@@ -350,13 +350,13 @@ function Hero() {
               className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-8"
             >
               <Link href="/login" className="relative overflow-hidden group bg-[#40D457] hover:bg-[#2eb847] text-[#122F38] font-bold text-sm px-7 py-3.5 rounded-2xl transition-all hover:shadow-[0_0_40px_rgba(64,212,87,0.5)] flex items-center justify-center gap-2">
-                <span className="relative z-10">Sign In to Get Started</span>
+                <span className="relative z-10">Get Started</span>
                 <ArrowRight className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                 <span className="absolute inset-0 bg-white/25 translate-x-[-110%] skew-x-[-20deg] group-hover:translate-x-[110%] transition-transform duration-500" />
               </Link>
-              <a href="https://wa.me/2348085300040" target="_blank" rel="noopener noreferrer" className="glass hover:bg-white/8 text-white font-semibold text-sm px-7 py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 border border-white/15 hover:border-[#40D457]/40">
+              <a href="#what-we-offer" className="glass hover:bg-white/8 text-white font-semibold text-sm px-7 py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 border border-white/15 hover:border-[#40D457]/40">
                 <Play className="h-3.5 w-3.5 fill-[#40D457] text-[#40D457]" />
-                Contact Support
+                See How It Works
               </a>
             </motion.div>
 
@@ -444,10 +444,10 @@ function Hero() {
 /* ─── Stats bar ─── */
 function StatsBar() {
   const stats = [
-    { value: 70, prefix: "", suffix: "+", label: "Members" },
-    { value: 35000, prefix: "₦", suffix: "", label: "For 6 months" },
-    { value: 50, prefix: "", suffix: "%", label: "Commission rate" },
-    { value: 17500, prefix: "₦", suffix: "", label: "Per new referral" },
+    { value: 70, prefix: "", suffix: "+", label: "Active Members" },
+    { value: 2, prefix: "", suffix: "", label: "Wealth Phases" },
+    { value: 50, prefix: "", suffix: "%", label: "Affiliate Commission" },
+    { value: 6, prefix: "", suffix: " months", label: "Full Access" },
   ];
 
   return (
@@ -474,24 +474,24 @@ function HowItWorks() {
     {
       num: "01",
       icon: "/Iconography/Rocket.svg",
-      title: "Subscribe & Learn",
-      desc: "Pay ₦35,000 for 6 months of full access. Dive into our video courses on affiliate marketing, digital sales, and wealth-building strategies.",
+      title: "Get Access",
+      desc: "Get your Averis Academy login from whoever introduced you to us. Pay ₦35,000 for 6 months of full access to Phase 1 — training, community, coaching, and your affiliate product.",
       color: "bg-[#40D457]/10 border-[#40D457]/20",
       badge: "Step 1",
     },
     {
       num: "02",
       icon: "/Iconography/Pointer.svg",
-      title: "Promote & Earn",
-      desc: "Get your unique referral links for every product. Share on WhatsApp, Instagram, Telegram, or wherever your audience lives. Every sale earns you 50%.",
+      title: "Learn & Earn",
+      desc: "Work through the modules. Create your own digital product or promote the one we give you. Apply what you learn, take action daily, and start making consistent income.",
       color: "bg-blue-500/10 border-blue-500/20",
       badge: "Step 2",
     },
     {
       num: "03",
       icon: "/Iconography/Naira Sign.svg",
-      title: "Withdraw & Grow",
-      desc: "₦17,500 per new subscriber. ₦15,000 per renewal. Instant bank transfers via Korapay. The more you refer, the more you earn — no cap.",
+      title: "Invest & Build Wealth",
+      desc: "When your income is consistent, level up to Averis Wealth Club (Phase 2). Learn where to invest your earnings and build a portfolio that grows while you sleep.",
       color: "bg-[#40D457]/10 border-[#40D457]/20",
       badge: "Step 3",
     },
@@ -501,11 +501,9 @@ function HowItWorks() {
     <section id="how-it-works" className="py-24 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
         <FadeUp className="text-center mb-16">
-          <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">How It Works</p>
+          <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">The Process</p>
           <h2 className="text-4xl md:text-5xl font-black text-[#122F38] leading-tight">
-            Three steps to your
-            <br />
-            <span className="gradient-text">financial freedom</span>
+            How <span className="gradient-text">Averis Academy</span> Works
           </h2>
         </FadeUp>
 
@@ -541,41 +539,41 @@ function Features() {
   const features = [
     {
       icon: "/Iconography/Rocket.svg",
-      title: "Averis Academy",
-      desc: "Professionally produced video courses on affiliate marketing, social media sales, WhatsApp business, and digital wealth strategies.",
+      title: "Professional Video Training",
+      desc: "4 comprehensive modules covering digital products, affiliate marketing, paid advertising, and organic growth — built specifically for the Nigerian market.",
       tag: "Learn",
     },
     {
       icon: "/Iconography/Naira Sign.svg",
-      title: "50% Affiliate Commission",
-      desc: "The highest commission rate in Nigerian EdTech. Earn ₦17,500 on every new subscription and ₦15,000 on every renewal — automatically tracked.",
+      title: "A Hot Product to Promote",
+      desc: "Not ready to create your own product yet? No problem. We give you a high-converting product to promote as an affiliate and start earning from Day 1.",
       tag: "Earn",
     },
     {
       icon: "/Iconography/Badge.svg",
-      title: "Multi-Product Links",
-      desc: "Promote multiple premium products with unique, trackable referral links. QR codes included. Share across any platform, any time.",
-      tag: "Promote",
+      title: "Accountability Trios",
+      desc: "Grouped with 2 other serious members. Daily check-ins. Weekly calls. The kind of peer accountability that keeps you moving even when motivation dips.",
+      tag: "Grow",
     },
     {
       icon: "/Iconography/Up arrow.svg",
-      title: "Instant Withdrawals",
-      desc: "Your earnings, your timeline. Withdraw directly to any Nigerian bank account. Powered by Korapay for secure, instant transfers.",
-      tag: "Withdraw",
+      title: "Weekly Live Coaching",
+      desc: "Every Sunday at 7 PM WAT. Ask questions, share wins, get direct feedback from the founder and guest experts who are actively building businesses.",
+      tag: "Coach",
     },
   ];
 
   return (
-    <section id="features" className="py-24 relative overflow-hidden" style={{ background: "linear-gradient(180deg, #f4f8f6 0%, #ffffff 100%)" }}>
+    <section id="what-we-offer" className="py-24 relative overflow-hidden" style={{ background: "linear-gradient(180deg, #f4f8f6 0%, #ffffff 100%)" }}>
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#40D457]/5 blur-[100px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-6">
         <FadeUp className="text-center mb-16">
-          <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">Platform Features</p>
+          <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">What&apos;s Included</p>
           <h2 className="text-4xl md:text-5xl font-black text-[#122F38] leading-tight">
-            Everything you need to
-            <br />earn <span className="gradient-text">serious money</span>
+            Everything You Need
+            <br /><span className="gradient-text">Inside Phase 1</span>
           </h2>
         </FadeUp>
 
@@ -602,14 +600,161 @@ function Features() {
   );
 }
 
+/* ─── Averis Wealth Club (Phase 2) ─── */
+function WealthClub() {
+  const features = [
+    { text: "Stock market investing — Nigerian & international" },
+    { text: "Cryptocurrency the right way, no speculation" },
+    { text: "Portfolio allocation & risk management strategy" },
+    { text: "Monthly curated investment guidance & alerts" },
+    { text: "Private investor community & accountability" },
+    { text: "Optional: Done-For-You portfolio management" },
+  ];
+
+  return (
+    <section id="wealth-club" className="py-24 gradient-hero relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none" style={dotGrid} />
+      <HexRings />
+
+      {/* Decorative floating icons */}
+      <motion.img
+        src="/Iconography/Up arrow.svg"
+        alt="" aria-hidden
+        className="absolute left-8 top-1/4 h-24 opacity-[0.06] pointer-events-none select-none"
+        animate={{ y: [0, -14, 0], rotate: [0, 3, 0] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.img
+        src="/Iconography/Badge.svg"
+        alt="" aria-hidden
+        className="absolute right-8 bottom-1/4 h-28 opacity-[0.06] pointer-events-none select-none"
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
+
+        {/* Phase label + heading */}
+        <FadeUp className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-5 border border-white/10">
+            <span className="w-2 h-2 rounded-full bg-[#40D457] shrink-0" />
+            <span className="text-white/65 text-xs font-semibold uppercase tracking-widest">Phase 2</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-4">
+            Averis <span className="gradient-text">Wealth Club</span>
+          </h2>
+          <p className="text-white/55 text-lg max-w-2xl mx-auto leading-relaxed">
+            Making money is step one. Keeping and growing it is step two. Most people skip step two — and that&apos;s why most people never build real wealth.
+          </p>
+        </FadeUp>
+
+        {/* Two-column layout */}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+
+          {/* Left — copy */}
+          <FadeUp delay={0.1}>
+            <div className="space-y-6">
+              <p className="text-white/70 text-base leading-relaxed">
+                Averis Wealth Club is our investment education and portfolio management platform. When you&apos;re consistently earning from Phase 1, you join Phase 2 and learn to put your money to work in stocks, crypto, and other assets.
+              </p>
+              <p className="text-white/70 text-base leading-relaxed">
+                This is where income becomes generational wealth.
+              </p>
+
+              {/* Phase comparison cards */}
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                <div className="glass border border-white/10 rounded-2xl p-5">
+                  <p className="text-[#40D457] text-xs font-black uppercase tracking-widest mb-2">Phase 1</p>
+                  <p className="text-white font-bold text-base mb-1">Make Money</p>
+                  <p className="text-white/50 text-xs leading-relaxed">Sell digital products, earn affiliate commissions, build consistent income.</p>
+                  <p className="text-[#40D457] font-bold text-sm mt-3">₦500K–₦1M / month</p>
+                </div>
+                <div className="glass border border-[#40D457]/30 rounded-2xl p-5 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#40D457] to-[#40D457]/0" />
+                  <p className="text-[#40D457] text-xs font-black uppercase tracking-widest mb-2">Phase 2</p>
+                  <p className="text-white font-bold text-base mb-1">Grow Wealth</p>
+                  <p className="text-white/50 text-xs leading-relaxed">Invest your income into stocks, crypto, and assets that compound over time.</p>
+                  <p className="text-[#40D457] font-bold text-sm mt-3">₦10M–₦50M portfolio</p>
+                </div>
+              </div>
+
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 bg-[#40D457] hover:bg-[#2eb847] text-[#122F38] font-bold text-sm px-7 py-3.5 rounded-2xl transition-all hover:shadow-[0_0_40px_rgba(64,212,87,0.4)] mt-2"
+              >
+                Get Started with Phase 2
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </FadeUp>
+
+          {/* Right — feature card */}
+          <FadeUp delay={0.2}>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="relative glass border border-white/15 rounded-3xl overflow-hidden shadow-2xl"
+            >
+              {/* Card top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#40D457]/0 via-[#40D457] to-[#40D457]/0" />
+
+              {/* Card header */}
+              <div className="px-7 pt-7 pb-5 border-b border-white/8">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-10 h-10 rounded-xl bg-[#40D457]/15 border border-[#40D457]/25 flex items-center justify-center">
+                    <img src="/Iconography/Up arrow.svg" alt="" className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-lg leading-none">Build a Portfolio That Lasts</p>
+                    <p className="text-white/45 text-xs mt-0.5">Averis Wealth Club — Phase 2</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature list */}
+              <div className="px-7 py-5 space-y-3.5">
+                {features.map((f, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: 16 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.25 + i * 0.07, duration: 0.45 }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-[#40D457]/15 border border-[#40D457]/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <CheckCircle className="h-3 w-3 text-[#40D457]" />
+                    </div>
+                    <p className="text-white/70 text-sm leading-relaxed">{f.text}</p>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Target outcome */}
+              <div className="mx-7 mb-7 px-4 py-3.5 bg-[#40D457]/10 border border-[#40D457]/20 rounded-2xl">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-[#40D457] shrink-0" />
+                  <p className="text-[#40D457] text-sm font-semibold">
+                    Target outcome: ₦10M – ₦50M portfolio in 5–10 years
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </FadeUp>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── Testimonials ─── */
 function Testimonials() {
   const testimonials = [
-    { name: "Emmanuel O.", location: "Lagos", text: "I joined Averis Academy three months ago and I'm now making over ₦500,000 per month from referrals alone. The courses showed me exactly how to close sales on WhatsApp.", stars: 5 },
-    { name: "Chidinma A.", location: "Abuja", text: "₦800,000 in my second month. I didn't believe it at first but the system works perfectly. The withdrawal to my account was instant every single time.", stars: 5 },
-    { name: "Tunde B.", location: "Port Harcourt", text: "Financial freedom is real and Averis Academy made it happen for me. I've referred 47 people and earn passive income every time they renew.", stars: 5 },
-    { name: "Aisha M.", location: "Kano", text: "As a stay-at-home mum, this is the perfect side income. I work 2 hours a day and consistently earn ₦200K+ monthly just from sharing my referral link.", stars: 5 },
-    { name: "Rotimi K.", location: "Ibadan", text: "The academy courses are world-class. I learned digital marketing from zero and now I have a full-time income online. Best investment I ever made.", stars: 5 },
+    { name: "Emmanuel O.", location: "Lagos", text: "I joined with zero experience. By Week 4 I made my first ₦50,000. By Month 3 I'm consistently earning ₦400,000 per month. The accountability system is what made the difference — I couldn't slack even when I wanted to.", stars: 5 },
+    { name: "Chidinma A.", location: "Abuja", text: "Every other course gave me information. Averis gave me results. The weekly calls keep you accountable, the community keeps you motivated, and the system actually works in Nigeria. I made back my ₦35,000 in 10 days.", stars: 5 },
+    { name: "Tunde B.", location: "Port Harcourt", text: "What separates Averis is the two-phase system. I'm not just making money — I'm learning to invest it. For the first time I have a real financial plan, not just a hustle. That's the difference between income and wealth.", stars: 5 },
+    { name: "Aisha M.", location: "Kano", text: "As a stay-at-home mum, this is the perfect platform. I work 2 hours a day, earn consistent income from affiliate sales, and now I'm learning how to invest it properly through the Wealth Club.", stars: 5 },
+    { name: "Rotimi K.", location: "Ibadan", text: "Most courses teach you to hustle forever. Averis teaches you to build — first an income, then a portfolio. I have a real financial plan for the first time in my life.", stars: 5 },
   ];
 
   const [index, setIndex] = useState(0);
@@ -637,7 +782,7 @@ function Testimonials() {
         <FadeUp className="text-center mb-14">
           <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">Member Stories</p>
           <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-            Real people,<br /><span className="gradient-text">real results</span>
+            Real People.<br /><span className="gradient-text">Real Results.</span>
           </h2>
         </FadeUp>
 
@@ -695,9 +840,9 @@ function Pricing() {
 
       <div className="max-w-4xl mx-auto px-6">
         <FadeUp className="text-center mb-16">
-          <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">Transparent Pricing</p>
+          <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">Simple Pricing</p>
           <h2 className="text-4xl md:text-5xl font-black text-[#122F38] leading-tight">
-            One plan. <span className="gradient-text">Everything included.</span>
+            One Plan. <span className="gradient-text">Everything Included.</span>
           </h2>
         </FadeUp>
 
@@ -722,14 +867,14 @@ function Pricing() {
               <div className="p-8">
                 <div className="grid md:grid-cols-2 gap-4 mb-8">
                   {[
-                    "Full Academy video course access",
-                    "Unique referral links for all products",
-                    "50% commission on every new sale",
-                    "₦15,000 commission on renewals",
+                    "4 professional video training modules",
+                    "A hot digital product to promote as an affiliate",
+                    "50% commission on every new sale (₦17,500)",
+                    "50% commission on every renewal (₦15,000)",
+                    "Accountability trio & weekly live coaching",
                     "Real-time earnings dashboard",
-                    "Instant bank withdrawals",
-                    "QR code generator for offline sharing",
-                    "WhatsApp & community support",
+                    "Instant bank withdrawals via Korapay",
+                    "Access to Averis Wealth Club (Phase 2)",
                   ].map((item) => (
                     <div key={item} className="flex items-center gap-3">
                       <CheckCircle className="h-4 w-4 text-[#40D457] shrink-0" />
@@ -769,19 +914,19 @@ function Pricing() {
 /* ─── Values ─── */
 function Values() {
   const vals = [
-    { icon: "/Iconography/Human.svg", title: "Accessibility", desc: "World-class training made affordable for every Nigerian, regardless of background or location." },
-    { icon: "/Iconography/Shield.svg", title: "Integrity", desc: "Transparent commissions, honest earnings data, and instant verified payouts. No games." },
-    { icon: "/Iconography/Pointer.svg", title: "Simplicity", desc: "Log in, share your link, earn money. We remove every barrier between you and your income." },
-    { icon: "/Iconography/Community.svg", title: "Community", desc: "Join a network of driven entrepreneurs all helping each other win. We grow together." },
+    { icon: "/Iconography/Human.svg", title: "Accessibility", desc: "World-class wealth education made affordable for every Nigerian, regardless of background or location." },
+    { icon: "/Iconography/Shield.svg", title: "Integrity", desc: "Transparent commissions, honest earnings data, and instant verified payouts. No games. No fake numbers." },
+    { icon: "/Iconography/Pointer.svg", title: "Execution", desc: "We don't just teach theory. We force action through accountability systems that turn learning into real income." },
+    { icon: "/Iconography/Community.svg", title: "Community", desc: "Join a network of serious Nigerians building wealth together. We don't just train you — we grow with you." },
   ];
 
   return (
     <section className="py-24 bg-[#f4f8f6]">
       <div className="max-w-6xl mx-auto px-6">
         <FadeUp className="text-center mb-16">
-          <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">Our Values</p>
+          <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-3">Our Foundation</p>
           <h2 className="text-4xl md:text-5xl font-black text-[#122F38] leading-tight">
-            Built on a <span className="gradient-text">foundation of trust</span>
+            Built on <span className="gradient-text">Trust</span>
           </h2>
         </FadeUp>
 
@@ -828,19 +973,19 @@ function CTABanner() {
         <FadeUp>
           <p className="text-[#40D457] text-xs font-bold uppercase tracking-widest mb-4">Start Today</p>
           <h2 className="text-4xl md:text-6xl font-black text-white leading-tight mb-6">
-            Your first ₦17,500<br /><span className="gradient-text">is one share away</span>
+            Your Wealth Journey<br /><span className="gradient-text">Starts Here.</span>
           </h2>
           <p className="text-white/55 text-lg mb-10 max-w-xl mx-auto">
-            Join over 70 members already earning consistent income from Averis Academy&apos;s affiliate program. No experience needed.
+            Join 70+ Nigerians learning to make money, invest it, and build wealth that lasts. Both phases. One platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/login" className="relative overflow-hidden group bg-[#40D457] hover:bg-[#2eb847] text-[#122F38] font-bold text-base px-10 py-4 rounded-2xl transition-all hover:shadow-[0_0_50px_rgba(64,212,87,0.4)] flex items-center justify-center gap-2">
-              <span className="relative z-10">Sign In to Dashboard</span>
+              <span className="relative z-10">Get Started</span>
               <ArrowRight className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" />
               <span className="absolute inset-0 bg-white/25 translate-x-[-110%] skew-x-[-20deg] group-hover:translate-x-[110%] transition-transform duration-600" />
             </Link>
             <a href="https://wa.me/2348085300040" target="_blank" rel="noopener noreferrer" className="glass hover:bg-white/8 text-white font-semibold text-base px-10 py-4 rounded-2xl transition-all border border-white/15 hover:border-white/30 flex items-center justify-center">
-              Get Access via Support
+              Talk to Support
             </a>
           </div>
         </FadeUp>
@@ -865,9 +1010,9 @@ function Footer() {
               </div>
             </div>
             <p className="text-white/45 text-sm leading-relaxed max-w-xs">
-              Nigeria&apos;s premier digital marketing and affiliate income platform. Learn, promote, and earn.
+              Nigeria&apos;s premier wealth creation platform. Make money, invest it, and build generational wealth.
             </p>
-            <p className="text-[#40D457]/70 text-xs font-semibold mt-3 uppercase tracking-widest">Marketing Made Easy</p>
+            <p className="text-[#40D457]/70 text-xs font-semibold mt-3 uppercase tracking-widest">Phase 1 · Phase 2 · Build Wealth</p>
           </div>
 
           {/* Quick links */}
@@ -876,8 +1021,8 @@ function Footer() {
             <div className="space-y-3">
               {[
                 { label: "Sign In", href: "/login" },
+                { label: "What We Offer", href: "#what-we-offer" },
                 { label: "How It Works", href: "#how-it-works" },
-                { label: "Pricing", href: "#pricing" },
               ].map((l) => (
                 <a key={l.label} href={l.href} className="block text-white/50 hover:text-white text-sm transition-colors">{l.label}</a>
               ))}
@@ -891,10 +1036,10 @@ function Footer() {
               {[
                 { icon: Shield, text: "Secure payments via Korapay" },
                 { icon: Zap, text: "Instant bank withdrawals" },
-                { icon: TrendingUp, text: "Proven 50% commission model" },
-                { icon: Users, text: "Growing community of 70+ earners" },
-                { icon: BookOpen, text: "Professional video courses" },
-                { icon: Gift, text: "Earn on every renewal too" },
+                { icon: TrendingUp, text: "Phase 1: Make money online" },
+                { icon: Users, text: "70+ active members building wealth" },
+                { icon: BookOpen, text: "Phase 2: Averis Wealth Club" },
+                { icon: Gift, text: "50% commission on every sale" },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-2.5">
                   <Icon className="h-3.5 w-3.5 text-[#40D457] shrink-0" />
@@ -923,6 +1068,7 @@ export default function MarketingPage() {
       <StatsBar />
       <HowItWorks />
       <Features />
+      <WealthClub />
       <Testimonials />
       <Pricing />
       <Values />

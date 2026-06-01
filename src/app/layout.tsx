@@ -3,9 +3,13 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "Averis Academy — Affiliate & Learning Platform",
+  title: "Averis Academy — Wealth Creation Platform",
   description:
-    "Learn digital marketing, earn commissions, and build wealth with Averis Academy Nigeria.",
+    "Averis Academy is a wealth creation platform. Learn to build real income selling digital products online, then invest that income to build generational wealth. Nigeria's premier two-phase wealth system.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

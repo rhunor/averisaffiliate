@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms of Service — Averis Academy",
+  title: "Terms of Service | Averis Academy",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

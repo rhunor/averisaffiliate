@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy — Averis Academy",
+  title: "Privacy Policy | Averis Academy",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -41,10 +41,10 @@ export default function PrivacyPolicy() {
         <Section title="2. Information We Collect">
           <p><strong>Account information:</strong> Your name, email address, and password when you register.</p>
           <p><strong>Payment information:</strong> Payment is processed by Korapay. We do not store card details. We receive confirmation of successful transactions.</p>
-          <p><strong>Bank details:</strong> Bank name, account number, and verified account name — used solely to process your withdrawal requests.</p>
+          <p><strong>Bank details:</strong> Bank name, account number, and verified account name, used solely to process your withdrawal requests.</p>
           <p><strong>Profile photo:</strong> If you upload one, it is stored on Cloudinary and displayed on your account.</p>
           <p><strong>Telegram ID:</strong> If you link your Telegram account to join our community group.</p>
-          <p><strong>Usage data:</strong> Pages visited, course progress, and affiliate link activity — used to improve the platform.</p>
+          <p><strong>Usage data:</strong> Pages visited, course progress, and affiliate link activity, used to improve the platform.</p>
         </Section>
 
         <Section title="3. How We Use Your Information">
@@ -63,11 +63,11 @@ export default function PrivacyPolicy() {
         <Section title="4. Data Sharing">
           <p>We share your data with the following trusted third parties only as necessary:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
-            <li><strong>Korapay</strong> — payment processing</li>
-            <li><strong>Resend</strong> — transactional email delivery</li>
-            <li><strong>Cloudinary</strong> — profile photo storage</li>
-            <li><strong>MongoDB Atlas</strong> — secure database hosting</li>
-            <li><strong>Vercel</strong> — platform hosting</li>
+            <li><strong>Korapay</strong>: payment processing</li>
+            <li><strong>Resend</strong>: transactional email delivery</li>
+            <li><strong>Cloudinary</strong>: profile photo storage</li>
+            <li><strong>MongoDB Atlas</strong>: secure database hosting</li>
+            <li><strong>Vercel</strong>: platform hosting</li>
           </ul>
         </Section>
 

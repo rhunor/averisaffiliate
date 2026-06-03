@@ -138,7 +138,7 @@ function Navbar() {
 
 /* ─── Hero photo slideshow with notification popups ─── */
 function HeroVisual() {
-  const images = ["/hero.jpg", "/hero2.jpg"];
+  const images = ["/hero1.jpg", "/hero2.jpg"];
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -274,7 +274,7 @@ function Hero() {
               transition={{ duration: 0.65, delay: 0.2 }}
               className="text-sm sm:text-base md:text-lg text-white/50 leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0"
             >
-              Averis Academy is a wealth creation platform. We teach you to build real income selling digital products online —{" "}
+              Averis Academy is a wealth creation platform. We teach you to build real income selling digital products online,{" "}
               <span className="text-[#40D457] font-semibold">then show you how to invest that income</span> to build generational wealth.
             </motion.p>
 
@@ -368,7 +368,7 @@ function HowItWorks() {
       num: "01",
       icon: "/Iconography/Rocket.svg",
       title: "Register & Get Full Access",
-      desc: "Register on Averis Academy, log in, and get 6 months full access to Phase 1 — you'll get access to Averis Academy trainings, community, coaching and close guidance to help you succeed.",
+      desc: "Register on Averis Academy, log in, and get 6 months full access to Phase 1: you'll get access to Averis Academy trainings, community, coaching and close guidance to help you succeed.",
       color: "bg-[#40D457]/10 border-[#40D457]/20",
       badge: "Step 1",
     },
@@ -376,7 +376,7 @@ function HowItWorks() {
       num: "02",
       icon: "/Iconography/Pointer.svg",
       title: "Learn & Build Your Online Business",
-      desc: "Study the trainings and we help you create your own digital product. Also, if you want, you start out as an affiliate — we give you access to a hot digital product you can start selling immediately and start making consistent online income.",
+      desc: "Study the trainings and we help you create your own digital product. Also, if you want, you start out as an affiliate; we give you access to a hot digital product you can start selling immediately and start making consistent online income.",
       color: "bg-blue-500/10 border-blue-500/20",
       badge: "Step 2",
     },
@@ -384,7 +384,7 @@ function HowItWorks() {
       num: "03",
       icon: "/Iconography/Naira Sign.svg",
       title: "Invest & Build Generational Wealth",
-      desc: "When your income is consistent, level up to Averis Wealth Club (Phase 2). We show you where to invest your earnings and build an investment portfolio that grows while you sleep — this way you never go broke again, you're building wealth on the internet.",
+      desc: "When your income is consistent, level up to Averis Wealth Club (Phase 2). We show you where to invest your earnings and build an investment portfolio that grows while you sleep, so you never go broke again and keep building wealth on the internet.",
       color: "bg-[#40D457]/10 border-[#40D457]/20",
       badge: "Step 3",
     },
@@ -433,13 +433,13 @@ function Features() {
     {
       icon: "/Iconography/Rocket.svg",
       title: "Averis Academy Video Trainings",
-      desc: "Easy to understand video trainings covering digital products, affiliate marketing, paid advertising, and organic growth — every video is simple to understand and created to help you make lots of money in your digital product business.",
+      desc: "Easy to understand video trainings covering digital products, affiliate marketing, paid advertising, and organic growth. Every video is created to help you make lots of money in your digital product business.",
       tag: "Learn",
     },
     {
       icon: "/Iconography/Naira Sign.svg",
       title: "A Hot Product to Promote",
-      desc: "If you're not ready to create your own product yet, that's not a problem — we give you access to a high-converting product to promote as an affiliate and start earning from Day 1.",
+      desc: "If you're not ready to create your own product yet, that's not a problem. We give you access to a high-converting product to promote as an affiliate and start earning from Day 1.",
       tag: "Earn",
     },
     {
@@ -496,8 +496,8 @@ function Features() {
 /* ─── Averis Wealth Club (Phase 2) ─── */
 function WealthClub() {
   const features = [
-    { text: "Stock market investing — Nigerian & international" },
-    { text: "Cryptocurrency the right way — investing in the right assets in crypto" },
+    { text: "Stock market investing: Nigerian & international" },
+    { text: "Cryptocurrency the right way: investing in the right assets in crypto" },
     { text: "Portfolio allocation & risk management strategy" },
     { text: "Monthly curated investment guidance & alerts" },
     { text: "Private investor community & accountability" },
@@ -537,7 +537,7 @@ function WealthClub() {
             Averis <span className="gradient-text">Wealth Club</span>
           </h2>
           <p className="text-white/55 text-lg max-w-2xl mx-auto leading-relaxed">
-            Making money is step one. Keeping and growing it is step two. Most people skip step two — and that&apos;s why most people never build real wealth.
+            Making money is step one. Keeping and growing it is step two. Most people skip step two, and that&apos;s why most people never build real wealth.
           </p>
         </FadeUp>
 
@@ -599,7 +599,7 @@ function WealthClub() {
                   </div>
                   <div>
                     <p className="text-white font-bold text-lg leading-none">Build a Portfolio That Lasts</p>
-                    <p className="text-white/45 text-xs mt-0.5">Averis Wealth Club — Phase 2</p>
+                    <p className="text-white/45 text-xs mt-0.5">Averis Wealth Club: Phase 2</p>
                   </div>
                 </div>
               </div>
@@ -643,11 +643,11 @@ function WealthClub() {
 /* ─── Testimonials ─── */
 function Testimonials() {
   const testimonials = [
-    { name: "Emmanuel O.", location: "Lagos", text: "I joined with zero experience. By Week 4 I made my first ₦50,000. By Month 3 I'm consistently earning ₦400,000 per month. The accountability system is what made the difference — I couldn't slack even when I wanted to.", stars: 5 },
+    { name: "Emmanuel O.", location: "Lagos", text: "I joined with zero experience. By Week 4 I made my first ₦50,000. By Month 3 I'm consistently earning ₦400,000 per month. The accountability system is what made the difference; I couldn't slack even when I wanted to.", stars: 5 },
     { name: "Chidinma A.", location: "Abuja", text: "Every other course gave me information. Averis gave me results. The weekly calls keep you accountable, the community keeps you motivated, and the system actually works in Nigeria. I made back my ₦35,000 in 10 days.", stars: 5 },
-    { name: "Tunde B.", location: "Port Harcourt", text: "What separates Averis is the two-phase system. I'm not just making money — I'm learning to invest it. For the first time I have a real financial plan, not just a hustle. That's the difference between income and wealth.", stars: 5 },
+    { name: "Tunde B.", location: "Port Harcourt", text: "What separates Averis is the two-phase system. I'm not just making money; I'm learning to invest it. For the first time I have a real financial plan, not just a hustle. That's the difference between income and wealth.", stars: 5 },
     { name: "Aisha M.", location: "Kano", text: "As a stay-at-home mum, this is the perfect platform. I work 2 hours a day, earn consistent income from affiliate sales, and now I'm learning how to invest it properly through the Wealth Club.", stars: 5 },
-    { name: "Rotimi K.", location: "Ibadan", text: "Most courses teach you to hustle forever. Averis teaches you to build — first an income, then a portfolio. I have a real financial plan for the first time in my life.", stars: 5 },
+    { name: "Rotimi K.", location: "Ibadan", text: "Most courses teach you to hustle forever. Averis teaches you to build: first an income, then a portfolio. I have a real financial plan for the first time in my life.", stars: 5 },
   ];
 
   const [index, setIndex] = useState(0);
@@ -793,8 +793,8 @@ function Values() {
   const vals = [
     { icon: "/Iconography/Human.svg", title: "Accessibility", desc: "World-class wealth education made affordable for every African, regardless of background or location." },
     { icon: "/Iconography/Shield.svg", title: "Integrity", desc: "We value our users and we are always committed to giving them the best and helping them scale their income." },
-    { icon: "/Iconography/Pointer.svg", title: "Execution", desc: "We don't just teach theory — we ensure our users take action through our accountability system that turns learning into online income." },
-    { icon: "/Iconography/Community.svg", title: "Community", desc: "Join a network of serious Africans building wealth together. We don't just train you — we grow with you." },
+    { icon: "/Iconography/Pointer.svg", title: "Execution", desc: "We don't just teach theory; we ensure our users take action through our accountability system that turns learning into online income." },
+    { icon: "/Iconography/Community.svg", title: "Community", desc: "Join a network of serious Africans building wealth together. We don't just train you; we grow with you." },
   ];
 
   return (
@@ -869,6 +869,47 @@ function CTABanner() {
 }
 
 /* ─── Footer ─── */
+const footerSocials = [
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/averisacademy?igsh=aXNhNnp1bjBpY29l",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="5" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    label: "Twitter / X",
+    href: "https://x.com/averisacademy?s=21",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ),
+  },
+  {
+    label: "YouTube",
+    href: "https://youtube.com/@calebekenenwanneka1829?si=dFirxJzQtriHSFO6",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+      </svg>
+    ),
+  },
+  {
+    label: "WhatsApp",
+    href: "https://wa.me/2348148818354",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
+      </svg>
+    ),
+  },
+];
+
 function Footer() {
   return (
     <footer className="bg-[#091820] border-t border-white/8">
@@ -887,6 +928,21 @@ function Footer() {
             <p className="text-white/40 text-xs leading-relaxed max-w-[240px]">
               Africa&apos;s premier wealth creation platform. Make money, invest it, and build generational wealth.
             </p>
+            {/* Social icons */}
+            <div className="flex items-center gap-3 mt-4">
+              {footerSocials.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/8 hover:border-white/20 flex items-center justify-center text-white/50 hover:text-white transition-all"
+                >
+                  {s.icon}
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Nav links */}
@@ -907,9 +963,7 @@ function Footer() {
         <div className="border-t border-white/8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/30 text-xs">© 2026 Averis Global Limited. All rights reserved.</p>
           <a
-            href="https://wa.me/2348085300040"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:hello@averisacademy.com"
             className="text-[#40D457]/70 hover:text-[#40D457] text-xs font-semibold transition-colors"
           >
             Contact Support →

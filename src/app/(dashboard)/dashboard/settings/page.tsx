@@ -85,46 +85,74 @@ export default function SettingsPage() {
     setBankName(banks.find((b) => b.code === code)?.name || "");
   }
 
+  function compressImage(file: File, maxPx = 900, quality = 0.82): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxPx || height > maxPx) {
+          if (width > height) { height = Math.round((height * maxPx) / width); width = maxPx; }
+          else { width = Math.round((width * maxPx) / height); height = maxPx; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
+      img.src = url;
+    });
+  }
+
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setAvatarMsg({ msg: "Please select an image file.", type: "error" });
+
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) {
+      setAvatarMsg({ msg: "Only JPG, PNG, WebP or GIF files are supported.", type: "error" });
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setAvatarMsg({ msg: "Image must be under 5MB.", type: "error" });
+    if (file.size > 10 * 1024 * 1024) {
+      setAvatarMsg({ msg: "Photo must be under 10MB.", type: "error" });
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const base64 = ev.target?.result as string;
-      setPreviewUrl(base64);
-      setUploadingAvatar(true);
-      setAvatarMsg(null);
-      try {
-        const res = await fetch("/api/dashboard/settings", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "upload_avatar", imageBase64: base64 }),
-        });
-        const json = await res.json();
-        if (res.ok) {
-          setPreviewUrl(json.profileImage);
-          setProfile((prev) => prev ? { ...prev, profileImage: json.profileImage } : prev);
-          setAvatarMsg({ msg: "Profile photo updated.", type: "success" });
-          await update();
-        } else {
-          setAvatarMsg({ msg: json.error || "Upload failed.", type: "error" });
-          setPreviewUrl(profile?.profileImage || null);
-        }
-      } finally {
-        setUploadingAvatar(false);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+    setUploadingAvatar(true);
+    setAvatarMsg(null);
+
+    try {
+      // Compress + resize before encoding so the payload stays well under 1MB
+      const compressed = await compressImage(file);
+      setPreviewUrl(compressed);
+
+      const res = await fetch("/api/dashboard/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "upload_avatar", imageBase64: compressed }),
+      });
+      const json = await res.json();
+
+      if (res.ok) {
+        setPreviewUrl(json.profileImage);
+        setProfile((prev) => prev ? { ...prev, profileImage: json.profileImage } : prev);
+        setAvatarMsg({ msg: "Profile photo updated successfully.", type: "success" });
+        await update();
+      } else {
+        setAvatarMsg({ msg: json.error || "Upload failed. Please try again.", type: "error" });
+        setPreviewUrl(profile?.profileImage || null);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      setAvatarMsg({ msg: "Something went wrong. Please try again.", type: "error" });
+      setPreviewUrl(profile?.profileImage || null);
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   async function saveProfile(e: React.FormEvent) {
@@ -247,7 +275,10 @@ export default function SettingsPage() {
             <p className="font-semibold text-foreground">{profile.firstName} {profile.lastName}</p>
             <p className="text-sm text-muted-foreground">{profile.email}</p>
             <p className="text-xs font-mono text-secondary mt-0.5">{profile.referralCode}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Click photo to change</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {uploadingAvatar ? "Uploading…" : "Tap photo to change"}
+            </p>
+            <p className="text-[10px] text-muted-foreground/70 mt-0.5">JPG · PNG · WebP · max 10MB</p>
           </div>
         </CardContent>
         {avatarMsg && (

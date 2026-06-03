@@ -15,7 +15,7 @@ export async function GET() {
     await dbConnect();
 
     const user = await User.findById(userId)
-      .select("firstName lastName email referralCode bankDetails isEmailVerified")
+      .select("firstName lastName email referralCode bankDetails isEmailVerified profileImage")
       .lean();
 
     if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });

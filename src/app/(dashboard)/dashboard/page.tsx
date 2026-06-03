@@ -59,7 +59,7 @@ function DashboardContent() {
   useEffect(() => {
     fetch("/api/dashboard")
       .then((r) => r.json())
-      .then((d) => setData(d))
+      .then((d) => { if (d && !d.error) setData(d); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -71,7 +71,18 @@ function DashboardContent() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <div className="w-12 h-12 rounded-xl bg-danger/10 flex items-center justify-center">
+          <span className="text-danger text-xl">⚠</span>
+        </div>
+        <p className="font-semibold text-foreground">Dashboard unavailable</p>
+        <p className="text-sm text-muted-foreground text-center max-w-xs">Could not connect to the server. Please check your internet connection and try again.</p>
+        <button onClick={() => window.location.reload()} className="text-sm text-secondary hover:underline mt-1">Retry</button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

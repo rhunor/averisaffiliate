@@ -136,8 +136,16 @@ function Navbar() {
   );
 }
 
-/* ─── Hero photo with notification popups ─── */
+/* ─── Hero photo slideshow with notification popups ─── */
 function HeroVisual() {
+  const images = ["/hero.jpg", "/hero2.jpg"];
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setCurrent((i) => (i + 1) % images.length), 4000);
+    return () => clearInterval(t);
+  }, [images.length]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -148,16 +156,36 @@ function HeroVisual() {
       {/* Glow behind image */}
       <div className="absolute -inset-4 rounded-3xl bg-[#40D457]/10 blur-2xl" />
 
-      {/* Hero photo */}
-      <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl border border-white/10">
-        <img
-          src="/hero.jpg"
-          alt="Averis Academy member working online"
-          className="w-full h-auto object-cover"
-          style={{ maxHeight: "420px", objectPosition: "center top" }}
-        />
-        {/* Subtle dark overlay at bottom for legibility */}
+      {/* Slideshow */}
+      <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl border border-white/10" style={{ minHeight: "280px" }}>
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={current}
+            src={images[current]}
+            alt="Averis Academy member working online"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="w-full h-auto object-cover absolute inset-0"
+            style={{ maxHeight: "420px", objectPosition: "center top" }}
+          />
+        </AnimatePresence>
+        {/* Spacer to maintain height */}
+        <img src={images[0]} alt="" aria-hidden className="w-full h-auto object-cover opacity-0 pointer-events-none" style={{ maxHeight: "420px" }} />
+        {/* Subtle dark overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+
+        {/* Slide dots */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`transition-all duration-300 rounded-full ${i === current ? "w-5 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"}`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Popup 1 — top left: new sale notification */}
@@ -224,7 +252,7 @@ function Hero() {
               className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-6 border border-white/10"
             >
               <span className="w-2 h-2 rounded-full bg-[#40D457] animate-pulse shrink-0" />
-              <span className="text-white/65 text-xs font-semibold uppercase tracking-widest">70+ Nigerians Building Wealth</span>
+              <span className="text-white/65 text-xs font-semibold uppercase tracking-widest">100+ Africans Building Wealth</span>
             </motion.div>
 
             {/* Headline */}

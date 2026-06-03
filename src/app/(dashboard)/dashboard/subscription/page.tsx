@@ -145,12 +145,11 @@ function SubscriptionContent() {
         <CardHeader><CardTitle>What's included</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {[
-            "Full access to all Academy video courses",
+            "Access to Averis Academy account",
+            "Full access to all Academy video trainings",
             "Multi-product affiliate dashboard",
-            "QR code & shareable referral links",
-            `${siteConfig.commission.rate}% commission on every referral (₦${siteConfig.commission.newSubscription.toLocaleString()})`,
-            `${siteConfig.commission.rate}% commission on renewals (₦${siteConfig.commission.renewal.toLocaleString()})`,
-            "Weekly Friday withdrawals",
+            "QR code & shareable affiliate links",
+            "Instant bank withdrawals via Korapay",
             "Real-time earnings tracking",
             "6-month membership validity",
           ].map((feature) => (
@@ -181,10 +180,6 @@ function SubscriptionContent() {
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Renewal</span>
             <span className="font-medium text-foreground">{formatCurrency(siteConfig.renewalFee)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Commission rate</span>
-            <span className="font-medium text-success">{siteConfig.commission.rate}% flat</span>
           </div>
         </CardContent>
       </Card>

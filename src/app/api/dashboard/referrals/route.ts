@@ -21,7 +21,7 @@ export async function GET() {
     const u = user as Record<string, unknown>;
     const referralCode = u.referralCode as string;
     const appUrl = process.env.NEXTAUTH_URL || "https://averisaffiliate.vercel.app";
-    const referralLink = `${appUrl}/register?ref=${referralCode}`;
+    const referralLink = `${appUrl}/register?aff=${referralCode}`;
 
     const referrals = await Referral.find({ referrerId: userId })
       .sort({ createdAt: -1 })

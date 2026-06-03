@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useInView, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
-import { ArrowRight, Play, CheckCircle, Star, TrendingUp, Users, Zap, Shield, BookOpen, Gift, ChevronDown } from "lucide-react";
+import { ArrowRight, Play, CheckCircle, Star, ChevronDown } from "lucide-react";
 
 /* ─── Logo ─── */
 function AverisLogoMark({ size = 40, white = false }: { size?: number; white?: boolean }) {
@@ -136,146 +136,63 @@ function Navbar() {
   );
 }
 
-/* ─── Earnings toast (used inline on mobile, absolute on desktop) ─── */
-function EarningsToast({ name, amount, time, delay, compact = false }: { name: string; amount: string; time: string; delay: number; compact?: boolean }) {
+/* ─── Hero photo with notification popups ─── */
+function HeroVisual() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12, scale: 0.92 }}
+      initial={{ opacity: 0, y: 30, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, duration: 0.5, type: "spring", stiffness: 180 }}
-      className={`flex items-center gap-3 glass border border-white/10 rounded-2xl shadow-lg ${compact ? "px-3 py-2.5" : "px-4 py-3"}`}
-    >
-      <div className={`rounded-full bg-[#40D457]/20 border border-[#40D457]/30 flex items-center justify-center shrink-0 ${compact ? "w-8 h-8" : "w-9 h-9"}`}>
-        <span className={`text-[#40D457] font-bold ${compact ? "text-xs" : "text-sm"}`}>{name[0]}</span>
-      </div>
-      <div className="min-w-0">
-        <p className="text-white text-xs font-semibold truncate">{name} earned</p>
-        <p className={`text-[#40D457] font-black ${compact ? "text-xs" : "text-sm"}`}>{amount}</p>
-        {!compact && <p className="text-white/35 text-[10px]">{time}</p>}
-      </div>
-    </motion.div>
-  );
-}
-
-/* ─── Mock earnings dashboard card ─── */
-function EarningsDashCard({ showFloating = false }: { showFloating?: boolean }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: 0.45, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ delay: 0.4, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       className="relative w-full"
     >
-      {/* Glow */}
-      <div className="absolute -inset-3 rounded-3xl bg-[#40D457]/12 blur-2xl" />
+      {/* Glow behind image */}
+      <div className="absolute -inset-4 rounded-3xl bg-[#40D457]/10 blur-2xl" />
 
-      <div className="relative glass border border-white/15 rounded-3xl overflow-hidden shadow-2xl">
-        {/* Header */}
-        <div className="bg-[#40D457]/10 border-b border-white/8 px-5 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#40D457] animate-pulse" />
-            <span className="text-white/70 text-xs font-semibold uppercase tracking-widest">Live Earnings</span>
-          </div>
-          <span className="text-white/30 text-[10px]">Today</span>
-        </div>
-
-        <div className="p-5 space-y-4">
-          {/* Balance */}
-          <div>
-            <p className="text-white/45 text-xs mb-1">Available balance</p>
-            <motion.p className="text-3xl md:text-4xl font-black text-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}>
-              ₦<Counter to={245000} />
-            </motion.p>
-            <p className="text-[#40D457] text-xs font-semibold mt-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" /> +₦17,500 this week
-            </p>
-          </div>
-
-          {/* Bar chart */}
-          <div className="flex items-end gap-1 h-12">
-            {[30, 55, 40, 80, 65, 90, 75].map((h, i) => (
-              <motion.div
-                key={i}
-                className="flex-1 rounded-t-sm"
-                style={{ background: i === 5 ? "#40D457" : "rgba(64,212,87,0.25)" }}
-                initial={{ height: 0 }}
-                animate={{ height: `${h}%` }}
-                transition={{ delay: 0.85 + i * 0.06, duration: 0.5, ease: "easeOut" }}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between text-white/25 text-[10px]">
-            {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <span key={i}>{d}</span>)}
-          </div>
-
-          {/* Stats row */}
-          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-white/8">
-            <div className="text-center">
-              <p className="text-white/35 text-[10px] mb-0.5">Referrals</p>
-              <p className="text-white font-bold text-base">14</p>
-            </div>
-            <div className="text-center border-x border-white/8">
-              <p className="text-white/35 text-[10px] mb-0.5">Commission</p>
-              <p className="text-[#40D457] font-bold text-base">50%</p>
-            </div>
-            <div className="text-center">
-              <p className="text-white/35 text-[10px] mb-0.5">Per ref</p>
-              <p className="text-[#40D457] font-bold text-sm">₦17.5k</p>
-            </div>
-          </div>
-
-          <Link href="/login" className="block w-full text-center bg-[#40D457] hover:bg-[#2eb847] text-[#122F38] font-bold text-xs py-2.5 rounded-xl transition-colors">
-            Sign in to start earning →
-          </Link>
-        </div>
+      {/* Hero photo */}
+      <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+        <img
+          src="/hero.jpg"
+          alt="Averis Academy member working online"
+          className="w-full h-auto object-cover"
+          style={{ maxHeight: "420px", objectPosition: "center top" }}
+        />
+        {/* Subtle dark overlay at bottom for legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
       </div>
 
-      {/* Desktop-only floating chips */}
-      {showFloating && (
-        <>
-          <motion.div
-            className="absolute -left-16 top-10 glass border border-white/10 rounded-xl px-3 py-2 shadow-lg"
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <p className="text-white/55 text-[10px] leading-none mb-0.5">Commission</p>
-            <p className="text-[#40D457] font-black text-base">50%</p>
-          </motion.div>
-          <motion.div
-            className="absolute -right-12 bottom-24 glass border border-white/10 rounded-xl px-3 py-2 shadow-lg"
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          >
-            <p className="text-white/55 text-[10px] leading-none mb-0.5">Per referral</p>
-            <p className="text-[#40D457] font-black text-sm">₦17,500</p>
-          </motion.div>
-        </>
-      )}
-    </motion.div>
-  );
-}
+      {/* Popup 1 — top left: new sale notification */}
+      <motion.div
+        initial={{ opacity: 0, x: -20, scale: 0.9 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        transition={{ delay: 1.0, duration: 0.5, type: "spring", stiffness: 200 }}
+        className="absolute top-4 left-4 bg-white rounded-2xl shadow-xl px-3.5 py-2.5 flex items-center gap-2.5 max-w-[220px]"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
+      >
+        <div className="w-8 h-8 rounded-full bg-[#40D457]/15 border border-[#40D457]/30 flex items-center justify-center shrink-0 text-base">
+          🎉
+        </div>
+        <div className="min-w-0">
+          <p className="text-[#122F38] text-[11px] font-bold leading-tight">Emmanuel O. just made a sale!</p>
+          <p className="text-[#40D457] text-xs font-black">+₦17,500 earned</p>
+        </div>
+      </motion.div>
 
-/* ─── Spinning badge (desktop only) ─── */
-function SpinBadge() {
-  const text = "AVERIS ACADEMY · MARKETING MADE EASY · ";
-  const chars = text.split("");
-  const r = 48;
-  return (
-    <motion.div animate={{ rotate: 360 }} transition={{ duration: 18, repeat: Infinity, ease: "linear" }} className="relative w-24 h-24">
-      <svg viewBox="0 0 120 120" className="w-full h-full">
-        <path id="spinCircle" d={`M 60,60 m -${r},0 a ${r},${r} 0 1,1 ${r * 2},0 a ${r},${r} 0 1,1 -${r * 2},0`} fill="none" />
-        {chars.map((ch, i) => (
-          <text key={i} fontSize="7.5" fill="rgba(255,255,255,0.5)" fontWeight="600" letterSpacing="0.5">
-            <textPath href="#spinCircle" startOffset={`${(i / chars.length) * 100}%`}>{ch}</textPath>
-          </text>
-        ))}
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <svg width="28" height="22" viewBox="0 0 65 51" fill="none">
-          <path fillRule="evenodd" clipRule="evenodd" d="M23.6321 39.1078L64.2474 39.1659L44.6646 50.2771L4.34633 50.2697L0 42.891L2.22282 39.3854L20.7427 10.7465L39.9931 0L21.4887 28.6184L19.2659 32.124L23.6321 39.1078Z" fill="white" />
-          <path fillRule="evenodd" clipRule="evenodd" d="M54.3371 28.6184L44.0985 12.7838L33.8601 28.6184H54.3371Z" fill="#40D457" />
-        </svg>
-      </div>
+      {/* Popup 2 — bottom right: commission alert */}
+      <motion.div
+        initial={{ opacity: 0, x: 20, scale: 0.9 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        transition={{ delay: 1.4, duration: 0.5, type: "spring", stiffness: 200 }}
+        className="absolute bottom-4 right-4 bg-white rounded-2xl shadow-xl px-3.5 py-2.5 flex items-center gap-2.5 max-w-[230px]"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
+      >
+        <div className="w-8 h-8 rounded-full bg-[#122F38]/10 border border-[#122F38]/20 flex items-center justify-center shrink-0 text-base">
+          💰
+        </div>
+        <div className="min-w-0">
+          <p className="text-[#122F38] text-[11px] font-bold leading-tight">New Commission Alert!</p>
+          <p className="text-[#555] text-[10px] leading-snug">You just earned ₦17,500 from a new subscriber</p>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -285,15 +202,6 @@ function Hero() {
   const tags = [
     { label: "Phase 1: Make Money", color: "bg-[#40D457]/15 text-[#40D457] border-[#40D457]/20" },
     { label: "Phase 2: Grow Wealth", color: "bg-white/8 text-white/70 border-white/10" },
-    { label: "50% Commission", color: "bg-[#40D457]/15 text-[#40D457] border-[#40D457]/20" },
-    { label: "6 Months Access", color: "bg-white/8 text-white/70 border-white/10" },
-    { label: "Build a Portfolio", color: "bg-white/8 text-white/70 border-white/10" },
-  ];
-
-  const toasts = [
-    { name: "Emmanuel O.", amount: "₦17,500", time: "2 min ago" },
-    { name: "Chidinma A.", amount: "₦35,000", time: "14 min ago" },
-    { name: "Tunde B.", amount: "₦17,500", time: "1 hr ago" },
   ];
 
   return (
@@ -376,52 +284,11 @@ function Hero() {
             </div>
           </div>
 
-          {/* ── RIGHT: visual section ── */}
-          <div className="relative flex flex-col items-center lg:items-end gap-4">
-
-            {/* Spinning badge — desktop only, floats top-left of card area */}
-            <div className="hidden lg:block absolute -top-4 left-0 z-20">
-              <SpinBadge />
+          {/* ── RIGHT: hero photo ── */}
+          <div className="relative flex items-center justify-center lg:justify-end">
+            <div className="w-full max-w-md lg:max-w-none">
+              <HeroVisual />
             </div>
-
-            {/* Dashboard card — full width on mobile, capped on desktop */}
-            <div className="w-full max-w-sm lg:max-w-[300px] lg:ml-16 relative z-10">
-              {/* showFloating only renders the offset chips on desktop where there's room */}
-              <div className="lg:hidden">
-                <EarningsDashCard showFloating={false} />
-              </div>
-              <div className="hidden lg:block">
-                <EarningsDashCard showFloating={true} />
-              </div>
-            </div>
-
-            {/* Toast notifications */}
-            {/* Mobile: 2-column grid below card, compact style */}
-            <div className="lg:hidden w-full max-w-sm grid grid-cols-2 gap-2">
-              {toasts.slice(0, 2).map((t, i) => (
-                <EarningsToast key={t.name} name={t.name} amount={t.amount} time={t.time} delay={0.9 + i * 0.15} compact />
-              ))}
-              {/* Third toast spans full width */}
-              <div className="col-span-2">
-                <EarningsToast name={toasts[2].name} amount={toasts[2].amount} time={toasts[2].time} delay={1.2} compact />
-              </div>
-            </div>
-
-            {/* Desktop: absolute positioned stack to left of card */}
-            <div className="hidden lg:flex lg:flex-col gap-2.5 absolute left-0 bottom-8 z-20">
-              {toasts.map((t, i) => (
-                <EarningsToast key={t.name} name={t.name} amount={t.amount} time={t.time} delay={1.0 + i * 0.18} />
-              ))}
-            </div>
-
-            {/* Rocket icon — desktop only, top right */}
-            <motion.img
-              src="/Iconography/Rocket.svg"
-              alt="" aria-hidden
-              className="hidden lg:block absolute -top-6 right-0 h-16 opacity-20 pointer-events-none select-none"
-              animate={{ y: [0, -10, 0], rotate: [0, 4, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            />
           </div>
         </div>
       </div>
@@ -444,16 +311,14 @@ function Hero() {
 /* ─── Stats bar ─── */
 function StatsBar() {
   const stats = [
-    { value: 70, prefix: "", suffix: "+", label: "Active Members" },
+    { value: 100, prefix: "", suffix: "+", label: "Active Members" },
     { value: 2, prefix: "", suffix: "", label: "Wealth Phases" },
-    { value: 50, prefix: "", suffix: "%", label: "Affiliate Commission" },
-    { value: 6, prefix: "", suffix: " months", label: "Full Access" },
   ];
 
   return (
     <section className="bg-[#091820] border-y border-white/8">
       <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="flex items-center justify-center gap-16 sm:gap-24 md:gap-40">
           {stats.map((s, i) => (
             <FadeUp key={s.label} delay={i * 0.08} className="text-center">
               <p className="text-3xl md:text-4xl font-black text-white mb-1">
@@ -474,24 +339,24 @@ function HowItWorks() {
     {
       num: "01",
       icon: "/Iconography/Rocket.svg",
-      title: "Get Access",
-      desc: "Get your Averis Academy login from whoever introduced you to us. Pay ₦35,000 for 6 months of full access to Phase 1 — training, community, coaching, and your affiliate product.",
+      title: "Register & Get Full Access",
+      desc: "Register on Averis Academy, log in, and get 6 months full access to Phase 1 — you'll get access to Averis Academy trainings, community, coaching and close guidance to help you succeed.",
       color: "bg-[#40D457]/10 border-[#40D457]/20",
       badge: "Step 1",
     },
     {
       num: "02",
       icon: "/Iconography/Pointer.svg",
-      title: "Learn & Earn",
-      desc: "Work through the modules. Create your own digital product or promote the one we give you. Apply what you learn, take action daily, and start making consistent income.",
+      title: "Learn & Build Your Online Business",
+      desc: "Study the trainings and we help you create your own digital product. Also, if you want, you start out as an affiliate — we give you access to a hot digital product you can start selling immediately and start making consistent online income.",
       color: "bg-blue-500/10 border-blue-500/20",
       badge: "Step 2",
     },
     {
       num: "03",
       icon: "/Iconography/Naira Sign.svg",
-      title: "Invest & Build Wealth",
-      desc: "When your income is consistent, level up to Averis Wealth Club (Phase 2). Learn where to invest your earnings and build a portfolio that grows while you sleep.",
+      title: "Invest & Build Generational Wealth",
+      desc: "When your income is consistent, level up to Averis Wealth Club (Phase 2). We show you where to invest your earnings and build an investment portfolio that grows while you sleep — this way you never go broke again, you're building wealth on the internet.",
       color: "bg-[#40D457]/10 border-[#40D457]/20",
       badge: "Step 3",
     },
@@ -539,26 +404,26 @@ function Features() {
   const features = [
     {
       icon: "/Iconography/Rocket.svg",
-      title: "Professional Video Training",
-      desc: "4 comprehensive modules covering digital products, affiliate marketing, paid advertising, and organic growth — built specifically for the Nigerian market.",
+      title: "Averis Academy Video Trainings",
+      desc: "Easy to understand video trainings covering digital products, affiliate marketing, paid advertising, and organic growth — every video is simple to understand and created to help you make lots of money in your digital product business.",
       tag: "Learn",
     },
     {
       icon: "/Iconography/Naira Sign.svg",
       title: "A Hot Product to Promote",
-      desc: "Not ready to create your own product yet? No problem. We give you a high-converting product to promote as an affiliate and start earning from Day 1.",
+      desc: "If you're not ready to create your own product yet, that's not a problem — we give you access to a high-converting product to promote as an affiliate and start earning from Day 1.",
       tag: "Earn",
     },
     {
       icon: "/Iconography/Badge.svg",
-      title: "Accountability Trios",
-      desc: "Grouped with 2 other serious members. Daily check-ins. Weekly calls. The kind of peer accountability that keeps you moving even when motivation dips.",
+      title: "Accountability Group & Community",
+      desc: "You gain access to the Averis community where we hold you accountable and make sure you succeed. We check in on you and help review what you are doing to make the journey easy for you.",
       tag: "Grow",
     },
     {
       icon: "/Iconography/Up arrow.svg",
       title: "Weekly Live Coaching",
-      desc: "Every Sunday at 7 PM WAT. Ask questions, share wins, get direct feedback from the founder and guest experts who are actively building businesses.",
+      desc: "Every Sunday at 8 PM WAT, we have our weekly coaching calls where you can ask questions, share wins, and get direct answers from the founder and other top marketers who are actively building businesses.",
       tag: "Coach",
     },
   ];
@@ -604,7 +469,7 @@ function Features() {
 function WealthClub() {
   const features = [
     { text: "Stock market investing — Nigerian & international" },
-    { text: "Cryptocurrency the right way, no speculation" },
+    { text: "Cryptocurrency the right way — investing in the right assets in crypto" },
     { text: "Portfolio allocation & risk management strategy" },
     { text: "Monthly curated investment guidance & alerts" },
     { text: "Private investor community & accountability" },
@@ -733,9 +598,9 @@ function WealthClub() {
               {/* Target outcome */}
               <div className="mx-7 mb-7 px-4 py-3.5 bg-[#40D457]/10 border border-[#40D457]/20 rounded-2xl">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-[#40D457] shrink-0" />
+                  <span className="text-[#40D457] text-base shrink-0">🎯</span>
                   <p className="text-[#40D457] text-sm font-semibold">
-                    Target outcome: ₦10M – ₦50M portfolio in 5–10 years
+                    Target outcome: ₦10M – ₦50M portfolio in 1–5 years
                   </p>
                 </div>
               </div>
@@ -867,14 +732,13 @@ function Pricing() {
               <div className="p-8">
                 <div className="grid md:grid-cols-2 gap-4 mb-8">
                   {[
+                    "Access to Averis Academy account",
                     "4 professional video training modules",
                     "A hot digital product to promote as an affiliate",
-                    "50% commission on every new sale (₦17,500)",
-                    "50% commission on every renewal (₦15,000)",
-                    "Accountability trio & weekly live coaching",
-                    "Real-time earnings dashboard",
-                    "Instant bank withdrawals via Korapay",
-                    "Access to Averis Wealth Club (Phase 2)",
+                    "Accountability group & weekly live coaching",
+                    "Real-time affiliate sales dashboard",
+                    "Instant bank withdrawals",
+                    "QR code & shareable affiliate links",
                   ].map((item) => (
                     <div key={item} className="flex items-center gap-3">
                       <CheckCircle className="h-4 w-4 text-[#40D457] shrink-0" />
@@ -883,25 +747,10 @@ function Pricing() {
                   ))}
                 </div>
 
-                {/* Commission breakdown */}
-                <div className="bg-[#f4f8f6] rounded-2xl p-5 mb-8 grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <p className="text-xs text-[#5f7268] mb-1">New subscription</p>
-                    <p className="text-2xl font-black text-[#16a34a]">₦17,500</p>
-                    <p className="text-xs text-[#5f7268]">per referral</p>
-                  </div>
-                  <div className="text-center border-l border-[#deeae5]">
-                    <p className="text-xs text-[#5f7268] mb-1">Renewal commission</p>
-                    <p className="text-2xl font-black text-[#40D457]">₦15,000</p>
-                    <p className="text-xs text-[#5f7268]">per renewal</p>
-                  </div>
-                </div>
-
                 <Link href="/login" className="relative overflow-hidden group block w-full text-center bg-[#122F38] hover:bg-[#1a3f4d] text-white font-bold text-base py-4 rounded-2xl transition-all hover:shadow-[0_8px_30px_rgba(18,47,56,0.35)]">
                   <span className="relative z-10">Join Averis Academy Now</span>
                   <span className="absolute inset-0 bg-[#40D457]/10 translate-x-[-110%] skew-x-[-20deg] group-hover:translate-x-[110%] transition-transform duration-500" />
                 </Link>
-                <p className="text-center text-xs text-[#5f7268] mt-3">Min. withdrawal: ₦10,000 · Instant bank transfer</p>
               </div>
             </div>
           </div>
@@ -914,10 +763,10 @@ function Pricing() {
 /* ─── Values ─── */
 function Values() {
   const vals = [
-    { icon: "/Iconography/Human.svg", title: "Accessibility", desc: "World-class wealth education made affordable for every Nigerian, regardless of background or location." },
-    { icon: "/Iconography/Shield.svg", title: "Integrity", desc: "Transparent commissions, honest earnings data, and instant verified payouts. No games. No fake numbers." },
-    { icon: "/Iconography/Pointer.svg", title: "Execution", desc: "We don't just teach theory. We force action through accountability systems that turn learning into real income." },
-    { icon: "/Iconography/Community.svg", title: "Community", desc: "Join a network of serious Nigerians building wealth together. We don't just train you — we grow with you." },
+    { icon: "/Iconography/Human.svg", title: "Accessibility", desc: "World-class wealth education made affordable for every African, regardless of background or location." },
+    { icon: "/Iconography/Shield.svg", title: "Integrity", desc: "We value our users and we are always committed to giving them the best and helping them scale their income." },
+    { icon: "/Iconography/Pointer.svg", title: "Execution", desc: "We don't just teach theory — we ensure our users take action through our accountability system that turns learning into online income." },
+    { icon: "/Iconography/Community.svg", title: "Community", desc: "Join a network of serious Africans building wealth together. We don't just train you — we grow with you." },
   ];
 
   return (
@@ -976,7 +825,7 @@ function CTABanner() {
             Your Wealth Journey<br /><span className="gradient-text">Starts Here.</span>
           </h2>
           <p className="text-white/55 text-lg mb-10 max-w-xl mx-auto">
-            Join 70+ Nigerians learning to make money, invest it, and build wealth that lasts. Both phases. One platform.
+            Join 100+ Africans learning to make money, invest it, and build wealth that lasts. Both phases. One platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/login" className="relative overflow-hidden group bg-[#40D457] hover:bg-[#2eb847] text-[#122F38] font-bold text-base px-10 py-4 rounded-2xl transition-all hover:shadow-[0_0_50px_rgba(64,212,87,0.4)] flex items-center justify-center gap-2">
@@ -984,9 +833,6 @@ function CTABanner() {
               <ArrowRight className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" />
               <span className="absolute inset-0 bg-white/25 translate-x-[-110%] skew-x-[-20deg] group-hover:translate-x-[110%] transition-transform duration-600" />
             </Link>
-            <a href="https://wa.me/2348085300040" target="_blank" rel="noopener noreferrer" className="glass hover:bg-white/8 text-white font-semibold text-base px-10 py-4 rounded-2xl transition-all border border-white/15 hover:border-white/30 flex items-center justify-center">
-              Talk to Support
-            </a>
           </div>
         </FadeUp>
       </div>
@@ -998,61 +844,48 @@ function CTABanner() {
 function Footer() {
   return (
     <footer className="bg-[#091820] border-t border-white/8">
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-3 gap-12 mb-12">
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        {/* Top row */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-10">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <AverisLogoMark size={36} white />
+            <div className="flex items-center gap-3 mb-3">
+              <AverisLogoMark size={32} white />
               <div className="leading-none">
-                <div className="font-black text-[16px] text-white tracking-[0.18em]">AVERIS</div>
-                <div className="font-black text-[16px] text-[#40D457] tracking-[0.18em] -mt-0.5">ACADEMY</div>
+                <div className="font-black text-[15px] text-white tracking-[0.18em]">AVERIS</div>
+                <div className="font-black text-[15px] text-[#40D457] tracking-[0.18em] -mt-0.5">ACADEMY</div>
               </div>
             </div>
-            <p className="text-white/45 text-sm leading-relaxed max-w-xs">
-              Nigeria&apos;s premier wealth creation platform. Make money, invest it, and build generational wealth.
+            <p className="text-white/40 text-xs leading-relaxed max-w-[240px]">
+              Africa&apos;s premier wealth creation platform. Make money, invest it, and build generational wealth.
             </p>
-            <p className="text-[#40D457]/70 text-xs font-semibold mt-3 uppercase tracking-widest">Phase 1 · Phase 2 · Build Wealth</p>
           </div>
 
-          {/* Quick links */}
-          <div>
-            <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-4">Platform</p>
-            <div className="space-y-3">
-              {[
-                { label: "Sign In", href: "/login" },
-                { label: "What We Offer", href: "#what-we-offer" },
-                { label: "How It Works", href: "#how-it-works" },
-              ].map((l) => (
-                <a key={l.label} href={l.href} className="block text-white/50 hover:text-white text-sm transition-colors">{l.label}</a>
-              ))}
-            </div>
-          </div>
-
-          {/* Trust badges */}
-          <div>
-            <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-4">Why Averis</p>
-            <div className="space-y-3">
-              {[
-                { icon: Shield, text: "Secure payments via Korapay" },
-                { icon: Zap, text: "Instant bank withdrawals" },
-                { icon: TrendingUp, text: "Phase 1: Make money online" },
-                { icon: Users, text: "70+ active members building wealth" },
-                { icon: BookOpen, text: "Phase 2: Averis Wealth Club" },
-                { icon: Gift, text: "50% commission on every sale" },
-              ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-2.5">
-                  <Icon className="h-3.5 w-3.5 text-[#40D457] shrink-0" />
-                  <span className="text-white/50 text-xs">{text}</span>
-                </div>
-              ))}
-            </div>
+          {/* Nav links */}
+          <div className="flex flex-wrap gap-x-8 gap-y-3">
+            {[
+              { label: "Sign In", href: "/login" },
+              { label: "What We Offer", href: "#what-we-offer" },
+              { label: "How It Works", href: "#how-it-works" },
+              { label: "Privacy Policy", href: "/privacy-policy" },
+              { label: "Terms of Service", href: "/terms-of-service" },
+            ].map((l) => (
+              <a key={l.label} href={l.href} className="text-white/50 hover:text-white text-sm transition-colors">{l.label}</a>
+            ))}
           </div>
         </div>
 
-        <div className="border-t border-white/8 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Bottom row */}
+        <div className="border-t border-white/8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/30 text-xs">© 2026 Averis Global Limited. All rights reserved.</p>
-          <p className="text-white/20 text-xs">Made for Nigerian entrepreneurs</p>
+          <a
+            href="https://wa.me/2348085300040"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#40D457]/70 hover:text-[#40D457] text-xs font-semibold transition-colors"
+          >
+            Contact Support →
+          </a>
         </div>
       </div>
     </footer>

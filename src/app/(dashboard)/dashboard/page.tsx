@@ -88,18 +88,18 @@ function DashboardContent() {
       <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-primary-light px-6 py-5">
         <img src="/Iconography/Rocket.svg" alt="" aria-hidden className="absolute -right-4 -top-4 h-28 opacity-10 rotate-12 pointer-events-none select-none" />
         <img src="/Iconography/Up arrow.svg" alt="" aria-hidden className="absolute right-20 bottom-2 h-12 opacity-8 pointer-events-none select-none" />
-        <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">Dashboard</p>
+        <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">My Affiliate Dashboard</p>
         <h1 className="text-xl font-bold text-white">
           Welcome, {data.user.firstName}!
         </h1>
-        <p className="text-white/60 text-sm mt-0.5">Your affiliate performance at a glance</p>
+        <p className="text-white/60 text-sm mt-0.5">Your sales dashboard at a glance</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Earned" value={formatCurrency(data.stats.totalEarnings)} icon={DollarSign} color="bg-secondary/10 text-secondary" />
         <StatCard title="Available" value={formatCurrency(data.stats.availableBalance)} sub="Ready to withdraw" icon={Wallet} color="bg-success/10 text-success" />
-        <StatCard title="Affiliate Sales" value={String(data.stats.totalReferrals)} sub={`${data.stats.activeReferrals} active`} icon={Users} color="bg-primary/10 text-primary" />
+        <StatCard title="Total Sales Made" value={String(data.stats.totalReferrals)} sub={`${data.stats.activeReferrals} active`} icon={Users} color="bg-primary/10 text-primary" />
         <StatCard title="Withdrawn" value={formatCurrency(data.stats.totalWithdrawn)} icon={TrendingUp} color="bg-warning/10 text-warning" />
       </div>
 

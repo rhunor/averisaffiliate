@@ -36,7 +36,7 @@ function ShareModal({ product, onClose }: { product: Product; onClose: () => voi
   }
 
   function shareTelegram() {
-    const text = `Join Averis Academy with my referral link: ${product.referralLink}`;
+    const text = `Join Averis Academy with my affiliate link: ${product.referralLink}`;
     window.open(`https://t.me/share/url?url=${encodeURIComponent(product.referralLink)}&text=${encodeURIComponent(text)}`, "_blank");
   }
 
@@ -46,7 +46,7 @@ function ShareModal({ product, onClose }: { product: Product; onClose: () => voi
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="font-bold text-foreground text-lg">{product.name}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Share your referral link and earn commission</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Share your affiliate link and earn commission</p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors text-lg font-bold">✕</button>
         </div>
@@ -67,7 +67,7 @@ function ShareModal({ product, onClose }: { product: Product; onClose: () => voi
 
         {/* Link */}
         <div className="bg-muted rounded-xl p-3 mb-4">
-          <p className="text-[10px] text-muted-foreground mb-1 font-medium">Your referral link</p>
+          <p className="text-[10px] text-muted-foreground mb-1 font-medium">Your affiliate link</p>
           <p className="text-xs font-mono text-foreground break-all leading-relaxed">{product.referralLink}</p>
         </div>
 
@@ -139,13 +139,13 @@ export default function ProductsPage() {
   const averisAcademyProduct = useMemo<Product>(() => ({
     _id: "__averis_academy__",
     name: "Averis Academy",
-    description: "Nigeria's #1 affiliate learning platform. Share your personal referral link and earn 50% commission on every new subscription and renewal — every 6 months.",
+    description: "Africa's premier wealth creation platform. Make money, invest it, and build generational wealth.",
     imageUrl: null,
     price: siteConfig.signupFee,
     commissionAmount: siteConfig.commission.newSubscription,
     renewalCommissionAmount: siteConfig.commission.renewal,
     slug: "averis-academy",
-    referralLink: referralCode ? `${appUrl}/register?ref=${referralCode}` : "",
+    referralLink: referralCode ? `${appUrl}/register?aff=${referralCode}` : "",
   }), [referralCode, appUrl]);
 
   const products = useMemo(() => [averisAcademyProduct, ...dbProducts], [averisAcademyProduct, dbProducts]);
@@ -181,11 +181,6 @@ export default function ProductsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <CardTitle className="text-white">{product.name}</CardTitle>
-                      {isAverisAcademy && (
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-secondary/30 text-secondary border border-secondary/40 px-2 py-0.5 rounded-full">
-                          Main Product
-                        </span>
-                      )}
                     </div>
                     <p className="text-white/70 text-sm mt-0.5 leading-relaxed">{product.description}</p>
                   </div>
@@ -217,7 +212,7 @@ export default function ProductsPage() {
 
                 {/* Referral link */}
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1.5 font-medium">Your referral link</p>
+                  <p className="text-xs text-muted-foreground mb-1.5 font-medium">Your affiliate link</p>
                   {!linkReady ? (
                     <div className="bg-muted rounded-xl px-3 py-2.5 flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full border-2 border-secondary border-t-transparent animate-spin shrink-0" />

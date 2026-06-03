@@ -24,7 +24,7 @@ const btnCls =
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const refCode = searchParams.get("ref") || "";
+  const refCode = searchParams.get("aff") || searchParams.get("ref") || "";
   const productSlug = searchParams.get("product") || "";
 
   const [form, setForm] = useState({

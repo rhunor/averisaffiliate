@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -16,45 +16,6 @@ function AverisLogoMark({ size = 44 }: { size?: number }) {
   );
 }
 
-const TESTIMONIALS = [
-  "I used to earn ₦50,000/month. After joining Averis Academy I now make ₦2.5M a month! — Emmanuel O.",
-  "Marketing Made Easy is not just a tagline — it's my reality. ₦800k in my second month! — Chidinma A.",
-  "Averis Academy gave me the knowledge and community to build real financial freedom. — Tunde B.",
-];
-
-function TestimonialTicker() {
-  const [idx, setIdx] = useState(0);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setIdx((i) => (i + 1) % TESTIMONIALS.length);
-        setVisible(true);
-      }, 400);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <div className="fixed bottom-5 left-0 right-0 flex justify-center px-4 pointer-events-none z-10">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 px-4 py-3 max-w-sm w-full flex items-start gap-3 pointer-events-auto">
-        <div className="w-8 h-8 rounded-full bg-[#40D457] flex-shrink-0 flex items-center justify-center mt-0.5">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-        </div>
-        <p
-          className="text-xs text-gray-600 leading-relaxed transition-opacity duration-400"
-          style={{ opacity: visible ? 1 : 0 }}
-        >
-          {TESTIMONIALS[idx]}
-        </p>
-      </div>
-    </div>
-  );
-}
 
 const inputCls =
   "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#122F38]/20 focus:border-[#122F38] transition-colors";
@@ -225,7 +186,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 pb-28">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-[400px]">
         {/* Logo */}
         <div className="flex justify-center mb-10">
@@ -252,7 +213,6 @@ export default function LoginPage() {
         </Suspense>
       </div>
 
-      <TestimonialTicker />
     </div>
   );
 }

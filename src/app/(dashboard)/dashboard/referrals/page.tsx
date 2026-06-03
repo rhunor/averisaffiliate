@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
-interface Referral {
+interface Sale {
   _id: string;
   referredUserId: { firstName: string; lastName: string; email: string } | null;
   status: string;
@@ -15,15 +15,15 @@ interface Referral {
   product?: { name: string } | null;
 }
 
-interface ReferralsData {
+interface SalesData {
   referralCode: string;
   referralLink: string;
   stats: { total: number; active: number; pending: number; cancelled: number };
-  referrals: Referral[];
+  referrals: Sale[];
 }
 
-export default function ReferralsPage() {
-  const [data, setData] = useState<ReferralsData | null>(null);
+export default function AffiliateSalesPage() {
+  const [data, setData] = useState<SalesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -55,20 +55,20 @@ export default function ReferralsPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-xl font-bold text-foreground">Affiliate Sales</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Everyone you&apos;ve referred to Averis Academy</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Everyone you&apos;ve brought in to Averis Academy</p>
       </div>
 
-      {/* Referral link card */}
+      {/* Affiliate link card */}
       <Card>
         <CardContent className="pt-5 space-y-3">
           <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1.5">Your referral code</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">Your affiliate code</p>
             <span className="inline-block font-mono font-bold text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg text-sm">
               {data.referralCode}
             </span>
           </div>
           <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1.5">Your referral link</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">Your affiliate link</p>
             <div className="flex gap-2">
               <div className="flex-1 bg-muted rounded-xl px-3 py-2 overflow-hidden">
                 <p className="text-xs font-mono text-foreground truncate">{data.referralLink}</p>
@@ -87,7 +87,7 @@ export default function ReferralsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total", value: data.stats.total, icon: Users, color: "bg-primary/10 text-primary" },
+          { label: "Total Sales", value: data.stats.total, icon: Users, color: "bg-primary/10 text-primary" },
           { label: "Active", value: data.stats.active, icon: UserCheck, color: "bg-success/10 text-success" },
           { label: "Pending", value: data.stats.pending, icon: Users, color: "bg-warning/10 text-warning" },
           { label: "Cancelled", value: data.stats.cancelled, icon: UserX, color: "bg-danger/10 text-danger" },
@@ -108,41 +108,41 @@ export default function ReferralsPage() {
         ))}
       </div>
 
-      {/* Referrals table */}
+      {/* Sales table */}
       <Card>
         <CardHeader><CardTitle>All Affiliate Sales</CardTitle></CardHeader>
         <CardContent className="p-0">
           {data.referrals.length === 0 ? (
             <div className="py-16 text-center">
               <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">No referrals yet. Share your link to start earning!</p>
+              <p className="text-sm text-muted-foreground">No affiliate sales yet. Share your link to start making sales!</p>
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {data.referrals.map((ref) => (
-                <div key={ref._id} className="flex items-center justify-between px-6 py-4">
+              {data.referrals.map((sale) => (
+                <div key={sale._id} className="flex items-center justify-between px-6 py-4">
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      {ref.referredUserId
-                        ? `${ref.referredUserId.firstName} ${ref.referredUserId.lastName}`
+                      {sale.referredUserId
+                        ? `${sale.referredUserId.firstName} ${sale.referredUserId.lastName}`
                         : "Unknown user"}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-muted-foreground">{formatDate(ref.createdAt)}</p>
-                      {ref.product && (
-                        <span className="text-xs text-muted-foreground">· {ref.product.name}</span>
+                      <p className="text-xs text-muted-foreground">{formatDate(sale.createdAt)}</p>
+                      {sale.product && (
+                        <span className="text-xs text-muted-foreground">· {sale.product.name}</span>
                       )}
                     </div>
                   </div>
                   <div className="text-right flex flex-col items-end gap-1">
-                    {ref.commissionAmount > 0 && (
-                      <p className="text-sm font-semibold text-success">{formatCurrency(ref.commissionAmount)}</p>
+                    {sale.commissionAmount > 0 && (
+                      <p className="text-sm font-semibold text-success">{formatCurrency(sale.commissionAmount)}</p>
                     )}
                     <Badge variant={
-                      ref.status === "active" ? "success" :
-                      ref.status === "pending" ? "warning" : "secondary"
+                      sale.status === "active" ? "success" :
+                      sale.status === "pending" ? "warning" : "secondary"
                     }>
-                      {ref.status}
+                      {sale.status}
                     </Badge>
                   </div>
                 </div>

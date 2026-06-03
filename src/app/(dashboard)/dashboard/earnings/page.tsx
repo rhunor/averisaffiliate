@@ -51,7 +51,7 @@ export default function EarningsPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-xl font-bold text-foreground">Earnings</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">All your commission history</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Your complete affiliate sales history</p>
       </div>
 
       {/* Summary cards */}
@@ -73,7 +73,7 @@ export default function EarningsPage() {
           <CardContent className="pt-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">New Referrals</p>
+                <p className="text-xs text-muted-foreground">New Sales</p>
                 <p className="text-xl font-bold text-foreground mt-0.5">{data.stats.totalReferrals}</p>
               </div>
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -99,12 +99,12 @@ export default function EarningsPage() {
 
       {/* Transaction list */}
       <Card>
-        <CardHeader><CardTitle>Commission History</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Sales History</CardTitle></CardHeader>
         <CardContent className="p-0">
           {data.transactions.length === 0 ? (
             <div className="py-16 text-center">
               <DollarSign className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground text-sm">No earnings yet. Start sharing your referral link!</p>
+              <p className="text-muted-foreground text-sm">No earnings yet. Share your affiliate link to start making sales!</p>
             </div>
           ) : (
             <div className="divide-y divide-border">

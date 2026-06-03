@@ -18,7 +18,7 @@ export async function GET() {
 
     const productsWithLinks = products.map((p) => ({
       ...p,
-      referralLink: `${appUrl}/register?ref=${referralCode}&product=${(p as Record<string, unknown>).slug}`,
+      referralLink: `${appUrl}/register?aff=${referralCode}&product=${(p as Record<string, unknown>).slug}`,
     }));
 
     return NextResponse.json({ products: productsWithLinks });

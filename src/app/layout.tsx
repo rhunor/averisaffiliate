@@ -7,8 +7,10 @@ export const metadata: Metadata = {
   description:
     "Averis Academy is a wealth creation platform. Learn to build real income selling digital products online, then invest that income to build generational wealth. Nigeria's premier two-phase wealth system.",
   icons: {
-    icon: "/icon.svg",
-    shortcut: "/favicon.ico",
+    icon: [
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: "/icon.png",
   },
 };
 

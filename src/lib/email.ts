@@ -3,14 +3,27 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM)!;
 const APP_NAME = "Averis Academy";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
 function header(appUrl: string) {
   return `
     <div style="text-align:center;padding:28px 0 20px;border-bottom:1px solid #e2e8f0;margin-bottom:8px;">
       <a href="${appUrl}" style="text-decoration:none;display:inline-block;">
-        <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);padding:12px 24px;border-radius:12px;display:inline-block;">
-          <span style="color:#4dbdd4;font-family:Georgia,serif;font-size:22px;font-weight:900;letter-spacing:-0.5px;">Averis</span>
-          <span style="color:#ffffff;font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;"> Academy</span>
+        <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);padding:14px 24px;border-radius:12px;display:inline-block;">
+          <table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;">
+            <tr>
+              <td style="vertical-align:middle;padding-right:10px;">
+                <svg width="36" height="28" viewBox="0 0 65 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M23.6321 39.1078L64.2474 39.1659L44.6646 50.2771L4.34633 50.2697L0 42.891L2.22282 39.3854L20.7427 10.7465L39.9931 0L21.4887 28.6184L19.2659 32.124L23.6321 39.1078Z" fill="white"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M54.3371 28.6184L44.0985 12.7838L33.8601 28.6184H54.3371Z" fill="#40D457"/>
+                </svg>
+              </td>
+              <td style="vertical-align:middle;">
+                <div style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:900;letter-spacing:0.18em;line-height:1.1;">AVERIS</div>
+                <div style="color:#40D457;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:900;letter-spacing:0.18em;line-height:1.1;">ACADEMY</div>
+              </td>
+            </tr>
+          </table>
         </div>
       </a>
     </div>
@@ -32,7 +45,7 @@ const btn = (href: string, label: string) =>
   </div>`;
 
 export async function sendVerificationEmail(email: string, firstName: string, token: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
   const verifyUrl = `${appUrl}/verify-email?token=${token}`;
   if (process.env.NODE_ENV !== "production") console.log(`[DEV] Email verify URL for ${email}:`, verifyUrl);
 
@@ -56,7 +69,7 @@ export async function sendVerificationEmail(email: string, firstName: string, to
 }
 
 export async function sendPasswordResetEmail(email: string, firstName: string, token: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
   const resetUrl = `${appUrl}/reset-password?token=${token}`;
   if (process.env.NODE_ENV !== "production") console.log(`[DEV] Password reset URL for ${email}:`, resetUrl);
 
@@ -79,7 +92,7 @@ export async function sendPasswordResetEmail(email: string, firstName: string, t
 }
 
 export async function sendWelcomeEmail(email: string, firstName: string, referralCode?: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
   const communityLink = "https://t.me/averisacademycommunity";
   const botUsername = process.env.TELEGRAM_BOT_USERNAME || "primetrexbot";
   const botDeepLink = referralCode
@@ -148,7 +161,7 @@ export async function sendWelcomeEmail(email: string, firstName: string, referra
 }
 
 export async function sendOTPEmail(email: string, firstName: string, otp: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
@@ -181,7 +194,7 @@ export async function sendPendingCommissionEmail(params: {
   orderId: string;
   productName: string;
 }) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
   const { affiliateEmail, affiliateFirstName, buyerName, commissionAmount, orderId, productName } = params;
 
   const { error } = await resend.emails.send({
@@ -232,7 +245,7 @@ export async function sendCommissionEmail(params: {
   productName: string;
   paymentReference: string;
 }) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
   const { affiliateEmail, affiliateFirstName, buyerName, commissionAmount, orderId, productName } = params;
 
   const { error } = await resend.emails.send({
@@ -280,7 +293,7 @@ export async function sendWithdrawalRequestEmail(params: {
   accountName: string;
   withdrawalId: string;
 }) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
   const { email, firstName, amount, bankName, accountNumber, accountName, withdrawalId } = params;
 
   const { error } = await resend.emails.send({
@@ -331,7 +344,7 @@ export async function sendBankDetailsChangedEmail(params: {
   accountNumber: string;
   accountName: string;
 }) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
   const { email, firstName, bankName, accountNumber, accountName } = params;
 
   const { error } = await resend.emails.send({
@@ -374,7 +387,7 @@ export async function sendSubscriptionExpiryEmail(params: {
   expiryDate: Date;
   hoursLeft?: number;
 }) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = APP_URL;
   const { email, firstName, daysLeft, expiryDate, hoursLeft } = params;
   const isExpired = daysLeft <= 0 && !hoursLeft;
   const formattedDate = expiryDate.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });

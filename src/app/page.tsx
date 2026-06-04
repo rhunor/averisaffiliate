@@ -76,6 +76,17 @@ function Navbar() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
+  const scrollToSection = (id: string) => {
+    setOpen(false);
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        const top = el.getBoundingClientRect().top + window.scrollY - 72;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
+    }, 50);
+  };
+
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-[#091820]/95 backdrop-blur-md border-b border-white/8 shadow-lg shadow-black/20" : "bg-transparent"}`}>
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -91,17 +102,14 @@ function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {["What We Offer", "How It Works"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`} className="text-white/60 hover:text-white text-sm font-medium transition-colors">
-              {item}
-            </a>
+          {[{ label: "What We Offer", id: "what-we-offer" }, { label: "How It Works", id: "how-it-works" }].map((item) => (
+            <button key={item.id} onClick={() => scrollToSection(item.id)} className="text-white/60 hover:text-white text-sm font-medium transition-colors">
+              {item.label}
+            </button>
           ))}
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="text-white/70 hover:text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
-            Sign In
-          </Link>
           <Link href="/login" className="relative overflow-hidden bg-[#40D457] text-[#122F38] text-sm font-bold px-5 py-2.5 rounded-xl transition-all hover:bg-[#2eb847] group">
             <span className="relative z-10">Get Started</span>
             <span className="absolute inset-0 bg-white/20 translate-x-[-110%] skew-x-[-20deg] group-hover:translate-x-[110%] transition-transform duration-500" />
@@ -119,15 +127,14 @@ function Navbar() {
       {/* Mobile menu */}
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="md:hidden bg-[#091820]/98 border-b border-white/10 px-6 pb-4">
-            {["What We Offer", "How It Works"].map((item) => (
-              <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`} onClick={() => setOpen(false)} className="block py-3 text-white/70 text-sm border-b border-white/8">
-                {item}
-              </a>
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="md:hidden bg-[#091820]/98 border-b border-white/10 px-6 pb-4 overflow-hidden">
+            {[{ label: "What We Offer", id: "what-we-offer" }, { label: "How It Works", id: "how-it-works" }].map((item) => (
+              <button key={item.id} onClick={() => scrollToSection(item.id)} className="block w-full text-left py-3 text-white/70 text-sm border-b border-white/8">
+                {item.label}
+              </button>
             ))}
-            <div className="flex gap-3 mt-4">
-              <Link href="/login" className="flex-1 text-center py-2.5 text-sm font-medium text-white/70 border border-white/20 rounded-xl">Sign In</Link>
-              <Link href="/login" className="flex-1 text-center py-2.5 text-sm font-bold bg-[#40D457] text-[#122F38] rounded-xl">Get Started</Link>
+            <div className="mt-4">
+              <Link href="/login" className="block text-center py-2.5 text-sm font-bold bg-[#40D457] text-[#122F38] rounded-xl">Get Started</Link>
             </div>
           </motion.div>
         )}

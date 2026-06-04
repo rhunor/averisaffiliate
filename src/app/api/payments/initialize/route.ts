@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     const reference = generateSignupRef();
     const orderId = generateOrderId();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
     const checkoutUrl = await initializeCharge({
       reference,
@@ -67,7 +67,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ checkoutUrl, reference, orderId });
   } catch (err) {
-    console.error("[payments/initialize]", err);
-    return NextResponse.json({ error: "Payment initialization failed." }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[payments/initialize]", msg);
+    return NextResponse.json({ error: `Payment initialization failed: ${msg}` }, { status: 500 });
   }
 }

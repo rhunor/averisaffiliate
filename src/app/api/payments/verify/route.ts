@@ -13,7 +13,7 @@ import { siteConfig } from "@/config/site";
 export async function GET(req: NextRequest) {
   const reference = req.nextUrl.searchParams.get("reference");
   const orderId = req.nextUrl.searchParams.get("orderId") || generateOrderId();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
   if (!reference) {
     return NextResponse.redirect(new URL("/pending-payment?error=missing_reference", appUrl));

@@ -31,35 +31,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Look up product for product-specific pricing
-    let productRecord: (typeof Product extends { findOne: (...a: unknown[]) => infer R } ? Awaited<R> : null) | null = null;
+    let productRecord: Record<string, unknown> | null = null;
     if (user.signupProductSlug) {
-      productRecord = await Product.findOne({ slug: user.signupProductSlug, isActive: true }).lean() as typeof productRecord;
+      productRecord = await Product.findOne({ slug: user.signupProductSlug, isActive: true }).lean() as Record<string, unknown> | null;
     }
 
     const amount = isRenewal
-      ? ((productRecord as Record<string, unknown> | null)?.renewalPrice as number ?? siteConfig.renewalFee)
-      : ((productRecord as Record<string, unknown> | null)?.price as number ?? siteConfig.signupFee);
+      ? ((productRecord?.renewalPrice as number) ?? siteConfig.renewalFee)
+      : ((productRecord?.price as number) ?? siteConfig.signupFee);
 
     const reference = generateSignupRef();
     const orderId = generateOrderId();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
+
+    // Pass context via redirect URL — avoids Korapay metadata validation issues
+    const redirectUrl = `${appUrl}/api/payments/verify?reference=${reference}&orderId=${orderId}&type=${isRenewal ? "renewal" : "new"}`;
 
     const checkoutUrl = await initializeCharge({
       reference,
       amount,
       email: user.email,
       name: `${user.firstName} ${user.lastName}`,
-      narration: isRenewal
-        ? "Averis Academy 6-Month Renewal"
-        : "Averis Academy 6-Month Subscription",
-      redirectUrl: `${appUrl}/api/payments/verify?reference=${reference}&orderId=${orderId}`,
-      metadata: {
-        userId: user._id.toString(),
-        orderId,
-        paymentType: isRenewal ? "renewal" : "new",
-        productSlug: user.signupProductSlug ?? "averis-academy",
-        productId: productRecord ? String((productRecord as Record<string, unknown>)._id) : null,
-      },
+      redirectUrl,
     });
 
     user.signupPaymentRef = reference;

@@ -53,7 +53,7 @@ async function koraFetch<T>(endpoint: string, options: RequestInit = {}): Promis
   const data = await res.json();
   if (!res.ok) {
     throw new Error(
-      `Korapay API error: ${res.status} — ${(data as { message?: string }).message || JSON.stringify(data)}`
+      `Korapay API error: ${res.status} — ${JSON.stringify(data)}`
     );
   }
   return data;
@@ -64,9 +64,7 @@ export async function initializeCharge(params: {
   amount: number;
   email: string;
   name: string;
-  narration: string;
   redirectUrl: string;
-  metadata?: Record<string, unknown>;
 }): Promise<string> {
   const data = await koraFetch<KoraChargeResponse>("/charges/initialize", {
     method: "POST",
@@ -76,9 +74,6 @@ export async function initializeCharge(params: {
       currency: "NGN",
       customer: { email: params.email, name: params.name },
       redirect_url: params.redirectUrl,
-      narration: params.narration,
-      channels: ["card", "bank_transfer"],
-      metadata: params.metadata,
     }),
   });
 

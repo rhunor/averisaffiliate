@@ -13,6 +13,7 @@ import { siteConfig } from "@/config/site";
 export async function GET(req: NextRequest) {
   const reference = req.nextUrl.searchParams.get("reference");
   const orderId = req.nextUrl.searchParams.get("orderId") || generateOrderId();
+  const paymentType = req.nextUrl.searchParams.get("type");
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
   if (!reference) {
@@ -38,11 +39,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL("/pending-payment?error=user_not_found", appUrl));
     }
 
-    // Read payment context from Korapay metadata
-    const meta = (verify.data as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
-    const isRenewal = meta?.paymentType === "renewal";
-    const productSlug = (meta?.productSlug as string) || user.signupProductSlug || "averis-academy";
-    const productId = meta?.productId as string | null;
+    // Read payment context from URL params (avoids relying on Korapay metadata)
+    const isRenewal = paymentType === "renewal";
+    const productSlug = user.signupProductSlug || "averis-academy";
+    const productId: string | null = null;
 
     // Look up product for commission amounts
     let productRecord: Record<string, unknown> | null = null;

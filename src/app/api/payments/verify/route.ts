@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     // Idempotency: already processed
     const existing = await Transaction.findOne({ paymentReference: reference });
     if (existing) {
-      return NextResponse.redirect(new URL("/dashboard?activated=1", appUrl));
+      return NextResponse.redirect(new URL("/payment-success", appUrl));
     }
 
     const verify = await verifyCharge(reference);
@@ -193,7 +193,7 @@ export async function GET(req: NextRequest) {
 
     await sendWelcomeEmail(user.email, user.firstName, user.referralCode);
 
-    return NextResponse.redirect(new URL("/dashboard?activated=1", appUrl));
+    return NextResponse.redirect(new URL("/payment-success", appUrl));
   } catch (err) {
     console.error("[payments/verify]", err);
     return NextResponse.redirect(new URL("/pending-payment?error=server_error", appUrl));

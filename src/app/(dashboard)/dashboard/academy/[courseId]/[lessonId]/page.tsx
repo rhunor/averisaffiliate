@@ -3,21 +3,17 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle, FileText, ExternalLink, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, FileText, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
-interface LessonResource {
-  name: string;
-  url: string;
-}
+interface LessonResource { name: string; url: string; }
 
 interface LessonDetail {
   _id: string;
   courseId: string;
   title: string;
   description: string;
-  videoUrl: string;
+  youtubeVideoId: string;
   duration: number;
   resources: LessonResource[];
   completed: boolean;
@@ -27,15 +23,36 @@ interface LessonDetail {
   nextLesson: { _id: string; title: string } | null;
 }
 
+declare global {
+  interface Window {
+    YT: {
+      Player: new (
+        el: string | HTMLElement,
+        opts: {
+          videoId: string;
+          playerVars?: Record<string, number | string>;
+          events?: {
+            onReady?: () => void;
+            onStateChange?: (e: { data: number }) => void;
+          };
+        }
+      ) => { destroy(): void };
+      PlayerState: { PLAYING: number; PAUSED: number; ENDED: number };
+    };
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
 export default function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
   const router = useRouter();
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [markingComplete, setMarkingComplete] = useState(false);
-  const progressSaved = useRef(false);
-  const watchTimer = useRef<NodeJS.Timeout | null>(null);
   const watchedRef = useRef(0);
+  const tickRef = useRef<NodeJS.Timeout | null>(null);
+  const playerRef = useRef<{ destroy(): void } | null>(null);
+  const playerDivId = "yt-player-" + lessonId;
 
   useEffect(() => {
     fetch(`/api/academy/${courseId}/${lessonId}`)
@@ -51,36 +68,80 @@ export default function LessonPage() {
       .finally(() => setLoading(false));
 
     return () => {
-      if (watchTimer.current) clearInterval(watchTimer.current);
+      if (tickRef.current) clearInterval(tickRef.current);
+      playerRef.current?.destroy();
     };
   }, [courseId, lessonId, router]);
 
   const saveProgress = useCallback(async (completed = false) => {
-    if (progressSaved.current && !completed) return;
     try {
       await fetch("/api/academy/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lessonId, courseId, watchedSeconds: watchedRef.current, completed }),
       });
-      if (completed) progressSaved.current = true;
     } catch {}
   }, [lessonId, courseId]);
 
-  function handleVideoPlay() {
-    if (watchTimer.current) return;
-    watchTimer.current = setInterval(() => {
+  const startTick = useCallback(() => {
+    if (tickRef.current) return;
+    tickRef.current = setInterval(() => {
       watchedRef.current += 5;
       saveProgress(false);
     }, 5000);
-  }
+  }, [saveProgress]);
 
-  function handleVideoPause() {
-    if (watchTimer.current) { clearInterval(watchTimer.current); watchTimer.current = null; }
+  const stopTick = useCallback(() => {
+    if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
     saveProgress(false);
-  }
+  }, [saveProgress]);
 
-  async function markComplete() {
+  // Mount YouTube IFrame API after lesson loads
+  useEffect(() => {
+    if (!lesson?.youtubeVideoId) return;
+
+    const initPlayer = () => {
+      if (playerRef.current) { playerRef.current.destroy(); playerRef.current = null; }
+      playerRef.current = new window.YT.Player(playerDivId, {
+        videoId: lesson.youtubeVideoId,
+        playerVars: { rel: 0, modestbranding: 1, iv_load_policy: 3, playsinline: 1 },
+        events: {
+          onStateChange: (e) => {
+            if (e.data === window.YT.PlayerState.PLAYING) {
+              startTick();
+            } else if (e.data === window.YT.PlayerState.PAUSED) {
+              stopTick();
+            } else if (e.data === window.YT.PlayerState.ENDED) {
+              stopTick();
+              handleMarkComplete();
+            }
+          },
+        },
+      });
+    };
+
+    if (window.YT?.Player) {
+      initPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayer;
+      if (!document.getElementById("yt-api-script")) {
+        const s = document.createElement("script");
+        s.id = "yt-api-script";
+        s.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(s);
+      }
+    }
+
+    return () => {
+      window.onYouTubeIframeAPIReady = undefined;
+      if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
+      playerRef.current?.destroy();
+      playerRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lesson?.youtubeVideoId, playerDivId]);
+
+  async function handleMarkComplete() {
     if (markingComplete || lesson?.completed) return;
     setMarkingComplete(true);
     await saveProgress(true);
@@ -101,33 +162,14 @@ export default function LessonPage() {
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Back nav */}
-      <Link
-        href={`/dashboard/academy/${courseId}`}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
+      <Link href={`/dashboard/academy/${courseId}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
         {lesson.courseTitle}
       </Link>
 
-      {/* Video player */}
+      {/* YouTube player */}
       <div className="rounded-2xl overflow-hidden bg-black aspect-video w-full">
-        {lesson.videoUrl ? (
-          <video
-            key={lesson.videoUrl}
-            controls
-            className="w-full h-full"
-            onPlay={handleVideoPlay}
-            onPause={handleVideoPause}
-            onEnded={() => { handleVideoPause(); markComplete(); }}
-          >
-            <source src={lesson.videoUrl} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-white/40">
-            <Play className="h-16 w-16" />
-          </div>
-        )}
+        <div id={playerDivId} className="w-full h-full" />
       </div>
 
       {/* Lesson info */}
@@ -139,7 +181,7 @@ export default function LessonPage() {
           )}
         </div>
         <button
-          onClick={markComplete}
+          onClick={handleMarkComplete}
           disabled={markingComplete || lesson.completed}
           className={`shrink-0 flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl transition-colors ${
             lesson.completed
@@ -158,13 +200,8 @@ export default function LessonPage() {
           <CardHeader><CardTitle className="text-base">Resources</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {lesson.resources.map((r, i) => (
-              <a
-                key={i}
-                href={r.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 rounded-xl bg-muted hover:bg-border transition-colors"
-              >
+              <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-muted hover:bg-border transition-colors">
                 <FileText className="h-4 w-4 text-secondary shrink-0" />
                 <span className="text-sm font-medium text-foreground flex-1">{r.name}</span>
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
@@ -174,38 +211,26 @@ export default function LessonPage() {
         </Card>
       )}
 
-      {/* Prev / Next navigation */}
+      {/* Prev / Next */}
       <div className="grid grid-cols-2 gap-3 pt-2">
         {lesson.prevLesson ? (
-          <Link
-            href={`/dashboard/academy/${courseId}/${lesson.prevLesson._id}`}
-            className="flex flex-col items-start gap-1 p-4 rounded-xl border border-border hover:border-secondary/40 hover:bg-secondary/5 transition-colors"
-          >
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <ArrowLeft className="h-3 w-3" /> Previous
-            </span>
+          <Link href={`/dashboard/academy/${courseId}/${lesson.prevLesson._id}`}
+            className="flex flex-col items-start gap-1 p-4 rounded-xl border border-border hover:border-secondary/40 hover:bg-secondary/5 transition-colors">
+            <span className="text-xs text-muted-foreground flex items-center gap-1"><ArrowLeft className="h-3 w-3" /> Previous</span>
             <span className="text-sm font-medium text-foreground line-clamp-2">{lesson.prevLesson.title}</span>
           </Link>
         ) : <div />}
 
         {lesson.nextLesson ? (
-          <Link
-            href={`/dashboard/academy/${courseId}/${lesson.nextLesson._id}`}
-            className="flex flex-col items-end gap-1 p-4 rounded-xl border border-border hover:border-secondary/40 hover:bg-secondary/5 transition-colors text-right"
-          >
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              Next <ArrowRight className="h-3 w-3" />
-            </span>
+          <Link href={`/dashboard/academy/${courseId}/${lesson.nextLesson._id}`}
+            className="flex flex-col items-end gap-1 p-4 rounded-xl border border-border hover:border-secondary/40 hover:bg-secondary/5 transition-colors text-right">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">Next <ArrowRight className="h-3 w-3" /></span>
             <span className="text-sm font-medium text-foreground line-clamp-2">{lesson.nextLesson.title}</span>
           </Link>
         ) : (
-          <button
-            onClick={() => router.push(`/dashboard/academy/${courseId}`)}
-            className="flex flex-col items-end gap-1 p-4 rounded-xl border border-success/30 bg-success/5 hover:bg-success/10 transition-colors text-right"
-          >
-            <span className="text-xs text-success flex items-center gap-1">
-              Course done <CheckCircle className="h-3 w-3" />
-            </span>
+          <button onClick={() => router.push(`/dashboard/academy/${courseId}`)}
+            className="flex flex-col items-end gap-1 p-4 rounded-xl border border-success/30 bg-success/5 hover:bg-success/10 transition-colors text-right">
+            <span className="text-xs text-success flex items-center gap-1">Course done <CheckCircle className="h-3 w-3" /></span>
             <span className="text-sm font-medium text-success">Back to course</span>
           </button>
         )}

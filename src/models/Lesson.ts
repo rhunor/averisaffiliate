@@ -4,8 +4,7 @@ export interface ILesson extends Document {
   courseId: mongoose.Types.ObjectId;
   title: string;
   description: string;
-  videoUrl: string;
-  cloudinaryPublicId: string;
+  youtubeVideoId: string;
   duration: number;
   sortOrder: number;
   isPublished: boolean;
@@ -19,8 +18,7 @@ const LessonSchema = new Schema<ILesson>(
     courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true, index: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
-    videoUrl: { type: String, required: true },
-    cloudinaryPublicId: { type: String, required: true },
+    youtubeVideoId: { type: String, required: true },
     duration: { type: Number, default: 0 },
     sortOrder: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },

@@ -3,7 +3,17 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Course from "@/models/Course";
 import Lesson from "@/models/Lesson";
-import cloudinary from "@/lib/cloudinary";
+
+function extractYouTubeId(input: string): string | null {
+  const s = input.trim();
+  // Direct 11-char video ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
+  // Full URL patterns
+  const m = s.match(
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  return m ? m[1] : null;
+}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -11,15 +21,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!session?.user?.role || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
-
     const { id } = await params;
     await dbConnect();
-
     const [course, lessons] = await Promise.all([
       Course.findById(id).lean(),
       Lesson.find({ courseId: id }).sort({ sortOrder: 1 }).lean(),
     ]);
-
     if (!course) return NextResponse.json({ error: "Course not found." }, { status: 404 });
     return NextResponse.json({ course, lessons });
   } catch (err) {
@@ -34,17 +41,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!session?.user?.role || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
-
     const { id } = await params;
     const body = await req.json();
     await dbConnect();
-
-    const course = await Course.findByIdAndUpdate(
-      id,
-      { $set: body },
-      { new: true }
-    );
-
+    const course = await Course.findByIdAndUpdate(id, { $set: body }, { new: true });
     if (!course) return NextResponse.json({ error: "Course not found." }, { status: 404 });
     return NextResponse.json({ success: true, course });
   } catch (err) {
@@ -53,35 +53,35 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-// Add lesson to course — upload video URL from Cloudinary (client-side upload flow)
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.role || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
-
     const { id } = await params;
     const body = await req.json();
-    const { title, description, videoUrl, cloudinaryPublicId, duration, sortOrder, resources } = body;
+    const { title, description, youtubeUrl, duration, sortOrder, resources } = body;
 
-    if (!title || !videoUrl || !cloudinaryPublicId) {
-      return NextResponse.json({ error: "title, videoUrl, and cloudinaryPublicId required." }, { status: 400 });
+    if (!title || !youtubeUrl) {
+      return NextResponse.json({ error: "Title and YouTube URL are required." }, { status: 400 });
+    }
+
+    const youtubeVideoId = extractYouTubeId(youtubeUrl);
+    if (!youtubeVideoId) {
+      return NextResponse.json({ error: "Could not extract a valid YouTube video ID from that URL." }, { status: 400 });
     }
 
     await dbConnect();
-
     const course = await Course.findById(id);
     if (!course) return NextResponse.json({ error: "Course not found." }, { status: 404 });
 
     const existingCount = await Lesson.countDocuments({ courseId: id });
-
     const lesson = await Lesson.create({
       courseId: id,
       title,
       description: description || "",
-      videoUrl,
-      cloudinaryPublicId,
+      youtubeVideoId,
       duration: duration || 0,
       sortOrder: sortOrder ?? existingCount,
       resources: resources || [],
@@ -105,16 +105,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!session?.user?.role || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
-
     const { id } = await params;
     const { lessonId } = await req.json();
-
     await dbConnect();
 
     if (lessonId) {
       const lesson = await Lesson.findById(lessonId);
       if (lesson) {
-        await cloudinary.uploader.destroy(lesson.cloudinaryPublicId, { resource_type: "video" }).catch(() => {});
         await lesson.deleteOne();
         await Course.findByIdAndUpdate(id, {
           $inc: { totalLessons: -1, totalDuration: -(lesson.duration || 0) },
@@ -124,14 +121,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     const lessons = await Lesson.find({ courseId: id });
-    await Promise.all(
-      lessons.map((l) =>
-        cloudinary.uploader.destroy(l.cloudinaryPublicId, { resource_type: "video" }).catch(() => {})
-      )
-    );
     await Lesson.deleteMany({ courseId: id });
     await Course.findByIdAndDelete(id);
-
+    void lessons; // unused but kept for reference
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[admin/courses/id DELETE]", err);

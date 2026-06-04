@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, BookOpen, Play, Trash2, ChevronDown, ChevronRight, CheckCircle, XCircle } from "lucide-react";
+import { Plus, BookOpen, Trash2, ChevronDown, ChevronRight, CheckCircle, XCircle, PlayCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/utils";
@@ -10,7 +10,7 @@ interface Lesson {
   _id: string;
   title: string;
   description: string;
-  videoUrl: string;
+  youtubeVideoId: string;
   duration: number;
   isPublished: boolean;
   sortOrder: number;
@@ -27,8 +27,17 @@ interface Course {
   sortOrder: number;
 }
 
+function extractYouTubeId(input: string): string | null {
+  const s = input.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
+  const m = s.match(
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  return m ? m[1] : null;
+}
+
 const defaultCourseForm = { title: "", description: "", moduleNumber: "", sortOrder: "" };
-const defaultLessonForm = { title: "", description: "", videoUrl: "", cloudinaryPublicId: "", duration: "" };
+const defaultLessonForm = { title: "", description: "", youtubeUrl: "", duration: "" };
 
 export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -38,7 +47,6 @@ export default function AdminCoursesPage() {
   const [creatingCourse, setCreatingCourse] = useState(false);
   const [courseError, setCourseError] = useState("");
 
-  // Expanded course with lessons
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [lessons, setLessons] = useState<Record<string, Lesson[]>>({});
   const [lessonLoading, setLessonLoading] = useState<string | null>(null);
@@ -46,6 +54,8 @@ export default function AdminCoursesPage() {
   const [lessonForm, setLessonForm] = useState(defaultLessonForm);
   const [addingLesson, setAddingLesson] = useState(false);
   const [lessonError, setLessonError] = useState("");
+
+  const previewId = extractYouTubeId(lessonForm.youtubeUrl);
 
   function fetchCourses() {
     setLoading(true);
@@ -69,15 +79,12 @@ export default function AdminCoursesPage() {
   }
 
   async function toggleExpand(courseId: string) {
-    if (expandedId === courseId) {
-      setExpandedId(null);
-      return;
-    }
+    if (expandedId === courseId) { setExpandedId(null); return; }
     setExpandedId(courseId);
     if (!lessons[courseId]) await fetchLessons(courseId);
   }
 
-  async function createCourse(e: React.FormEvent) {
+  async function createCourse(e: { preventDefault(): void }) {
     e.preventDefault();
     setCourseError("");
     setCreatingCourse(true);
@@ -111,7 +118,7 @@ export default function AdminCoursesPage() {
     fetchCourses();
   }
 
-  async function addLesson(e: React.FormEvent, courseId: string) {
+  async function addLesson(e: { preventDefault(): void }, courseId: string) {
     e.preventDefault();
     setLessonError("");
     setAddingLesson(true);
@@ -122,8 +129,7 @@ export default function AdminCoursesPage() {
         body: JSON.stringify({
           title: lessonForm.title,
           description: lessonForm.description,
-          videoUrl: lessonForm.videoUrl,
-          cloudinaryPublicId: lessonForm.cloudinaryPublicId,
+          youtubeUrl: lessonForm.youtubeUrl,
           duration: parseInt(lessonForm.duration) || 0,
         }),
       });
@@ -139,7 +145,7 @@ export default function AdminCoursesPage() {
   }
 
   async function deleteLesson(courseId: string, lessonId: string) {
-    if (!confirm("Delete this lesson? The Cloudinary video will also be removed.")) return;
+    if (!confirm("Delete this lesson?")) return;
     await fetch(`/api/admin/courses/${courseId}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -148,6 +154,8 @@ export default function AdminCoursesPage() {
     await fetchLessons(courseId);
     fetchCourses();
   }
+
+  const inputCls = "w-full bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30";
 
   if (loading) {
     return (
@@ -173,9 +181,13 @@ export default function AdminCoursesPage() {
         </button>
       </div>
 
-      {/* Cloudinary upload instructions */}
-      <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 text-sm text-muted-foreground">
-        <strong className="text-foreground">Video upload flow:</strong> Upload videos directly to Cloudinary (via the Cloudinary Media Library or widget). Then paste the video URL and Public ID below when adding lessons.
+      {/* How-to banner */}
+      <div className="flex items-start gap-3 bg-[#ff0000]/5 border border-[#ff0000]/20 rounded-xl px-4 py-3 text-sm">
+        <PlayCircle className="h-4 w-4 text-[#ff0000] mt-0.5 shrink-0" />
+        <div>
+          <strong className="text-foreground">YouTube upload flow:</strong>
+          <span className="text-muted-foreground"> Upload your video to YouTube (set to <em>Unlisted</em>), then paste the YouTube URL below when adding a lesson. The video ID is extracted automatically.</span>
+        </div>
       </div>
 
       {/* Create course form */}
@@ -187,8 +199,7 @@ export default function AdminCoursesPage() {
               {courseError && <p className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-xl px-4 py-3">{courseError}</p>}
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">Course title</label>
-                <input value={courseForm.title} onChange={(e) => setCourseForm((f) => ({ ...f, title: e.target.value }))} required
-                  className="w-full bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30" />
+                <input value={courseForm.title} onChange={(e) => setCourseForm((f) => ({ ...f, title: e.target.value }))} required className={inputCls} />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">Description</label>
@@ -198,14 +209,11 @@ export default function AdminCoursesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground block mb-1.5">Module number</label>
-                  <input type="number" value={courseForm.moduleNumber} onChange={(e) => setCourseForm((f) => ({ ...f, moduleNumber: e.target.value }))} required min={1}
-                    className="w-full bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30" />
+                  <input type="number" value={courseForm.moduleNumber} onChange={(e) => setCourseForm((f) => ({ ...f, moduleNumber: e.target.value }))} required min={1} className={inputCls} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground block mb-1.5">Sort order</label>
-                  <input type="number" value={courseForm.sortOrder} onChange={(e) => setCourseForm((f) => ({ ...f, sortOrder: e.target.value }))} min={0}
-                    placeholder="Same as module"
-                    className="w-full bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30" />
+                  <input type="number" value={courseForm.sortOrder} onChange={(e) => setCourseForm((f) => ({ ...f, sortOrder: e.target.value }))} min={0} placeholder="Same as module" className={inputCls} />
                 </div>
               </div>
               <div className="flex gap-3">
@@ -236,16 +244,9 @@ export default function AdminCoursesPage() {
           {courses.map((course) => (
             <Card key={course._id} className="overflow-hidden">
               {/* Course header */}
-              <div
-                className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-muted/30 transition-colors"
-                onClick={() => toggleExpand(course._id)}
-              >
+              <div className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpand(course._id)}>
                 <div className="flex items-center gap-3">
-                  {expandedId === course._id ? (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  {expandedId === course._id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-semibold text-foreground">{course.title}</p>
@@ -258,14 +259,10 @@ export default function AdminCoursesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => togglePublish(course._id, course.isPublished)}
+                  <button onClick={() => togglePublish(course._id, course.isPublished)}
                     className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors ${
-                      course.isPublished
-                        ? "bg-success/10 text-success hover:bg-success/20"
-                        : "bg-muted text-muted-foreground hover:bg-border"
-                    }`}
-                  >
+                      course.isPublished ? "bg-success/10 text-success hover:bg-success/20" : "bg-muted text-muted-foreground hover:bg-border"
+                    }`}>
                     {course.isPublished ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                     {course.isPublished ? "Published" : "Draft"}
                   </button>
@@ -288,18 +285,25 @@ export default function AdminCoursesPage() {
                           {(lessons[course._id] || []).map((lesson, idx) => (
                             <div key={lesson._id} className="flex items-center justify-between px-5 py-3 bg-muted/20">
                               <div className="flex items-center gap-3">
-                                <span className="w-6 h-6 rounded-full bg-secondary/10 text-secondary text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                                {lesson.youtubeVideoId ? (
+                                  <img
+                                    src={`https://img.youtube.com/vi/${lesson.youtubeVideoId}/default.jpg`}
+                                    alt=""
+                                    className="w-12 h-9 object-cover rounded-md bg-black"
+                                  />
+                                ) : (
+                                  <span className="w-6 h-6 rounded-full bg-secondary/10 text-secondary text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                                )}
                                 <div>
                                   <p className="text-sm font-medium text-foreground">{lesson.title}</p>
-                                  {lesson.duration > 0 && (
-                                    <p className="text-xs text-muted-foreground">{formatDuration(lesson.duration)}</p>
-                                  )}
+                                  <p className="text-xs text-muted-foreground">
+                                    {lesson.youtubeVideoId && <span className="font-mono">{lesson.youtubeVideoId}</span>}
+                                    {lesson.duration > 0 && ` · ${formatDuration(lesson.duration)}`}
+                                  </p>
                                 </div>
                               </div>
-                              <button
-                                onClick={() => deleteLesson(course._id, lesson._id)}
-                                className="p-1.5 rounded-lg text-danger/60 hover:text-danger hover:bg-danger/10 transition-colors"
-                              >
+                              <button onClick={() => deleteLesson(course._id, lesson._id)}
+                                className="p-1.5 rounded-lg text-danger/60 hover:text-danger hover:bg-danger/10 transition-colors">
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
@@ -307,10 +311,11 @@ export default function AdminCoursesPage() {
                         </div>
                       )}
 
-                      {/* Add lesson */}
+                      {/* Add lesson form */}
                       {showLessonForm === course._id ? (
                         <form onSubmit={(e) => addLesson(e, course._id)} className="p-5 space-y-4 border-t border-border bg-muted/10">
                           {lessonError && <p className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-xl px-4 py-3">{lessonError}</p>}
+
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="text-xs font-medium text-muted-foreground block mb-1.5">Lesson title</label>
@@ -324,25 +329,55 @@ export default function AdminCoursesPage() {
                                 className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30" />
                             </div>
                           </div>
+
                           <div>
-                            <label className="text-xs font-medium text-muted-foreground block mb-1.5">Cloudinary Video URL</label>
-                            <input type="url" value={lessonForm.videoUrl} onChange={(e) => setLessonForm((f) => ({ ...f, videoUrl: e.target.value }))} required
-                              placeholder="https://res.cloudinary.com/…/video/upload/…"
-                              className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30" />
+                            <label className="text-xs font-medium text-muted-foreground block mb-1.5">YouTube URL</label>
+                            <input
+                              type="text"
+                              value={lessonForm.youtubeUrl}
+                              onChange={(e) => setLessonForm((f) => ({ ...f, youtubeUrl: e.target.value }))}
+                              required
+                              placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
+                              className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30"
+                            />
+                            {lessonForm.youtubeUrl && (
+                              <p className={`text-xs mt-1 ${previewId ? "text-success" : "text-danger"}`}>
+                                {previewId ? `✓ Video ID: ${previewId}` : "✗ Could not extract video ID — check the URL"}
+                              </p>
+                            )}
                           </div>
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground block mb-1.5">Cloudinary Public ID</label>
-                            <input value={lessonForm.cloudinaryPublicId} onChange={(e) => setLessonForm((f) => ({ ...f, cloudinaryPublicId: e.target.value }))} required
-                              placeholder="folder/video-name"
-                              className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30" />
-                          </div>
+
+                          {/* Thumbnail preview */}
+                          {previewId && (
+                            <div className="flex items-center gap-3 p-3 bg-white border border-border rounded-xl">
+                              <img
+                                src={`https://img.youtube.com/vi/${previewId}/hqdefault.jpg`}
+                                alt="Thumbnail"
+                                className="w-24 h-16 object-cover rounded-lg bg-black"
+                              />
+                              <div>
+                                <p className="text-xs font-semibold text-foreground">Thumbnail preview</p>
+                                <p className="text-xs text-muted-foreground font-mono mt-0.5">{previewId}</p>
+                                <a
+                                  href={`https://youtu.be/${previewId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-secondary hover:underline mt-1 inline-block"
+                                >
+                                  Open on YouTube →
+                                </a>
+                              </div>
+                            </div>
+                          )}
+
                           <div>
                             <label className="text-xs font-medium text-muted-foreground block mb-1.5">Description (optional)</label>
                             <textarea value={lessonForm.description} onChange={(e) => setLessonForm((f) => ({ ...f, description: e.target.value }))} rows={2}
                               className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 resize-none" />
                           </div>
+
                           <div className="flex gap-3">
-                            <button type="submit" disabled={addingLesson}
+                            <button type="submit" disabled={addingLesson || !previewId}
                               className="bg-secondary text-white font-semibold px-4 py-2 rounded-xl hover:bg-secondary-dark transition-colors disabled:opacity-60 text-sm">
                               {addingLesson ? "Adding…" : "Add lesson"}
                             </button>

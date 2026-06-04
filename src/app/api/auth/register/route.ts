@@ -30,6 +30,12 @@ export async function POST(req: NextRequest) {
     let referredByUser = null;
     if (referralCode) {
       referredByUser = await User.findOne({ referralCode });
+      if (!referredByUser) {
+        return NextResponse.json(
+          { errors: { referralCode: "Referral code not found. Please check it and try again." } },
+          { status: 400 }
+        );
+      }
     }
 
     const passwordHash = await bcrypt.hash(password, 12);

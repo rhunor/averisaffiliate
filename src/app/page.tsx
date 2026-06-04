@@ -745,13 +745,13 @@ function Pricing() {
             <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-[#40D457]/30 to-[#122F38]/20 blur-sm" />
             <div className="relative bg-white border border-[#40D457]/20 rounded-3xl overflow-hidden">
               {/* Header */}
-              <div className="gradient-averis px-8 py-10 relative overflow-hidden">
+              <div className="gradient-averis px-6 sm:px-8 py-8 sm:py-10 relative overflow-hidden">
                 <div className="absolute inset-0 pointer-events-none" style={dotGrid} />
                 <motion.img src="/Iconography/Badge.svg" alt="" aria-hidden className="absolute -right-4 -top-4 h-32 opacity-10 pointer-events-none select-none" animate={{ rotate: [0, 5, 0] }} transition={{ duration: 6, repeat: Infinity }} />
                 <span className="inline-block glass text-[#40D457] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-4 border border-[#40D457]/20">Full Access</span>
-                <div className="flex items-end gap-3 mb-3">
-                  <span className="text-6xl font-black text-white">₦35,000</span>
-                  <span className="text-white/50 text-lg pb-2">/ 6 months</span>
+                <div className="flex flex-wrap items-end gap-x-3 gap-y-1 mb-3">
+                  <span className="text-5xl sm:text-6xl font-black text-white leading-none">₦35,000</span>
+                  <span className="text-white/50 text-base sm:text-lg pb-1">/ 6 months</span>
                 </div>
                 <p className="text-white/60 text-sm">One flat payment. No hidden fees. No monthly charges.</p>
               </div>

@@ -109,10 +109,11 @@ export async function GET(req: NextRequest) {
             description: `50% renewal commission — ${user.firstName} ${user.lastName} renewed`,
           });
 
-          // Update referral record to active and store commission
+          // Update referral record to active and store commission (upsert covers edge case where record is missing)
           await Referral.findOneAndUpdate(
             { referrerId: referrer._id, referredUserId: user._id },
-            { status: "active", commissionAmount, isRenewal: true },
+            { $set: { status: "active", commissionAmount, isRenewal: true }, $setOnInsert: { referrerId: referrer._id, referredUserId: user._id, productId: productId || null } },
+            { upsert: true },
           );
 
           sendPendingCommissionEmail({

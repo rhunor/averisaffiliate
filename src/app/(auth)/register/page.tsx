@@ -167,9 +167,12 @@ function RegisterForm() {
             placeholder="AVR-XXXXXX"
             value={form.referralCode}
             onChange={(e) => setForm({ ...form, referralCode: e.target.value.toUpperCase() })}
-            className={inputCls}
+            className={`${inputCls} ${errors.referralCode ? "border-red-400" : ""}`}
           />
-          <p className="mt-1.5 text-xs text-gray-400">Enter the referral code of the person who invited you</p>
+          {errors.referralCode
+            ? <p className="mt-1 text-xs text-red-500">{errors.referralCode}</p>
+            : <p className="mt-1.5 text-xs text-gray-400">Enter the referral code of the person who invited you</p>
+          }
         </div>
 
         <button type="submit" disabled={loading} className={btnCls}>

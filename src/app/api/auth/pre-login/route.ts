@@ -23,33 +23,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const knownDevice = user.knownDevices.find(
-      (d: { ip: string; lastSeen: Date }) => d.ip === ip && d.lastSeen > thirtyDaysAgo
-    );
+    // Admins skip OTP — they log in directly
+    if (user.role === "admin") {
+      return NextResponse.json({ success: true, requiresOTP: false });
+    }
 
+    // Regular users — always require OTP
     const otp = generateOTP();
     user.twoFAOTP = otp;
     user.twoFAOTPExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
-    let emailSent = false;
-    try {
-      await sendOTPEmail(user.email, user.firstName, otp);
-      emailSent = true;
-    } catch {
-      // Email not configured — skip OTP step entirely
-      console.log(`[pre-login] Email unavailable — bypassing OTP for ${user.email}`);
-    }
+    await sendOTPEmail(user.email, user.firstName, otp);
 
-    return NextResponse.json({
-      success: true,
-      requiresOTP: emailSent,
-      knownDevice: !!knownDevice,
-    });
+    return NextResponse.json({ success: true, requiresOTP: true });
   } catch (err) {
     console.error("[pre-login]", err);
-    return NextResponse.json({ error: "Login failed." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Could not send verification code. Please try again." },
+      { status: 500 }
+    );
   }
 }

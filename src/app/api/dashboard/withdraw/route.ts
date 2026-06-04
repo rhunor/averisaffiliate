@@ -7,7 +7,6 @@ import Withdrawal from "@/models/Withdrawal";
 import { resolveAccount, initiatePayout, generatePayoutRef } from "@/lib/korapay";
 import { sendWithdrawalRequestEmail } from "@/lib/email";
 import { siteConfig } from "@/config/site";
-import { isFriday } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,13 +17,6 @@ export async function POST(req: NextRequest) {
 
     if (!amount || !bankCode || !accountNumber) {
       return NextResponse.json({ error: "Amount, bank, and account number are required." }, { status: 400 });
-    }
-
-    if (!isFriday()) {
-      return NextResponse.json(
-        { error: "Withdrawals are only processed on Fridays (from 8:00 AM WAT). Please try again on Friday." },
-        { status: 400 }
-      );
     }
 
     if (amount < siteConfig.minWithdrawal) {

@@ -27,6 +27,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const justVerified = searchParams.get("verified") === "1";
 
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
   const [form, setForm] = useState({ email: "", password: "", otp: "" });
@@ -94,6 +95,12 @@ function LoginForm() {
 
   return (
     <div>
+      {justVerified && (
+        <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-5">
+          ✓ Email verified! Log in below to complete your payment and activate your account.
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
           {error}

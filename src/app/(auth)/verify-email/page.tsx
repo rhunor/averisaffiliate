@@ -35,12 +35,12 @@ function VerifyEmailContent() {
         <>
           <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
           <h2 className="text-white font-bold text-xl mb-2">Email Verified!</h2>
-          <p className="text-white/60 text-sm mb-6">{message}</p>
+          <p className="text-white/60 text-sm mb-6">Your email is confirmed. Log in to complete your payment and activate your account.</p>
           <Link
-            href="/pending-payment"
+            href="/login?callbackUrl=%2Fpending-payment&verified=1"
             className="inline-block bg-secondary text-white px-6 py-3 rounded-xl font-semibold hover:bg-secondary-dark transition-colors"
           >
-            Continue to Payment →
+            Log In &amp; Complete Payment →
           </Link>
         </>
       )}

@@ -9,22 +9,8 @@ function header(appUrl: string) {
   return `
     <div style="text-align:center;padding:28px 0 20px;border-bottom:1px solid #e2e8f0;margin-bottom:8px;">
       <a href="${appUrl}" style="text-decoration:none;display:inline-block;">
-        <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);padding:14px 24px;border-radius:12px;display:inline-block;">
-          <table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;">
-            <tr>
-              <td style="vertical-align:middle;padding-right:10px;">
-                <svg width="36" height="28" viewBox="0 0 65 51" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M23.6321 39.1078L64.2474 39.1659L44.6646 50.2771L4.34633 50.2697L0 42.891L2.22282 39.3854L20.7427 10.7465L39.9931 0L21.4887 28.6184L19.2659 32.124L23.6321 39.1078Z" fill="white"/>
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M54.3371 28.6184L44.0985 12.7838L33.8601 28.6184H54.3371Z" fill="#40D457"/>
-                </svg>
-              </td>
-              <td style="vertical-align:middle;">
-                <div style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:900;letter-spacing:0.18em;line-height:1.1;">AVERIS</div>
-                <div style="color:#40D457;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:900;letter-spacing:0.18em;line-height:1.1;">ACADEMY</div>
-              </td>
-            </tr>
-          </table>
-        </div>
+        <img src="${appUrl}/email-logo.png" alt="Averis Academy" width="180" height="auto"
+          style="display:block;height:auto;border:0;outline:none;max-width:180px;" />
       </a>
     </div>
   `;

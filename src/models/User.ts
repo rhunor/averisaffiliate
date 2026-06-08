@@ -28,6 +28,7 @@ export interface IUser extends Document {
   } | null;
   signupProductSlug: string | null;
   isSpecialAffiliate: boolean;
+  isLifetime: boolean;
   knownDevices: { ip: string; lastSeen: Date }[];
   twoFAOTP: string | null;
   twoFAOTPExpires: Date | null;
@@ -67,6 +68,7 @@ const UserSchema = new Schema<IUser>(
     },
     signupProductSlug: { type: String, default: null },
     isSpecialAffiliate: { type: Boolean, default: false },
+    isLifetime: { type: Boolean, default: false },
     knownDevices: { type: [{ ip: String, lastSeen: Date }], default: [] },
     twoFAOTP: { type: String, default: null },
     twoFAOTPExpires: { type: Date, default: null },

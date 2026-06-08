@@ -20,8 +20,8 @@ export async function GET() {
 
     const u = user as Record<string, unknown>;
     const referralCode = u.referralCode as string;
-    const appUrl = process.env.NEXTAUTH_URL || "https://averisaffiliate.vercel.app";
-    const referralLink = `${appUrl}/register?aff=${referralCode}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
+    const referralLink = `${appUrl}/join/${referralCode}`;
 
     const referrals = await Referral.find({ referrerId: userId })
       .sort({ createdAt: -1 })

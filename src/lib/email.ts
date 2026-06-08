@@ -366,6 +366,83 @@ export async function sendBankDetailsChangedEmail(params: {
   if (error) throw new Error(`Resend: ${error.message}`);
 }
 
+export async function sendPaidSignupLinkEmail(params: {
+  email: string;
+  firstName: string;
+  signupToken: string;
+}) {
+  const appUrl = APP_URL;
+  const { email, firstName, signupToken } = params;
+  const signupUrl = `${appUrl}/complete-registration/${signupToken}`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `Your Averis Academy signup link is ready`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+      ${header(appUrl)}
+      <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
+        <p style="font-size:32px;margin:0;">🎉</p>
+        <h2 style="color:#fff;margin:10px 0 6px;font-size:22px;">Payment Confirmed, ${firstName}!</h2>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">Your Averis Academy access is waiting. Complete your registration below.</p>
+      </div>
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;">Hi ${firstName}, your payment was successfully processed. Click the button below to set up your password and access your account.</p>
+        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin:16px 0;">
+          <p style="color:#856404;font-size:13px;margin:0;">⚠️ <strong>This link is for your email only</strong> (${email}) and expires in <strong>7 days</strong>. Do not share it with anyone.</p>
+        </div>
+        ${btn(signupUrl, "Complete My Registration →")}
+        <p style="color:#888;font-size:12px;text-align:center;margin-top:8px;">Can't click? Copy this link: <a href="${signupUrl}" style="color:#2d7f8f;word-break:break-all;">${signupUrl}</a></p>
+      </div>
+      ${footer()}
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
+export async function sendLifetimeWelcomeEmail(email: string, firstName: string, referralCode: string) {
+  const appUrl = APP_URL;
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || "primetrexbot";
+  const botDeepLink = `https://t.me/${botUsername}?start=averis_link_${referralCode}`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `Welcome to Averis Academy — Your account is active!`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+      ${header(appUrl)}
+      <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
+        <p style="font-size:32px;margin:0;">🚀</p>
+        <h2 style="color:#fff;margin:10px 0 6px;font-size:24px;">Welcome aboard, ${firstName}!</h2>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">You have <strong style="color:#40D457;">lifetime access</strong> to Averis Academy.</p>
+      </div>
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;">Your account is fully active. Log in to access all courses and start earning as an affiliate.</p>
+        <div style="background:white;border-radius:8px;padding:16px;margin:12px 0;border:1px solid #e2e8f0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Login URL</td>
+              <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;text-align:right;"><a href="${appUrl}/login" style="color:#2d7f8f;font-size:13px;">${appUrl}/login</a></td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;color:#888;font-size:13px;">Email</td>
+              <td style="padding:8px 0;text-align:right;color:#333;font-size:13px;">${email}</td>
+            </tr>
+          </table>
+        </div>
+        ${btn(`${appUrl}/dashboard`, "Go to Dashboard →")}
+        <div style="margin-top:20px;padding:20px;background:#1a3a52;border-radius:10px;text-align:center;">
+          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Join the Averis Community on Telegram</p>
+          <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:0 0 14px;">Connect your account to the Telegram group — the bot will verify your membership and send you an invite link.</p>
+          <a href="${botDeepLink}" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">Join Community →</a>
+        </div>
+      </div>
+      ${footer()}
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
 export async function sendSubscriptionExpiryEmail(params: {
   email: string;
   firstName: string;

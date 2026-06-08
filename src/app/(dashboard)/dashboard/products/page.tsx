@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Copy, ExternalLink, QrCode, CheckCircle, ShoppingBag, Share2 } from "lucide-react";
+import { Copy, ExternalLink, QrCode, CheckCircle, Share2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -145,7 +145,7 @@ export default function ProductsPage() {
     commissionAmount: siteConfig.commission.newSubscription,
     renewalCommissionAmount: siteConfig.commission.renewal,
     slug: "averis-academy",
-    referralLink: referralCode ? `${appUrl}/register?aff=${referralCode}` : "",
+    referralLink: referralCode ? `${appUrl}/join/${referralCode}` : "",
   }), [referralCode, appUrl]);
 
   const products = useMemo(() => [averisAcademyProduct, ...dbProducts], [averisAcademyProduct, dbProducts]);

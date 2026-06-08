@@ -15,7 +15,7 @@ export async function GET() {
     await dbConnect();
 
     const user = await User.findById(userId)
-      .select("firstName lastName email isActive subscriptionExpiresAt createdAt")
+      .select("firstName lastName email isActive isLifetime subscriptionExpiresAt createdAt")
       .lean();
 
     if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
@@ -29,9 +29,10 @@ export async function GET() {
 
     return NextResponse.json({
       isActive: u.isActive,
+      isLifetime: !!(u.isLifetime),
       subscriptionExpiresAt: expiresAt,
       daysLeft,
-      isExpiringSoon: daysLeft > 0 && daysLeft <= 14,
+      isExpiringSoon: !u.isLifetime && daysLeft > 0 && daysLeft <= 14,
     });
   } catch (err) {
     console.error("[subscription]", err);

@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle, AlertCircle, Clock, CreditCard, Zap } from "lucide-react";
+import { CheckCircle, AlertCircle, CreditCard, Zap, Infinity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { siteConfig } from "@/config/site";
 
 interface SubscriptionData {
   isActive: boolean;
+  isLifetime: boolean;
   subscriptionExpiresAt: string | null;
   daysLeft: number;
   isExpiringSoon: boolean;
@@ -62,6 +63,55 @@ function SubscriptionContent() {
     ? data.isExpiringSoon ? "Expiring soon" : "Active"
     : "Expired";
 
+  // ── Lifetime access view ────────────────────────────────────────────────
+  if (data.isLifetime) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Subscription</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Your Averis Academy membership</p>
+        </div>
+
+        <Card className="border-2 border-success/30">
+          <CardContent className="pt-6 pb-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Membership status</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Infinity className="h-5 w-5 text-success" />
+                  <p className="text-xl font-bold text-foreground">Lifetime Access</p>
+                </div>
+                <p className="text-sm text-success font-semibold mt-1">Never expires</p>
+              </div>
+              <Badge variant="success" className="text-sm">Active</Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>What's included</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              "Access to Averis Academy account",
+              "Full access to all Academy video trainings",
+              "Multi-product affiliate dashboard",
+              "QR code & shareable affiliate links",
+              "Instant bank withdrawals via Korapay",
+              "Real-time earnings tracking",
+              "Lifetime membership — never expires",
+            ].map((feature) => (
+              <div key={feature} className="flex items-start gap-3">
+                <CheckCircle className="h-4 w-4 text-success mt-0.5 shrink-0" />
+                <p className="text-sm text-foreground">{feature}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Standard subscription view ───────────────────────────────────────────
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -74,7 +124,7 @@ function SubscriptionContent() {
           <CheckCircle className="h-5 w-5 text-success shrink-0" />
           <div>
             <p className="font-semibold text-success">Subscription renewed!</p>
-            <p className="text-sm text-muted-foreground">Your 6-month access has been extended. Commission will be credited to your referrer tomorrow.</p>
+            <p className="text-sm text-muted-foreground">Your 6-month access has been extended.</p>
           </div>
         </div>
       )}

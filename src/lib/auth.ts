@@ -43,7 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         const u = user as unknown as Record<string, unknown>;
         (token as Record<string, unknown>).role = u.role;
@@ -53,17 +53,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (token as Record<string, unknown>).profileImage = u.profileImage ?? null;
       }
       if (trigger === "update") {
-        const { default: dbConnect } = await import("@/lib/db");
-        const { default: User } = await import("@/models/User");
-        await dbConnect();
-        const dbUser = (await User.findById(token.sub).lean()) as Record<
-          string,
-          unknown
-        > | null;
-        if (dbUser) {
-          (token as Record<string, unknown>).isEmailVerified = !!dbUser.isEmailVerified;
-          (token as Record<string, unknown>).isActive = dbUser.isActive;
-          (token as Record<string, unknown>).profileImage = (dbUser.profileImage as string) ?? null;
+        const s = session as Record<string, unknown> | null;
+        // If caller passed specific fields, apply them directly without a DB round-trip
+        if (s?.profileImage !== undefined) {
+          (token as Record<string, unknown>).profileImage = s.profileImage ?? null;
+        }
+        // Re-fetch mutable fields from DB to keep session in sync
+        try {
+          const { default: dbConnect } = await import("@/lib/db");
+          const { default: User } = await import("@/models/User");
+          await dbConnect();
+          const dbUser = (await User.findById(token.sub).lean()) as Record<string, unknown> | null;
+          if (dbUser) {
+            (token as Record<string, unknown>).isEmailVerified = !!dbUser.isEmailVerified;
+            (token as Record<string, unknown>).isActive = dbUser.isActive;
+            // Only overwrite profileImage from DB if the caller didn't supply it
+            if (s?.profileImage === undefined) {
+              (token as Record<string, unknown>).profileImage = (dbUser.profileImage as string) ?? null;
+            }
+          }
+        } catch {
+          // Non-fatal — token still has the caller-supplied values
         }
       }
       return token;

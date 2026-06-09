@@ -29,7 +29,7 @@ function Toast({ msg, type }: { msg: string; type: "success" | "error" }) {
 }
 
 export default function SettingsPage() {
-  const { data: session, update } = useSession();
+  const { update } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -141,7 +141,7 @@ export default function SettingsPage() {
         setPreviewUrl(json.profileImage);
         setProfile((prev) => prev ? { ...prev, profileImage: json.profileImage } : prev);
         setAvatarMsg({ msg: "Profile photo updated successfully.", type: "success" });
-        await update();
+        await update({ profileImage: json.profileImage });
       } else {
         setAvatarMsg({ msg: json.error || "Upload failed. Please try again.", type: "error" });
         setPreviewUrl(profile?.profileImage || null);

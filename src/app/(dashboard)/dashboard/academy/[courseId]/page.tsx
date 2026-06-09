@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, CheckCircle, Lock } from "lucide-react";
+import { ArrowLeft, Play, CheckCircle2, FileText, ExternalLink, ChevronRight, X } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
+
+interface Resource { name: string; url: string; }
 
 interface Lesson {
   _id: string;
@@ -16,13 +17,14 @@ interface Lesson {
   isPublished: boolean;
   completed: boolean;
   watchedSeconds: number;
+  resources: Resource[];
+  group: string | null;
 }
 
 interface Course {
   _id: string;
   title: string;
   description: string;
-  thumbnailUrl: string | null;
   moduleNumber: number;
   totalLessons: number;
   totalDuration: number;
@@ -31,146 +33,231 @@ interface Course {
   lessons: Lesson[];
 }
 
-const TRACK_COLORS = [
-  { card: "linear-gradient(135deg, #0d2b20 0%, #1a4d35 100%)", accent: "#2ec97a", shadow: "rgba(46,201,122,0.18)", numBg: "rgba(46,201,122,0.15)", numColor: "#2ec97a", thumb: "linear-gradient(135deg, #0d2b20, #1a4d35)" },
-  { card: "linear-gradient(135deg, #2a1a00 0%, #4a3000 100%)", accent: "#f5a623", shadow: "rgba(245,166,35,0.18)", numBg: "rgba(245,166,35,0.15)", numColor: "#f5a623", thumb: "linear-gradient(135deg, #2a1a00, #4a3000)" },
-  { card: "linear-gradient(135deg, #0d1a40 0%, #1a2d6e 100%)", accent: "#6c9fff", shadow: "rgba(108,159,255,0.18)", numBg: "rgba(108,159,255,0.15)", numColor: "#6c9fff", thumb: "linear-gradient(135deg, #0d1a40, #1a2d6e)" },
-  { card: "linear-gradient(135deg, #2a0a30 0%, #4e1060 100%)", accent: "#d97bff", shadow: "rgba(217,123,255,0.18)", numBg: "rgba(217,123,255,0.15)", numColor: "#d97bff", thumb: "linear-gradient(135deg, #2a0a30, #4e1060)" },
-];
+interface Section {
+  key: string;
+  title: string;
+  isGroup: boolean;
+  lessons: Lesson[];
+  resources: Resource[];
+  completedCount: number;
+}
+
+const ACCENTS: Record<number, string> = {
+  1: "#2ec97a",
+  2: "#f5a623",
+  3: "#6c9fff",
+  4: "#d97bff",
+};
+
+function buildSections(lessons: Lesson[]): Section[] {
+  const map = new Map<string, Lesson[]>();
+  const order: string[] = [];
+  for (const l of lessons) {
+    const key = l.group ?? l._id;
+    if (!map.has(key)) { map.set(key, []); order.push(key); }
+    map.get(key)!.push(l);
+  }
+  return order.map((key) => {
+    const ls = map.get(key)!;
+    const resources = ls.flatMap((l) => l.resources).filter(
+      (r, i, arr) => arr.findIndex((x) => x.url === r.url) === i
+    );
+    return {
+      key,
+      title: ls[0].group ?? ls[0].title,
+      isGroup: ls[0].group !== null,
+      lessons: ls,
+      resources,
+      completedCount: ls.filter((l) => l.completed).length,
+    };
+  });
+}
+
+// ─── Section icon letter ──────────────────────────────────────────────────────
+function SectionBadge({ title, accent, size = 40 }: { title: string; accent: string; size?: number }) {
+  const letter = title.replace(/[^a-zA-Z0-9]/g, "").charAt(0).toUpperCase();
+  return (
+    <div
+      className="flex items-center justify-center rounded-xl shrink-0 font-black text-white"
+      style={{
+        width: size, height: size,
+        fontSize: size * 0.38,
+        background: `linear-gradient(135deg, ${accent}cc, ${accent})`,
+      }}
+    >
+      {letter}
+    </div>
+  );
+}
+
+// ─── Thumbnail ────────────────────────────────────────────────────────────────
+function Thumb({ videoId, size = 64, className = "" }: { videoId: string; size?: number; className?: string }) {
+  return (
+    <div
+      className={`relative bg-gray-900 shrink-0 overflow-hidden rounded-xl ${className}`}
+      style={{ width: size, height: size * 0.5625 + 8 }}
+    >
+      <img
+        src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+        alt=""
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+        <div className="w-5 h-5 rounded-full bg-white/90 flex items-center justify-center">
+          <Play className="h-2.5 w-2.5 fill-gray-900 text-gray-900 ml-0.5" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CoursePage() {
   const { courseId } = useParams<{ courseId: string }>();
   const router = useRouter();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState<Section | null>(null);
+  const [activeTab, setActiveTab] = useState<"videos" | "resources">("videos");
 
   useEffect(() => {
     fetch(`/api/academy/${courseId}`)
       .then((r) => r.json())
-      .then((d) => {
-        if (d.course) setCourse(d.course);
-        else router.push("/dashboard/academy");
-      })
+      .then((d) => { if (d.course) setCourse(d.course); else router.push("/dashboard/academy"); })
       .finally(() => setLoading(false));
   }, [courseId, router]);
+
+  const openSection = useCallback((section: Section) => {
+    if (!section.isGroup && section.lessons.length === 1) {
+      router.push(`/dashboard/academy/${courseId}/${section.lessons[0]._id}`);
+      return;
+    }
+    setActiveSection(section);
+    setActiveTab("videos");
+    document.body.style.overflow = "hidden";
+  }, [courseId, router]);
+
+  const closeSection = useCallback(() => {
+    setActiveSection(null);
+    document.body.style.overflow = "";
+  }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-secondary border-t-transparent" />
+        <div className="animate-spin rounded-full h-7 w-7 border-2 border-secondary border-t-transparent" />
       </div>
     );
   }
 
   if (!course) return null;
 
-  const colors = TRACK_COLORS[(course.moduleNumber - 1) % TRACK_COLORS.length];
-  const hasStarted = course.completedLessons > 0;
-  const isComplete = course.progressPct === 100;
+  const accent = ACCENTS[course.moduleNumber] ?? "#2ec97a";
+  const sections = buildSections(course.lessons);
+  const totalSections = sections.length;
+  const completedSections = sections.filter((s) => s.completedCount === s.lessons.length && s.lessons.length > 0).length;
 
   return (
-    <div className="animate-fade-in -mx-4 lg:-mx-6">
-      {/* Hero header */}
-      <div className="relative overflow-hidden px-4 lg:px-6 pt-4 pb-6" style={{ background: colors.card }}>
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full" style={{ background: colors.accent, opacity: 0.08 }} />
-        <div className="absolute -bottom-12 left-8 w-28 h-28 rounded-full" style={{ background: colors.accent, opacity: 0.05 }} />
-
-        <div className="relative">
-          <Link
-            href="/dashboard/academy"
-            className="inline-flex items-center gap-2 text-xs font-medium mb-4 px-3 py-1.5 rounded-full"
-            style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.8)" }}
-          >
-            <ArrowLeft className="h-3 w-3" />
-            Back
-          </Link>
-
-          <div
-            className="inline-flex items-center text-[10px] font-bold tracking-widest uppercase mb-2 px-2.5 py-1 rounded-full block"
-            style={{ background: "rgba(255,255,255,0.12)", color: colors.accent }}
-          >
-            Module {course.moduleNumber}
-          </div>
-
-          <h1 className="text-xl font-black text-white leading-tight mb-1.5">{course.title}</h1>
-          <p className="text-white/55 text-xs mb-4">{course.totalLessons} lessons{course.totalDuration > 0 && ` · ${formatDuration(course.totalDuration)}`}</p>
-
-          {/* Progress */}
-          {hasStarted && (
-            <div>
-              <div className="flex justify-between text-[10px] mb-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>
-                <span>{course.completedLessons} of {course.totalLessons} completed</span>
-                <span>{course.progressPct}%</span>
-              </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${course.progressPct}%`, background: colors.accent }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Lessons list */}
-      <div className="px-4 lg:px-6 pt-4 pb-24">
-        <p
-          className="text-[11px] font-bold uppercase tracking-widest mb-3"
-          style={{ color: "var(--muted-foreground)" }}
+    <>
+      <div className="animate-fade-in pb-24">
+        {/* Back */}
+        <button
+          onClick={() => router.push("/dashboard/academy")}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5"
         >
-          {isComplete ? "All Lessons — Completed" : hasStarted ? "Keep Going" : "All Lessons"}
-        </p>
+          <ArrowLeft className="h-4 w-4" />
+          All Courses
+        </button>
 
-        <div className="flex flex-col gap-2.5">
-          {course.lessons.map((lesson, index) => {
-            const isLocked = false; // all lessons accessible once course is open
+        {/* Course header card */}
+        <div
+          className="rounded-2xl bg-white mb-6 overflow-hidden"
+          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)" }}
+        >
+          <div className="h-1" style={{ background: accent }} />
+          <div className="p-5">
+            <span
+              className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded mb-2 inline-block"
+              style={{ background: `${accent}15`, color: accent }}
+            >
+              Module {course.moduleNumber}
+            </span>
+            <h1 className="text-lg font-bold text-gray-900 mb-1">{course.title}</h1>
+            <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-4">{course.description}</p>
+
+            <div className="flex items-center gap-4 mb-3">
+              <span className="text-xs text-gray-400">{totalSections} sections · {course.totalLessons} videos</span>
+              {course.completedLessons > 0 && (
+                <span className="text-xs font-semibold" style={{ color: accent }}>
+                  {course.completedLessons}/{course.totalLessons} complete
+                </span>
+              )}
+            </div>
+
+            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${course.progressPct}%`, background: accent }}
+              />
+            </div>
+            <div className="flex justify-between mt-1.5">
+              <span className="text-[10px] text-gray-400">{course.progressPct}% complete</span>
+              {completedSections > 0 && (
+                <span className="text-[10px] text-gray-400">{completedSections} of {totalSections} sections done</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Section list */}
+        <div className="mb-3 px-0.5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+            Course Content
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {sections.map((section) => {
+            const isSectionDone = section.completedCount === section.lessons.length && section.lessons.length > 0;
+            const inProgress = section.completedCount > 0 && !isSectionDone;
+            const firstLesson = section.lessons[0];
+            const hasResources = section.resources.length > 0;
 
             return (
               <button
-                key={lesson._id}
-                onClick={() => !isLocked && router.push(`/dashboard/academy/${courseId}/${lesson._id}`)}
-                disabled={isLocked}
-                className="w-full flex items-center gap-3.5 bg-white rounded-2xl p-3.5 text-left shadow-sm active:scale-[0.98] transition-transform disabled:opacity-50"
-                style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
+                key={section.key}
+                onClick={() => openSection(section)}
+                className="w-full flex items-center gap-3.5 bg-white rounded-2xl p-3.5 text-left active:scale-[0.985] transition-transform"
+                style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04)" }}
               >
-                {/* Thumbnail */}
-                <div
-                  className="w-[72px] h-[52px] rounded-xl flex-shrink-0 overflow-hidden relative flex items-center justify-center"
-                  style={{ background: colors.thumb }}
-                >
-                  {lesson.youtubeVideoId ? (
-                    <img
-                      src={`https://img.youtube.com/vi/${lesson.youtubeVideoId}/mqdefault.jpg`}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  ) : null}
-                  {/* Play/lock overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.25)" }}>
-                    {isLocked ? (
-                      <Lock className="h-4 w-4 text-white/70" />
-                    ) : lesson.completed ? (
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: colors.accent }}>
-                        <CheckCircle className="h-3.5 w-3.5 text-white" />
+                {/* Thumbnail (always show first video's thumbnail) */}
+                <div className="shrink-0 relative rounded-xl overflow-hidden bg-gray-900"
+                  style={{ width: 68, height: 52 }}>
+                  <img
+                    src={`https://img.youtube.com/vi/${firstLesson.youtubeVideoId}/mqdefault.jpg`}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                    {isSectionDone ? (
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent }}>
+                        <CheckCircle2 className="h-4 w-4 text-white" />
                       </div>
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center">
-                        <svg width="7" height="9" viewBox="0 0 8 10" fill="#0d1f1a">
-                          <polygon points="0,0 8,5 0,10" />
-                        </svg>
+                        <Play className="h-3 w-3 fill-gray-900 text-gray-900 ml-0.5" />
                       </div>
                     )}
                   </div>
-
-                  {/* Progress bar on thumb bottom */}
-                  {lesson.watchedSeconds > 0 && !lesson.completed && lesson.duration > 0 && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: "rgba(255,255,255,0.2)" }}>
+                  {/* Progress strip at bottom of thumb */}
+                  {inProgress && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
                       <div
                         className="h-full"
                         style={{
-                          width: `${Math.min(100, (lesson.watchedSeconds / lesson.duration) * 100)}%`,
-                          background: colors.accent,
+                          width: `${(section.completedCount / section.lessons.length) * 100}%`,
+                          background: accent,
                         }}
                       />
                     </div>
@@ -179,49 +266,173 @@ export default function CoursePage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div
-                    className="text-[10px] font-bold uppercase tracking-wide mb-0.5"
-                    style={{ color: colors.numColor }}
-                  >
-                    {index + 1 < 10 ? `0${index + 1}` : index + 1}
-                  </div>
-                  <p
-                    className="text-sm font-semibold leading-snug line-clamp-2"
-                    style={{ color: lesson.completed ? "#9ca3af" : "#111827" }}
-                  >
-                    {lesson.title}
+                  <p className={`text-sm font-semibold leading-snug ${isSectionDone ? "text-gray-400" : "text-gray-900"}`}>
+                    {section.title}
                   </p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    {lesson.duration > 0 && (
+                    {section.isGroup ? (
+                      <span className="text-[11px] text-gray-400">
+                        {section.lessons.length} {section.lessons.length === 1 ? "video" : "videos"}
+                        {section.completedCount > 0 && ` · ${section.completedCount}/${section.lessons.length} done`}
+                      </span>
+                    ) : (
+                      firstLesson.duration > 0 && (
+                        <span className="text-[11px] text-gray-400 flex items-center gap-1">
+                          {formatDuration(firstLesson.duration)}
+                        </span>
+                      )
+                    )}
+                    {hasResources && (
                       <span
-                        className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-                        style={{ background: "#f3f4f6", color: "#9ca3af" }}
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                        style={{ background: `${accent}15`, color: accent }}
                       >
-                        {formatDuration(lesson.duration)}
+                        Resources
                       </span>
                     )}
-                    {lesson.completed && (
-                      <span className="text-[10px] font-semibold" style={{ color: colors.accent }}>
-                        ✓ Completed
-                      </span>
-                    )}
-                    {isLocked && (
-                      <span className="text-[10px] text-gray-400">Locked</span>
+                    {isSectionDone && (
+                      <span className="text-[10px] font-semibold" style={{ color: accent }}>✓ Done</span>
                     )}
                   </div>
                 </div>
 
-                {/* Arrow */}
-                {!isLocked && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" className="shrink-0">
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                )}
+                {/* Chevron */}
+                <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
               </button>
             );
           })}
         </div>
       </div>
-    </div>
+
+      {/* ── Section bottom sheet ──────────────────────────────────────────── */}
+      {activeSection && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={closeSection}
+            className="fixed inset-0 z-40 bg-black/40"
+            style={{ backdropFilter: "blur(2px)" }}
+          />
+
+          {/* Sheet */}
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white flex flex-col"
+            style={{ borderRadius: "20px 20px 0 0", maxHeight: "88vh" }}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-0 shrink-0">
+              <div className="w-9 h-1 rounded-full bg-gray-200" />
+            </div>
+
+            {/* Sheet header */}
+            <div className="flex items-start justify-between px-5 pt-4 pb-3 shrink-0 border-b border-gray-100">
+              <div className="flex-1 min-w-0 pr-3">
+                <h2 className="font-bold text-gray-900 text-base leading-snug">
+                  {activeSection.title}
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {activeSection.lessons.length} {activeSection.lessons.length === 1 ? "video" : "videos"}
+                  {activeSection.completedCount > 0 &&
+                    ` · ${activeSection.completedCount} of ${activeSection.lessons.length} completed`}
+                </p>
+              </div>
+              <button
+                onClick={closeSection}
+                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0 hover:bg-gray-200 transition-colors"
+              >
+                <X className="h-3.5 w-3.5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Tabs — only shown if the section has resources */}
+            {activeSection.resources.length > 0 && (
+              <div className="flex gap-1 px-5 pt-3 pb-0 shrink-0">
+                {(["videos", "resources"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className="flex-1 py-2 text-sm font-semibold rounded-xl transition-colors"
+                    style={
+                      activeTab === tab
+                        ? { background: `${accent}15`, color: accent }
+                        : { color: "#9ca3af" }
+                    }
+                  >
+                    {tab === "videos" ? "Videos" : "Resources"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Tab content */}
+            <div className="overflow-y-auto flex-1 px-4 py-3 pb-10">
+              {(activeTab === "videos" || activeSection.resources.length === 0) && (
+                <div className="flex flex-col gap-2">
+                  {activeSection.lessons.map((lesson, i) => (
+                    <button
+                      key={lesson._id}
+                      onClick={() => {
+                        closeSection();
+                        router.push(`/dashboard/academy/${courseId}/${lesson._id}`);
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                    >
+                      {/* Thumb */}
+                      <Thumb videoId={lesson.youtubeVideoId} size={72} className="!rounded-lg" />
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span
+                            className="text-[9px] font-black uppercase tracking-wider"
+                            style={{ color: accent }}
+                          >
+                            {String(i + 1).padStart(2, "0")}
+                          </span>
+                          {lesson.completed && (
+                            <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color: accent }} />
+                          )}
+                        </div>
+                        <p className={`text-sm font-semibold leading-snug line-clamp-2 ${lesson.completed ? "text-gray-400" : "text-gray-900"}`}>
+                          {lesson.title}
+                        </p>
+                        {lesson.duration > 0 && (
+                          <p className="text-[11px] text-gray-400 mt-0.5">{formatDuration(lesson.duration)}</p>
+                        )}
+                      </div>
+
+                      <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === "resources" && activeSection.resources.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {activeSection.resources.map((r, i) => (
+                    <a
+                      key={i}
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 hover:bg-gray-100 active:bg-gray-100 transition-colors"
+                    >
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ background: `${accent}15` }}
+                      >
+                        <FileText className="h-4 w-4" style={{ color: accent }} />
+                      </div>
+                      <span className="flex-1 text-sm font-medium text-gray-800 leading-snug">{r.name}</span>
+                      <ExternalLink className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }

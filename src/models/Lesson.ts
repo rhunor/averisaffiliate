@@ -9,6 +9,7 @@ export interface ILesson extends Document {
   sortOrder: number;
   isPublished: boolean;
   resources: { name: string; url: string }[];
+  group: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +27,7 @@ const LessonSchema = new Schema<ILesson>(
       type: [{ name: String, url: String }],
       default: [],
     },
+    group: { type: String, default: null },
   },
   { timestamps: true }
 );

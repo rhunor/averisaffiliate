@@ -43,13 +43,14 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-function NavItem({ item }: { item: (typeof navItems)[number] }) {
+function NavItem({ item, onClose }: { item: (typeof navItems)[number]; onClose: () => void }) {
   const pathname = usePathname();
   const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
   return (
     <Link
       href={item.href}
+      onClick={onClose}
       className={cn(
         "group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
         active
@@ -101,7 +102,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
           {navItems.map((item) => (
-            <NavItem key={item.href} item={item} />
+            <NavItem key={item.href} item={item} onClose={onClose} />
           ))}
         </nav>
 

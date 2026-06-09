@@ -9,7 +9,9 @@ import { getInitials } from "@/lib/utils";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
-  const name = (session?.user?.name as string) || "Admin";
+  const user = session?.user as unknown as Record<string, unknown>;
+  const name = (user?.name as string) || "Admin";
+  const profileImage = user?.profileImage as string | null;
 
   return (
     <div className="min-h-screen bg-muted">
@@ -23,8 +25,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="text-sm font-semibold text-primary">Admin Panel</p>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary-dark flex items-center justify-center">
-              <span className="text-white text-xs font-bold">{getInitials(name)}</span>
+            <div className="w-8 h-8 rounded-full bg-primary-dark flex items-center justify-center overflow-hidden shrink-0">
+              {profileImage
+                ? <img src={profileImage} alt={name} className="w-full h-full object-cover" />
+                : <span className="text-white text-xs font-bold">{getInitials(name)}</span>
+              }
             </div>
           </div>
         </header>

@@ -16,39 +16,44 @@ export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
-    const pending = await PendingSignup.findOne({ paymentReference: reference });
-    if (!pending) {
-      return NextResponse.redirect(new URL("/join?error=not_found", appUrl));
-    }
-
-    // Already processed
-    if (pending.paid && pending.signupToken) {
-      return NextResponse.redirect(
-        new URL(`/check-email?email=${encodeURIComponent(pending.email)}`, appUrl)
-      );
-    }
-
+    // Verify with the payment provider first (before touching the DB)
     const verify = await verifyCharge(reference);
     if (!verify.data || verify.data.status !== "success") {
       return NextResponse.redirect(new URL("/join?error=payment_failed", appUrl));
     }
 
-    // Generate unique signup token
     const signupToken = crypto.randomBytes(32).toString("hex");
+    const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    pending.paid = true;
-    pending.signupToken = signupToken;
-    pending.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await pending.save();
+    // Atomic update: only set paid+token if not already paid.
+    // This prevents a duplicate Korapay callback from overwriting the token
+    // and sending a second signup-link email with a different (now-invalid) token.
+    const updated = await PendingSignup.findOneAndUpdate(
+      { paymentReference: reference, paid: false },
+      { $set: { paid: true, signupToken, expiresAt: newExpiry } },
+      { new: true }
+    );
+
+    if (!updated) {
+      // Either not found, or already paid (webhook fired twice — idempotent: just redirect).
+      const existing = await PendingSignup.findOne({ paymentReference: reference }).lean();
+      if (existing && (existing as Record<string, unknown>).paid) {
+        const email = (existing as Record<string, unknown>).email as string;
+        return NextResponse.redirect(
+          new URL(`/check-email?email=${encodeURIComponent(email)}`, appUrl)
+        );
+      }
+      return NextResponse.redirect(new URL("/join?error=not_found", appUrl));
+    }
 
     await sendPaidSignupLinkEmail({
-      email: pending.email,
-      firstName: pending.firstName,
+      email: updated.email,
+      firstName: updated.firstName,
       signupToken,
     });
 
     return NextResponse.redirect(
-      new URL(`/check-email?email=${encodeURIComponent(pending.email)}`, appUrl)
+      new URL(`/check-email?email=${encodeURIComponent(updated.email)}`, appUrl)
     );
   } catch (err) {
     console.error("[pre-register/verify]", err);

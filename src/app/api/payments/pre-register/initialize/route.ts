@@ -78,6 +78,27 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[pre-register/initialize]", msg);
-    return NextResponse.json({ error: `Payment initialization failed: ${msg}` }, { status: 500 });
+
+    // Duplicate key on paymentReference → transient collision, safe to retry
+    if (msg.includes("E11000") && msg.includes("paymentReference")) {
+      return NextResponse.json(
+        { error: "A temporary conflict occurred. Please try again." },
+        { status: 409 }
+      );
+    }
+
+    // Any other duplicate key (e.g. stale non-sparse signupToken index) →
+    // do NOT surface raw Mongo errors to the client.
+    if (msg.includes("E11000")) {
+      return NextResponse.json(
+        { error: "A database conflict occurred. Please try again in a moment." },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Payment initialization failed. Please try again." },
+      { status: 500 }
+    );
   }
 }

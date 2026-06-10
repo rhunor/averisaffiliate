@@ -32,10 +32,21 @@ const PendingSignupSchema = new Schema<IPendingSignup>(
 );
 
 PendingSignupSchema.index({ email: 1 });
-PendingSignupSchema.index({ signupToken: 1 });
+// signupToken_1 is already declared as unique+sparse on the field above — no standalone re-declaration.
 PendingSignupSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-const PendingSignup: Model<IPendingSignup> =
-  mongoose.models.PendingSignup ||
-  mongoose.model<IPendingSignup>("PendingSignup", PendingSignupSchema);
+const isNew = !mongoose.models.PendingSignup;
+
+const PendingSignup: Model<IPendingSignup> = isNew
+  ? mongoose.model<IPendingSignup>("PendingSignup", PendingSignupSchema)
+  : (mongoose.models.PendingSignup as Model<IPendingSignup>);
+
+// On first model registration in this process, sync indexes so any stale
+// non-sparse signupToken_1 index in the DB is dropped and recreated correctly.
+if (isNew) {
+  PendingSignup.syncIndexes().catch((e) =>
+    console.error("[PendingSignup] syncIndexes:", e)
+  );
+}
+
 export default PendingSignup;

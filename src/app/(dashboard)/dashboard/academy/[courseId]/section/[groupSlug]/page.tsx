@@ -117,7 +117,7 @@ export default function GroupPage() {
               className="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl shrink-0"
               style={{ background: "rgba(255,255,255,0.15)" }}
             >
-              {groupName.charAt(0).toUpperCase()}
+              {(groupName.match(/:\s*([A-Za-z])/)?.[1] ?? groupName.charAt(0)).toUpperCase()}
             </div>
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: theme.accent }}>

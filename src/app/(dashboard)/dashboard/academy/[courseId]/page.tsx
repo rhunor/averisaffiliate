@@ -203,7 +203,7 @@ export default function CoursePage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: theme.accent }}>
-                    Lesson {lesson.sortOrder + 1}
+                    {lesson.title.match(/^Lesson\s+(\d+):/i)?.[0]?.replace(/:$/, "") ?? `Lesson ${lesson.sortOrder + 1}`}
                   </div>
                   <p className={`text-sm font-semibold leading-snug line-clamp-2 ${isSectionDone ? "text-gray-400" : "text-gray-900"}`}>
                     {lesson.title}
@@ -238,7 +238,7 @@ export default function CoursePage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl shrink-0"
                 style={{ background: `linear-gradient(135deg, ${iconGrad.from}, ${iconGrad.to})` }}
               >
-                {section.title.charAt(0).toUpperCase()}
+                {(section.title.match(/:\s*([A-Za-z])/)?.[1] ?? section.title.charAt(0)).toUpperCase()}
               </div>
 
               {/* Info */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Wallet, AlertCircle, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,10 @@ export default function WithdrawalsPage() {
   const [bankCode, setBankCode] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [resolvedName, setResolvedName] = useState<string | null>(null);
+  const [resolving, setResolving] = useState(false);
+  const [resolveError, setResolveError] = useState("");
+  const resolveAbort = useRef<AbortController | null>(null);
 
   async function loadData() {
     const [dash, bankList] = await Promise.all([
@@ -53,6 +57,38 @@ export default function WithdrawalsPage() {
   }
 
   useEffect(() => { loadData().finally(() => setLoading(false)); }, []);
+
+  // Auto-detect account name when 10-digit account + bank are both set
+  useEffect(() => {
+    if (accountNumber.length !== 10 || !bankCode) {
+      setResolvedName(null);
+      setResolveError("");
+      return;
+    }
+    resolveAbort.current?.abort();
+    const ctrl = new AbortController();
+    resolveAbort.current = ctrl;
+    setResolving(true);
+    setResolvedName(null);
+    setResolveError("");
+    const timer = setTimeout(() => {
+      fetch("/api/banks/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bankCode, accountNumber }),
+        signal: ctrl.signal,
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (ctrl.signal.aborted) return;
+          if (d.accountName) setResolvedName(d.accountName);
+          else setResolveError(d.error || "Could not verify account.");
+        })
+        .catch((e) => { if (e?.name !== "AbortError") setResolveError("Network error — check your connection."); })
+        .finally(() => { if (!ctrl.signal.aborted) setResolving(false); });
+    }, 600);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [accountNumber, bankCode]);
 
   function handleBankChange(code: string) {
     setBankCode(code);
@@ -185,7 +221,7 @@ export default function WithdrawalsPage() {
                 <input
                   type="text"
                   value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value)}
+                  onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
                   placeholder="0123456789"
                   required
                   maxLength={10}
@@ -193,16 +229,36 @@ export default function WithdrawalsPage() {
                 />
               </div>
 
+              {/* Account resolution feedback */}
+              {resolving && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="w-3.5 h-3.5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
+                  Verifying account…
+                </div>
+              )}
+              {resolvedName && !resolving && (
+                <div className="flex items-center gap-2 bg-success/10 border border-success/20 rounded-xl px-3 py-2.5 text-sm">
+                  <CheckCircle className="h-4 w-4 text-success shrink-0" />
+                  <span className="text-success font-semibold">{resolvedName}</span>
+                </div>
+              )}
+              {resolveError && !resolving && (
+                <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5 text-sm">
+                  <AlertCircle className="h-4 w-4 text-danger shrink-0" />
+                  <span className="text-danger">{resolveError}</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={submitting || data.availableBalance < siteConfig.minWithdrawal}
+                disabled={submitting || data.availableBalance < siteConfig.minWithdrawal || resolving || (accountNumber.length === 10 && !!bankCode && !resolvedName)}
                 className="w-full bg-secondary hover:bg-secondary-dark text-primary font-bold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm"
               >
                 {submitting ? "Sending to your bank…" : "Withdraw now"}
               </button>
 
               <p className="text-xs text-muted-foreground text-center">
-                Your account name is verified and funds sent instantly via Korapay
+                Account name is verified automatically before funds are sent
               </p>
             </form>
           </CardContent>

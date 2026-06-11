@@ -50,6 +50,9 @@ export default function SettingsPage() {
   const [bankCode, setBankCode] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [resolvedName, setResolvedName] = useState<string | null>(null);
+  const [resolving, setResolving] = useState(false);
+  const [resolveError, setResolveError] = useState("");
   const [bankMsg, setBankMsg] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [savingBank, setSavingBank] = useState(false);
 
@@ -79,6 +82,35 @@ export default function SettingsPage() {
       if (b?.banks) setBanks(b.banks);
     }).finally(() => setLoading(false));
   }, []);
+
+  // Auto-detect account name when 10-digit account + bank are both set
+  useEffect(() => {
+    if (accountNumber.length !== 10 || !bankCode) {
+      setResolvedName(null);
+      setResolveError("");
+      return;
+    }
+    let cancelled = false;
+    setResolving(true);
+    setResolvedName(null);
+    setResolveError("");
+    const timer = setTimeout(() => {
+      fetch("/api/banks/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bankCode, accountNumber }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (cancelled) return;
+          if (d.accountName) setResolvedName(d.accountName);
+          else setResolveError(d.error || "Could not verify account.");
+        })
+        .catch(() => { if (!cancelled) setResolveError("Network error — check your connection."); })
+        .finally(() => { if (!cancelled) setResolving(false); });
+    }, 600);
+    return () => { cancelled = true; clearTimeout(timer); setResolving(false); };
+  }, [accountNumber, bankCode]);
 
   function handleBankChange(code: string) {
     setBankCode(code);
@@ -375,19 +407,40 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
+                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
                 placeholder="0123456789"
                 required
                 maxLength={10}
                 className="w-full bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30"
               />
             </div>
+
+            {/* Account resolution feedback */}
+            {resolving && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="w-3.5 h-3.5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
+                Verifying account…
+              </div>
+            )}
+            {resolvedName && !resolving && (
+              <div className="flex items-center gap-2 bg-success/10 border border-success/20 rounded-xl px-3 py-2.5 text-sm">
+                <CheckCircle className="h-4 w-4 text-success shrink-0" />
+                <span className="text-success font-semibold">{resolvedName}</span>
+              </div>
+            )}
+            {resolveError && !resolving && (
+              <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5 text-sm">
+                <AlertCircle className="h-4 w-4 text-danger shrink-0" />
+                <span className="text-danger">{resolveError}</span>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={savingBank}
+              disabled={savingBank || resolving || (accountNumber.length === 10 && !!bankCode && !resolvedName)}
               className="bg-secondary hover:bg-secondary-dark text-white font-semibold px-5 py-2 rounded-xl transition-colors disabled:opacity-60 text-sm"
             >
-              {savingBank ? "Verifying & saving…" : "Update bank details"}
+              {savingBank ? "Saving…" : "Update bank details"}
             </button>
           </form>
         </CardContent>

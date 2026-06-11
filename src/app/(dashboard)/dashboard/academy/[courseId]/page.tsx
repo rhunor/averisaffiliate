@@ -243,7 +243,12 @@ export default function CoursePage() {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 leading-snug">{section.title}</p>
+                <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: theme.accent }}>
+                  {section.title.match(/^(Lesson\s+\d+)/i)?.[1] ?? (section.title.toLowerCase().startsWith("bonus") ? "Bonus" : section.title)}
+                </div>
+                <p className="text-sm font-bold text-gray-900 leading-snug">
+                  {section.title.includes(":") ? section.title.split(":").slice(1).join(":").trim() : section.title}
+                </p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {section.lessons.length} {section.lessons.length === 1 ? "part" : "parts"} · Tap to explore
                 </p>

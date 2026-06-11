@@ -6,9 +6,16 @@ import Lesson from "@/models/Lesson";
 import Progress from "@/models/Progress";
 import mongoose from "mongoose";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ courseId: string }> }) {
+function toSlug(str: string) {
+  return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+}
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ courseId: string; groupSlug: string }> }
+) {
   try {
-    const { courseId } = await params;
+    const { courseId, groupSlug } = await params;
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
@@ -17,22 +24,31 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cou
 
     await dbConnect();
 
-    const [course, lessons] = await Promise.all([
+    const [course, allLessons] = await Promise.all([
       Course.findOne({ _id: courseId, isPublished: true }).lean(),
-      Lesson.find({ courseId, isPublished: true })
+      Lesson.find({ courseId, isPublished: true, group: { $ne: null } })
         .sort({ sortOrder: 1 })
         .select("-description -createdAt -updatedAt -__v")
         .lean(),
     ]);
+
     if (!course) return NextResponse.json({ error: "Course not found." }, { status: 404 });
 
-    const lessonIds = lessons.map((l) => (l as Record<string, unknown>)._id);
+    const groupLessons = allLessons.filter(
+      (l) => toSlug((l as Record<string, unknown>).group as string) === groupSlug
+    );
+
+    if (groupLessons.length === 0) {
+      return NextResponse.json({ error: "Group not found." }, { status: 404 });
+    }
+
+    const lessonIds = groupLessons.map((l) => (l as Record<string, unknown>)._id);
     const progressRecords = await Progress.find({ userId, lessonId: { $in: lessonIds } }).lean();
     const progressMap = new Map(
       progressRecords.map((p) => [(p as Record<string, unknown>).lessonId?.toString(), p])
     );
 
-    const lessonsWithProgress = lessons.map((l) => {
+    const lessonsWithProgress = groupLessons.map((l) => {
       const prog = progressMap.get((l as Record<string, unknown>)._id?.toString());
       return {
         ...l,
@@ -41,20 +57,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cou
       };
     });
 
-    const completedCount = lessonsWithProgress.filter((l) => l.completed).length;
-    const totalLessons = lessons.length;
+    const courseRecord = course as Record<string, unknown>;
 
     return NextResponse.json({
       course: {
-        ...course,
-        totalLessons,
-        completedLessons: completedCount,
-        progressPct: totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0,
-        lessons: lessonsWithProgress,
+        _id: courseRecord._id,
+        title: courseRecord.title,
+        moduleNumber: courseRecord.moduleNumber,
       },
+      lessons: lessonsWithProgress,
     });
   } catch (err) {
-    console.error("[academy/courseId]", err);
-    return NextResponse.json({ error: "Failed to load course." }, { status: 500 });
+    console.error("[academy/section]", err);
+    return NextResponse.json({ error: "Failed to load section." }, { status: 500 });
   }
 }

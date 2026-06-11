@@ -19,10 +19,8 @@ interface Lesson {
   group: string | null;
 }
 
-interface Course {
-  _id: string;
-  title: string;
-  moduleNumber: number;
+interface SectionData {
+  course: { _id: string; title: string; moduleNumber: number };
   lessons: Lesson[];
 }
 
@@ -32,10 +30,6 @@ const THEMES = [
   { accent: "#6c9fff", from: "#0a1a30", to: "#1a3060" },
   { accent: "#d97bff", from: "#1a0a2a", to: "#3a1a50" },
 ];
-
-function toSlug(str: string) {
-  return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-}
 
 function getResourceMeta(url: string): { label: string; iconBg: string } {
   const u = url.toLowerCase();
@@ -62,16 +56,16 @@ function ResourceIcon({ url }: { url: string }) {
 export default function GroupPage() {
   const { courseId, groupSlug } = useParams<{ courseId: string; groupSlug: string }>();
   const router = useRouter();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [data, setData] = useState<SectionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"videos" | "resources">("videos");
 
   useEffect(() => {
-    fetch(`/api/academy/${courseId}`)
+    fetch(`/api/academy/${courseId}/section/${groupSlug}`)
       .then((r) => r.json())
-      .then((d) => { if (d.course) setCourse(d.course); else router.push("/dashboard/academy"); })
+      .then((d) => { if (d.course) setData(d); else router.push("/dashboard/academy"); })
       .finally(() => setLoading(false));
-  }, [courseId, router]);
+  }, [courseId, groupSlug, router]);
 
   if (loading) {
     return (
@@ -81,13 +75,12 @@ export default function GroupPage() {
     );
   }
 
-  if (!course) return null;
+  if (!data) return null;
 
-  const theme = THEMES[(course.moduleNumber - 1) % THEMES.length];
+  const theme = THEMES[(data.course.moduleNumber - 1) % THEMES.length];
 
-  const groupLessons = course.lessons.filter(
-    (l) => l.group !== null && toSlug(l.group) === groupSlug
-  );
+  // lessons are pre-filtered server-side by groupSlug
+  const groupLessons = data.lessons;
 
   if (groupLessons.length === 0) {
     router.push(`/dashboard/academy/${courseId}`);

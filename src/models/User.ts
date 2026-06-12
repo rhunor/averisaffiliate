@@ -30,6 +30,7 @@ export interface IUser extends Document {
   isSpecialAffiliate: boolean;
   isLifetime: boolean;
   knownDevices: { ip: string; lastSeen: Date }[];
+  trustedDevices: { tokenHash: string; createdAt: Date; expiresAt: Date }[];
   twoFAOTP: string | null;
   twoFAOTPExpires: Date | null;
   createdAt: Date;
@@ -70,6 +71,10 @@ const UserSchema = new Schema<IUser>(
     isSpecialAffiliate: { type: Boolean, default: false },
     isLifetime: { type: Boolean, default: false },
     knownDevices: { type: [{ ip: String, lastSeen: Date }], default: [] },
+    trustedDevices: {
+      type: [{ tokenHash: String, createdAt: Date, expiresAt: Date }],
+      default: [],
+    },
     twoFAOTP: { type: String, default: null },
     twoFAOTPExpires: { type: Date, default: null },
   },

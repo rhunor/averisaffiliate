@@ -49,27 +49,6 @@ export default function JoinPage() {
 
       <div className="flex-1 flex items-center justify-center p-5 py-10">
         <div className="w-full max-w-[440px]">
-          {/* Hero card */}
-          <div className="rounded-2xl overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0d2b20 0%, #1a4d35 100%)" }}>
-            <div className="px-7 py-8">
-              <div className="inline-block bg-[#2ec97a]/20 text-[#2ec97a] text-xs font-bold tracking-widest uppercase px-3 py-1 rounded-full mb-4">Limited Access</div>
-              <h1 className="text-2xl font-black text-white mb-2 leading-tight">
-                Join Averis Academy
-              </h1>
-              <p className="text-white/60 text-sm leading-relaxed mb-6">
-                Learn affiliate marketing, build a digital business, and earn commissions every 6 months — all in one place.
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                {[["Video Courses", "Learn at your pace"], ["Earn Commissions", "50% per referral"], ["6-Month Access", "₦35,000 one-time"]].map(([title, sub]) => (
-                  <div key={title} className="bg-white/8 rounded-xl p-3 text-center">
-                    <p className="text-white text-xs font-bold mb-0.5">{title}</p>
-                    <p className="text-white/50 text-[10px]">{sub}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* Payment form */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
             <h2 className="text-lg font-bold text-[#122F38] mb-1">Get Access Now</h2>
@@ -99,11 +78,6 @@ export default function JoinPage() {
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email Address</label>
                 <input type="email" placeholder="you@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls} required />
                 <p className="mt-1.5 text-[11px] text-gray-400">Your signup link will be sent to this email. Make sure it is correct.</p>
-              </div>
-
-              <div className="bg-[#f0f5f2] rounded-xl px-4 py-3 flex items-center justify-between">
-                <span className="text-sm text-gray-600 font-medium">6-Month Access</span>
-                <span className="text-lg font-black text-[#122F38]">₦35,000</span>
               </div>
 
               <button

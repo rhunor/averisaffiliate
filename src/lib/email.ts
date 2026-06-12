@@ -5,12 +5,13 @@ const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM)!;
 const APP_NAME = "Averis Academy";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
+// Logo wrapped in a dark background strip so it renders on both light and dark email clients
 function header(appUrl: string) {
   return `
-    <div style="text-align:center;padding:28px 0 20px;border-bottom:1px solid #e2e8f0;margin-bottom:8px;">
+    <div style="text-align:center;padding:20px 0 16px;border-bottom:1px solid #e2e8f0;margin-bottom:8px;background:#0d2035;border-radius:12px 12px 0 0;">
       <a href="${appUrl}" style="text-decoration:none;display:inline-block;">
-        <img src="${appUrl}/email-logo.png" alt="Averis Academy" width="180" height="auto"
-          style="display:block;height:auto;border:0;outline:none;max-width:180px;" />
+        <img src="${appUrl}/email-logo.png" alt="Averis Academy" width="160" height="auto"
+          style="display:block;height:auto;border:0;outline:none;max-width:160px;" />
       </a>
     </div>
   `;
@@ -39,8 +40,9 @@ export async function sendVerificationEmail(email: string, firstName: string, to
     from: FROM_EMAIL,
     to: email,
     subject: `Verify your ${APP_NAME} account`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
         <h2 style="color:#1a3a52;margin-top:0;">Welcome, ${firstName}!</h2>
         <p style="color:#555;line-height:1.6;">Please verify your email address to activate your Averis Academy account.</p>
@@ -49,6 +51,7 @@ export async function sendVerificationEmail(email: string, firstName: string, to
         <p style="color:#888;font-size:13px;">Can't click the button? <a href="${verifyUrl}" style="color:#2d7f8f;word-break:break-all;">${verifyUrl}</a></p>
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -63,8 +66,9 @@ export async function sendPasswordResetEmail(email: string, firstName: string, t
     from: FROM_EMAIL,
     to: email,
     subject: `Reset your ${APP_NAME} password`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
         <h2 style="color:#1a3a52;margin-top:0;">Password Reset Request</h2>
         <p style="color:#555;line-height:1.6;">Hi ${firstName}, click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>
@@ -72,6 +76,7 @@ export async function sendPasswordResetEmail(email: string, firstName: string, t
         <p style="color:#888;font-size:13px;">If you didn't request this, ignore this email — your password won't change.</p>
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -79,8 +84,7 @@ export async function sendPasswordResetEmail(email: string, firstName: string, t
 
 export async function sendWelcomeEmail(email: string, firstName: string, referralCode?: string) {
   const appUrl = APP_URL;
-  const communityLink = "https://t.me/averisacademycommunity";
-  const botUsername = process.env.TELEGRAM_BOT_USERNAME || "primetrexbot";
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || "averisacademybot";
   const botDeepLink = referralCode
     ? `https://t.me/${botUsername}?start=averis_link_${referralCode}`
     : null;
@@ -89,8 +93,9 @@ export async function sendWelcomeEmail(email: string, firstName: string, referra
     from: FROM_EMAIL,
     to: email,
     subject: `Welcome to ${APP_NAME} — Your account is active!`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
         <h2 style="color:#fff;margin:0 0 8px;font-size:24px;">Welcome aboard, ${firstName}!</h2>
         <p style="color:rgba(255,255,255,0.8);margin:0;">Your Averis Academy account is now active. Start learning and earning today.</p>
@@ -110,37 +115,17 @@ export async function sendWelcomeEmail(email: string, firstName: string, referra
           </table>
         </div>
         <p style="color:#888;font-size:12px;margin:0 0 20px;">Use the password you set during registration to sign in.</p>
-
-        <p style="color:#555;line-height:1.6;margin-top:0;">Share your referral link with others and earn <strong>50% commission</strong> on every subscription — every 6 months.</p>
-        <div style="background:white;border-radius:8px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;">
-          <p style="color:#1a3a52;margin:0 0 12px;font-weight:bold;">Your commission structure:</p>
-          <table style="width:100%;border-collapse:collapse;">
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:13px;">New Subscription (₦35,000)</td>
-              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;color:#2d7f8f;font-size:18px;">₦17,500</td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;color:#555;font-size:13px;">Renewal every 6 months (₦30,000)</td>
-              <td style="padding:10px 0;text-align:right;font-weight:bold;color:#2d7f8f;font-size:18px;">₦15,000</td>
-            </tr>
-          </table>
-        </div>
-        <p style="color:#555;font-size:13px;line-height:1.6;margin-bottom:8px;"><strong>Note:</strong> Commissions are credited to your wallet the day after a confirmed sale.</p>
         ${btn(`${appUrl}/dashboard`, "Go to Your Dashboard →")}
         ${botDeepLink ? `
         <div style="margin-top:20px;padding:20px;background:#1a3a52;border-radius:10px;text-align:center;">
-          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Step 2 — Join the Averis Community on Telegram</p>
-          <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:0 0 14px;">Tap the button below to connect your account to the Telegram group. The bot will verify your subscription and send you an invite link instantly.</p>
+          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Step 1 — Join the Averis Academy Community</p>
+          <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:0 0 14px;">Tap the button below to connect your account to Telegram. The bot will verify your subscription and send you invite links to the community and announcement channel instantly.</p>
           <a href="${botDeepLink}" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">Join Community via Bot →</a>
           <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:10px 0 0;">Or open Telegram and message: <strong style="color:rgba(255,255,255,0.8);">@${botUsername}</strong> with the command: <code style="color:#40D457;">/start averis_link_${referralCode}</code></p>
         </div>` : ""}
-        <div style="margin-top:16px;padding:16px;background:#e8f4f8;border-radius:10px;text-align:center;">
-          <p style="color:#1a3a52;font-weight:bold;margin:0 0 8px;font-size:14px;">Averis Academy Affiliate Community</p>
-          <p style="color:#555;font-size:13px;margin:0 0 12px;">Connect with other affiliates, get tips, and stay updated.</p>
-          <a href="${communityLink}" style="background:#2d7f8f;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">Join Telegram Channel →</a>
-        </div>
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -153,8 +138,9 @@ export async function sendOTPEmail(email: string, firstName: string, otp: string
     from: FROM_EMAIL,
     to: email,
     subject: `Your ${APP_NAME} Login Code`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
         <h2 style="color:#1a3a52;margin-top:0;">Login Verification</h2>
         <p style="color:#555;line-height:1.6;">Hi ${firstName}, we detected a login from a new device. Enter the code below:</p>
@@ -165,8 +151,10 @@ export async function sendOTPEmail(email: string, firstName: string, otp: string
           </div>
         </div>
         <p style="color:#888;font-size:13px;text-align:center;">Expires in <strong>10 minutes</strong>. If you didn't attempt to log in, change your password immediately.</p>
+        <p style="color:#888;font-size:13px;text-align:center;">After verifying, this device will be remembered for 30 days so you won't need a code again.</p>
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -186,17 +174,22 @@ export async function sendPendingCommissionEmail(params: {
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: affiliateEmail,
-    subject: `Sale Confirmed — ₦${commissionAmount.toLocaleString()} credits tomorrow | ${APP_NAME}`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    subject: `Sale Confirmed 一₦${commissionAmount.toLocaleString()} affiliate commission earned | ${APP_NAME}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:24px;margin:20px 0;text-align:center;">
         <h2 style="color:#fff;margin:0 0 6px;font-size:22px;">Sale Confirmed!</h2>
         <p style="color:rgba(255,255,255,0.8);margin:0;">${productName}</p>
       </div>
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
-        <p style="color:#555;line-height:1.6;margin-top:0;">Hi ${affiliateFirstName}, great news — a sale was just confirmed through your referral link!</p>
+        <p style="color:#555;line-height:1.6;margin-top:0;">Hi ${affiliateFirstName}, great news — a sale was just confirmed through your affiliate link!</p>
         <div style="background:white;border-radius:8px;padding:20px;margin:16px 0;border:1px solid #e2e8f0;">
           <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Product</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;color:#333;font-size:13px;">${productName}</td>
+            </tr>
             <tr>
               <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Order ID</td>
               <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;font-family:monospace;color:#2d7f8f;">${orderId}</td>
@@ -211,12 +204,10 @@ export async function sendPendingCommissionEmail(params: {
             </tr>
           </table>
         </div>
-        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px;margin:16px 0;">
-          <p style="color:#856404;font-size:13px;margin:0;">⏰ <strong>Settlement:</strong> Your commission will be credited to your wallet balance <strong>tomorrow</strong>. You can then withdraw it anytime.</p>
-        </div>
         ${btn(`${appUrl}/dashboard/earnings`, "View Earnings →")}
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -238,8 +229,9 @@ export async function sendCommissionEmail(params: {
     from: FROM_EMAIL,
     to: affiliateEmail,
     subject: `Commission Earned — Order ${orderId} | ${APP_NAME}`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:24px;margin:20px 0;text-align:center;">
         <h2 style="color:#fff;margin:0 0 6px;font-size:22px;">Commission Earned!</h2>
         <p style="color:rgba(255,255,255,0.8);margin:0;">${productName}</p>
@@ -265,6 +257,7 @@ export async function sendCommissionEmail(params: {
         ${btn(`${appUrl}/dashboard/earnings`, "View Earnings →")}
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -286,8 +279,9 @@ export async function sendWithdrawalRequestEmail(params: {
     from: FROM_EMAIL,
     to: email,
     subject: `Withdrawal Request Received — ₦${amount.toLocaleString()} | ${APP_NAME}`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
         <h2 style="color:#1a3a52;margin-top:0;">Withdrawal Request Received</h2>
         <p style="color:#555;line-height:1.6;">Hi ${firstName}, your withdrawal request has been received and is being processed now via Korapay.</p>
@@ -318,6 +312,7 @@ export async function sendWithdrawalRequestEmail(params: {
         <p style="color:#aaa;font-size:11px;text-align:center;margin-top:12px;">Reference: ${withdrawalId}</p>
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -337,8 +332,9 @@ export async function sendBankDetailsChangedEmail(params: {
     from: FROM_EMAIL,
     to: email,
     subject: `Security Alert: Bank Details Updated | ${APP_NAME}`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
         <p style="font-size:28px;margin:0;">⚠️</p>
         <h2 style="color:#856404;margin:8px 0 0;">Security Alert</h2>
@@ -361,6 +357,7 @@ export async function sendBankDetailsChangedEmail(params: {
         </div>
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -379,8 +376,9 @@ export async function sendPaidSignupLinkEmail(params: {
     from: FROM_EMAIL,
     to: email,
     subject: `Your Averis Academy signup link is ready`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
         <p style="font-size:32px;margin:0;">🎉</p>
         <h2 style="color:#fff;margin:10px 0 6px;font-size:22px;">Payment Confirmed, ${firstName}!</h2>
@@ -395,6 +393,7 @@ export async function sendPaidSignupLinkEmail(params: {
         <p style="color:#888;font-size:12px;text-align:center;margin-top:8px;">Can't click? Copy this link: <a href="${signupUrl}" style="color:#2d7f8f;word-break:break-all;">${signupUrl}</a></p>
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -402,15 +401,16 @@ export async function sendPaidSignupLinkEmail(params: {
 
 export async function sendLifetimeWelcomeEmail(email: string, firstName: string, referralCode: string) {
   const appUrl = APP_URL;
-  const botUsername = process.env.TELEGRAM_BOT_USERNAME || "primetrexbot";
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || "averisacademybot";
   const botDeepLink = `https://t.me/${botUsername}?start=averis_link_${referralCode}`;
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
     subject: `Welcome to Averis Academy — Your account is active!`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
         <p style="font-size:32px;margin:0;">🚀</p>
         <h2 style="color:#fff;margin:10px 0 6px;font-size:24px;">Welcome aboard, ${firstName}!</h2>
@@ -432,12 +432,13 @@ export async function sendLifetimeWelcomeEmail(email: string, firstName: string,
         </div>
         ${btn(`${appUrl}/dashboard`, "Go to Dashboard →")}
         <div style="margin-top:20px;padding:20px;background:#1a3a52;border-radius:10px;text-align:center;">
-          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Join the Averis Community on Telegram</p>
-          <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:0 0 14px;">Connect your account to the Telegram group — the bot will verify your membership and send you an invite link.</p>
+          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Join the Averis Academy Community on Telegram</p>
+          <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:0 0 14px;">Connect your account — the bot will verify your membership and send you invite links to the community and announcement channel.</p>
           <a href="${botDeepLink}" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">Join Community →</a>
         </div>
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);
@@ -477,8 +478,9 @@ export async function sendSubscriptionExpiryEmail(params: {
     from: FROM_EMAIL,
     to: email,
     subject,
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;">
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
+      <div style="padding:20px;">
       <div style="background:${bannerBg};border:2px solid ${bannerBorder};border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
         <p style="font-size:32px;margin:0;">${emoji}</p>
         <h2 style="color:${bannerColor};margin:8px 0 0;">${timeLabel}</h2>
@@ -493,6 +495,7 @@ export async function sendSubscriptionExpiryEmail(params: {
         ${btn(`${appUrl}/dashboard/subscription`, "Renew Subscription →")}
       </div>
       ${footer()}
+      </div>
     </div>`,
   });
   if (error) throw new Error(`Resend: ${error.message}`);

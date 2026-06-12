@@ -19,7 +19,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
 
     // Earnings stats
-    const [transactions, pendingTransactions, referrals, withdrawals] = await Promise.all([
+    const [completedTransactions, pendingTransactions, referrals, withdrawals] = await Promise.all([
       Transaction.find({ userId, type: { $in: ["commission", "renewal_commission"] }, status: "completed" }).lean(),
       Transaction.find({ userId, type: { $in: ["commission", "renewal_commission"] }, status: "pending" }).lean(),
       Referral.find({ referrerId: userId })
@@ -30,22 +30,25 @@ export async function GET() {
       Withdrawal.find({ userId }).sort({ createdAt: -1 }).limit(20).lean(),
     ]);
 
-    const totalEarnings = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const completedEarnings = completedTransactions.reduce((sum, t) => sum + t.amount, 0);
     const pendingEarnings = pendingTransactions.reduce((sum, t) => sum + t.amount, 0);
+    // Total earned shows all commissions immediately (pending + completed)
+    const totalEarnings = completedEarnings + pendingEarnings;
     const pendingWithdrawals = withdrawals
       .filter((w) => w.status === "pending" || w.status === "processing")
       .reduce((sum, w) => sum + w.amount, 0);
     const totalWithdrawn = withdrawals
       .filter((w) => w.status === "completed")
       .reduce((sum, w) => sum + w.amount, 0);
-    const availableBalance = totalEarnings - totalWithdrawn - pendingWithdrawals;
+    // Available balance only uses settled (completed) commissions
+    const availableBalance = completedEarnings - totalWithdrawn - pendingWithdrawals;
 
     // 6-month earnings chart
     const now = new Date();
     const chartData = Array.from({ length: 6 }, (_, i) => {
       const month = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
       const label = month.toLocaleDateString("en-NG", { month: "short" });
-      const earnings = transactions
+      const earnings = completedTransactions
         .filter((t) => {
           const d = new Date(t.createdAt);
           return d.getFullYear() === month.getFullYear() && d.getMonth() === month.getMonth();

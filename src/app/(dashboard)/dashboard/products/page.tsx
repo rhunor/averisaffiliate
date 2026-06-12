@@ -250,16 +250,6 @@ export default function ProductsPage() {
                   )}
                 </div>
 
-                {/* Share button */}
-                <button
-                  onClick={() => linkReady && setShareProduct(product)}
-                  disabled={!linkReady}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary text-primary font-bold text-sm hover:bg-secondary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Share2 className="h-4 w-4" />
-                  Share &amp; Earn
-                </button>
-
                 {/* QR Code */}
                 {qrId === product._id && (
                   <div className="flex flex-col items-center gap-2 pt-2 border-t border-border">

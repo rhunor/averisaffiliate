@@ -86,3 +86,26 @@ export function getInitials(name: string): string {
 export function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max) + "…" : str;
 }
+
+/**
+ * Compares two names using Jaccard token similarity.
+ * Handles: different word order, middle names, extra initials.
+ * Returns a score between 0 (no overlap) and 1 (identical).
+ * Threshold ≥ 0.5 means the same person.
+ */
+export function compareNames(nameA: string, nameB: string): number {
+  const tokenize = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, "")
+      .split(/\s+/)
+      .filter((t) => t.length > 1); // drop single-letter initials
+
+  const a = new Set(tokenize(nameA));
+  const b = new Set(tokenize(nameB));
+  if (a.size === 0 || b.size === 0) return 0;
+
+  const intersection = [...a].filter((t) => b.has(t)).length;
+  const union = new Set([...a, ...b]).size;
+  return intersection / union;
+}

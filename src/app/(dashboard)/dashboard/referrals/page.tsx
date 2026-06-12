@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, UserCheck, UserX, Copy, CheckCircle } from "lucide-react";
+import { Users, UserCheck, UserX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -25,7 +25,6 @@ interface SalesData {
 export default function AffiliateSalesPage() {
   const [data, setData] = useState<SalesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch("/api/dashboard/referrals")
@@ -33,13 +32,6 @@ export default function AffiliateSalesPage() {
       .then((d) => setData(d))
       .finally(() => setLoading(false));
   }, []);
-
-  function copyLink() {
-    if (!data) return;
-    navigator.clipboard.writeText(data.referralLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
 
   if (loading) {
     return (
@@ -55,34 +47,8 @@ export default function AffiliateSalesPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-xl font-bold text-foreground">Affiliate Sales</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Everyone you&apos;ve brought in to Averis Academy</p>
+        <p className="text-sm text-muted-foreground mt-0.5">All your affiliate sales</p>
       </div>
-
-      {/* Affiliate link card */}
-      <Card>
-        <CardContent className="pt-5 space-y-3">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1.5">Your affiliate code</p>
-            <span className="inline-block font-mono font-bold text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg text-sm">
-              {data.referralCode}
-            </span>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1.5">Your affiliate link</p>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-muted rounded-xl px-3 py-2 overflow-hidden">
-                <p className="text-xs font-mono text-foreground truncate">{data.referralLink}</p>
-              </div>
-              <button
-                onClick={copyLink}
-                className="shrink-0 w-9 h-9 rounded-xl bg-secondary/10 hover:bg-secondary/20 text-secondary flex items-center justify-center transition-colors"
-              >
-                {copied ? <CheckCircle className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

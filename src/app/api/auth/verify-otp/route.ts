@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
+import { generateSecureToken } from "@/lib/utils";
+
+const DEVICE_COOKIE = "dt";
+const TRUST_DAYS = 30;
+const MAX_TRUSTED_DEVICES = 10;
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,6 +36,7 @@ export async function POST(req: NextRequest) {
     user.twoFAOTP = null;
     user.twoFAOTPExpires = null;
 
+    // Update known IPs
     const existingDevice = user.knownDevices.find((d: { ip: string }) => d.ip === ip);
     if (existingDevice) {
       existingDevice.lastSeen = now;
@@ -37,8 +44,32 @@ export async function POST(req: NextRequest) {
       user.knownDevices.push({ ip, lastSeen: now });
     }
 
+    // Issue trusted device token — stored as a hash in DB, raw token in HttpOnly cookie
+    const rawToken = generateSecureToken();
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = new Date(now.getTime() + TRUST_DAYS * 24 * 60 * 60 * 1000);
+
+    // Prune expired trusted devices and enforce max count
+    const validDevices = (user.trustedDevices || []).filter(
+      (d: { tokenHash: string; expiresAt: Date }) => new Date(d.expiresAt) > now
+    );
+    if (validDevices.length >= MAX_TRUSTED_DEVICES) {
+      validDevices.shift(); // remove oldest
+    }
+    validDevices.push({ tokenHash, createdAt: now, expiresAt });
+    user.trustedDevices = validDevices;
+
     await user.save();
-    return NextResponse.json({ success: true });
+
+    const res = NextResponse.json({ success: true });
+    res.cookies.set(DEVICE_COOKIE, rawToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: TRUST_DAYS * 24 * 60 * 60,
+    });
+    return res;
   } catch (err) {
     console.error("[verify-otp]", err);
     return NextResponse.json({ error: "Verification failed." }, { status: 500 });

@@ -7,6 +7,7 @@ import Withdrawal from "@/models/Withdrawal";
 import { resolveAccount, initiatePayout, generatePayoutRef } from "@/lib/korapay";
 import { sendWithdrawalRequestEmail } from "@/lib/email";
 import { siteConfig } from "@/config/site";
+import { compareNames } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,16 +71,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify account name via Korapay before doing anything
-    let accountName: string;
+    // Attempt account name resolution via Korapay.
+    // Some microfinance banks (PalmPay, Kuda, OPay) may not support instant
+    // resolution — in that case we proceed without blocking the user.
+    let accountName: string = `${user.firstName} ${user.lastName}`;
+    let nameVerified = false;
     try {
       const resolved = await resolveAccount(accountNumber, bankCode);
       accountName = resolved.accountName;
-    } catch {
-      return NextResponse.json(
-        { error: "Could not verify bank account. Please check the details." },
-        { status: 400 }
-      );
+      nameVerified = true;
+    } catch (resolveErr) {
+      console.warn("[withdraw] Account resolution failed for bank", bankCode, "—", resolveErr instanceof Error ? resolveErr.message : resolveErr);
+    }
+
+    // Name matching: only enforce when Korapay could resolve the name.
+    // Unresolvable banks (some MFBs) are allowed through — Korapay's payout
+    // API will reject the transaction if the account details are invalid.
+    if (nameVerified) {
+      const averisName = `${user.firstName} ${user.lastName}`;
+      const nameScore = compareNames(accountName, averisName);
+      if (nameScore < 0.5) {
+        return NextResponse.json(
+          {
+            error: `The bank account name "${accountName}" does not match the name on your Averis Academy account. Please use a bank account registered in your name.`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Create withdrawal record first

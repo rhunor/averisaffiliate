@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Wallet, AlertCircle, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { Wallet, AlertCircle, CheckCircle, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -35,11 +35,19 @@ export default function WithdrawalsPage() {
   const [amount, setAmount] = useState("");
   const [bankCode, setBankCode] = useState("");
   const [bankName, setBankName] = useState("");
+  const [bankSearch, setBankSearch] = useState("");
+  const [showBankList, setShowBankList] = useState(false);
   const [accountNumber, setAccountNumber] = useState("");
   const [resolvedName, setResolvedName] = useState<string | null>(null);
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState("");
   const resolveAbort = useRef<AbortController | null>(null);
+  const bankInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredBanks = useMemo(() => {
+    const q = bankSearch.toLowerCase();
+    return q ? banks.filter((b) => b.name.toLowerCase().includes(q)) : banks;
+  }, [banks, bankSearch]);
 
   async function loadData() {
     const [dash, bankList] = await Promise.all([
@@ -82,17 +90,28 @@ export default function WithdrawalsPage() {
         .then((d) => {
           if (ctrl.signal.aborted) return;
           if (d.accountName) setResolvedName(d.accountName);
-          else setResolveError(d.error || "Could not verify account.");
+          else setResolveError(d.error || "Could not auto-verify account name for this bank. You can still proceed.");
         })
-        .catch((e) => { if (e?.name !== "AbortError") setResolveError("Network error — check your connection."); })
+        .catch((e) => {
+          if (e?.name !== "AbortError") setResolveError("Could not auto-verify account name. You can still proceed.");
+        })
         .finally(() => { if (!ctrl.signal.aborted) setResolving(false); });
     }, 600);
     return () => { clearTimeout(timer); ctrl.abort(); };
   }, [accountNumber, bankCode]);
 
-  function handleBankChange(code: string) {
-    setBankCode(code);
-    setBankName(banks.find((b) => b.code === code)?.name || "");
+  function selectBank(bank: Bank) {
+    setBankCode(bank.code);
+    setBankName(bank.name);
+    setBankSearch(bank.name);
+    setShowBankList(false);
+  }
+
+  function handleBankSearchChange(val: string) {
+    setBankSearch(val);
+    setBankCode("");
+    setBankName("");
+    setShowBankList(true);
   }
 
   async function handleSubmit(e: { preventDefault(): void }) {
@@ -103,6 +122,10 @@ export default function WithdrawalsPage() {
     const amt = parseFloat(amount);
     if (!amt || amt < siteConfig.minWithdrawal) {
       setError(`Minimum withdrawal is ${formatCurrency(siteConfig.minWithdrawal)}.`);
+      return;
+    }
+    if (!bankCode) {
+      setError("Please select a bank from the list.");
       return;
     }
 
@@ -117,7 +140,7 @@ export default function WithdrawalsPage() {
       if (!res.ok) { setError(json.error || "Withdrawal failed."); return; }
 
       setSuccess(`₦${amt.toLocaleString()} is being sent to your account. It should arrive within minutes.`);
-      setAmount(""); setBankCode(""); setBankName(""); setAccountNumber("");
+      setAmount(""); setBankCode(""); setBankName(""); setBankSearch(""); setAccountNumber("");
       setShowForm(false);
       loadData();
     } finally {
@@ -135,11 +158,21 @@ export default function WithdrawalsPage() {
 
   if (!data) return null;
 
+  // Button is only blocked while actively resolving — a resolve error is a warning, not a blocker
+  const submitBlocked = submitting || data.availableBalance < siteConfig.minWithdrawal || resolving || !bankCode;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-xl font-bold text-foreground">Withdrawals</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Withdraw your earnings directly to your bank account</p>
+      </div>
+
+      {/* Bank support info */}
+      <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-xs text-muted-foreground space-y-1">
+        <p className="font-semibold text-foreground text-xs">Supported banks</p>
+        <p>All major commercial banks are fully supported — GTBank, Access, Zenith, UBA, First Bank, Fidelity, Sterling, Stanbic, and more.</p>
+        <p>Popular fintech accounts are also supported: <span className="font-medium text-foreground">Kuda, OPay, PalmPay, Moniepoint, VFD</span>. Account name auto-verification may not be available for some of these, but payouts still go through normally.</p>
       </div>
 
       {/* Balance card */}
@@ -201,19 +234,40 @@ export default function WithdrawalsPage() {
                 </div>
               </div>
 
-              <div>
+              {/* Searchable bank picker */}
+              <div className="relative">
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">Bank</label>
-                <select
-                  value={bankCode}
-                  onChange={(e) => handleBankChange(e.target.value)}
-                  required
-                  className="w-full bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30"
-                >
-                  <option value="">Select bank…</option>
-                  {banks.map((b) => (
-                    <option key={b.code} value={b.code}>{b.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <input
+                    ref={bankInputRef}
+                    type="text"
+                    value={bankSearch}
+                    onChange={(e) => handleBankSearchChange(e.target.value)}
+                    onFocus={() => setShowBankList(true)}
+                    onBlur={() => setTimeout(() => setShowBankList(false), 150)}
+                    placeholder="Search bank…"
+                    autoComplete="off"
+                    className="w-full bg-muted border border-border rounded-xl pl-8 pr-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30"
+                  />
+                </div>
+                {showBankList && filteredBanks.length > 0 && (
+                  <div className="absolute z-20 top-full mt-1 w-full bg-background border border-border rounded-xl shadow-lg max-h-52 overflow-y-auto">
+                    {filteredBanks.map((b) => (
+                      <button
+                        key={b.code}
+                        type="button"
+                        onMouseDown={() => selectBank(b)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors ${b.code === bankCode ? "font-semibold text-secondary" : "text-foreground"}`}
+                      >
+                        {b.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {bankSearch && !bankCode && (
+                  <p className="text-xs text-warning mt-1">Select a bank from the list above.</p>
+                )}
               </div>
 
               <div>
@@ -243,22 +297,22 @@ export default function WithdrawalsPage() {
                 </div>
               )}
               {resolveError && !resolving && (
-                <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5 text-sm">
-                  <AlertCircle className="h-4 w-4 text-danger shrink-0" />
-                  <span className="text-danger">{resolveError}</span>
+                <div className="flex items-center gap-2 bg-warning/10 border border-warning/20 rounded-xl px-3 py-2.5 text-sm">
+                  <AlertCircle className="h-4 w-4 text-warning shrink-0" />
+                  <span className="text-warning">{resolveError}</span>
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={submitting || data.availableBalance < siteConfig.minWithdrawal || resolving || (accountNumber.length === 10 && !!bankCode && !resolvedName)}
+                disabled={submitBlocked}
                 className="w-full bg-secondary hover:bg-secondary-dark text-primary font-bold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm"
               >
                 {submitting ? "Sending to your bank…" : "Withdraw now"}
               </button>
 
               <p className="text-xs text-muted-foreground text-center">
-                Account name is verified automatically before funds are sent
+                Account name is verified automatically where supported. Ensure your bank account is in your name.
               </p>
             </form>
           </CardContent>

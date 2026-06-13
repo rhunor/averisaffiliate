@@ -1,0 +1,15 @@
+{
+  "name": "averis-payout-proxy",
+  "version": "1.0.0",
+  "description": "Static-IP proxy for Korapay disbursement API",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

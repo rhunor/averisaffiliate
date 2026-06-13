@@ -126,24 +126,45 @@ export async function initiatePayout(params: {
   beneficiaryName: string;
   beneficiaryEmail?: string;
 }): Promise<KoraPayoutResponse> {
+  const body = {
+    reference: params.reference,
+    destination: {
+      type: "bank_account",
+      amount: params.amount,
+      currency: "NGN",
+      narration: params.narration,
+      bank_account: { bank: params.accountBank, account: params.accountNumber },
+      customer: {
+        name: params.beneficiaryName,
+        email: params.beneficiaryEmail || `${params.accountNumber}@payout.averisacademy.com`,
+      },
+    },
+  };
+
+  const proxyUrl = process.env.PAYOUT_PROXY_URL;
+  const proxySecret = process.env.PAYOUT_PROXY_SECRET;
+
+  if (proxyUrl && proxySecret) {
+    // Route through static-IP proxy so Korapay IP whitelist is satisfied
+    const res = await fetch(`${proxyUrl}/disburse`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-proxy-secret": proxySecret,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(25000),
+    });
+    const data = await res.json() as KoraPayoutResponse;
+    if (!res.ok || !data.status) throw new Error(`Korapay payout failed: ${data.message}`);
+    return data;
+  }
+
+  // Fallback: direct call (works locally where IP whitelisting isn't enforced)
   const data = await koraFetch<KoraPayoutResponse>("/transactions/disburse", {
     method: "POST",
-    body: JSON.stringify({
-      reference: params.reference,
-      destination: {
-        type: "bank_account",
-        amount: params.amount,
-        currency: "NGN",
-        narration: params.narration,
-        bank_account: { bank: params.accountBank, account: params.accountNumber },
-        customer: {
-          name: params.beneficiaryName,
-          email: params.beneficiaryEmail || `${params.accountNumber}@payout.averisacademy.com`,
-        },
-      },
-    }),
+    body: JSON.stringify(body),
   });
-
   if (!data.status) throw new Error(`Korapay payout failed: ${data.message}`);
   return data;
 }

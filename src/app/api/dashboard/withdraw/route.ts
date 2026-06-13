@@ -129,9 +129,15 @@ export async function POST(req: NextRequest) {
     } catch (payoutErr) {
       // Payout failed — roll back so the user can retry
       await Withdrawal.findByIdAndDelete(withdrawal._id);
-      console.error("[withdraw/payout]", payoutErr);
+      const errMsg = payoutErr instanceof Error ? payoutErr.message : String(payoutErr);
+      console.error("[withdraw/payout]", errMsg);
+      const isServiceIssue = errMsg.includes("not_authorized") || errMsg.includes("whitelist") || errMsg.includes("403");
       return NextResponse.json(
-        { error: "Payout failed. Please try again or contact support." },
+        {
+          error: isServiceIssue
+            ? "Withdrawals are temporarily unavailable. Our team is working to resolve this — please try again later or contact support."
+            : "Payout failed. Please try again or contact support.",
+        },
         { status: 502 }
       );
     }

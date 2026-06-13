@@ -43,6 +43,7 @@ export interface KoraPayoutResponse {
 async function koraFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${KORA_BASE_URL}${endpoint}`, {
     ...options,
+    signal: AbortSignal.timeout(20000),
     headers: {
       Authorization: `Bearer ${KORA_SECRET_KEY}`,
       "Content-Type": "application/json",

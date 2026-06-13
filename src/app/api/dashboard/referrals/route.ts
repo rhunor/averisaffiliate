@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import Referral from "@/models/Referral";
+import "@/models/Product"; // register Product model so populate("productId") works
 import mongoose from "mongoose";
 
 export async function GET() {

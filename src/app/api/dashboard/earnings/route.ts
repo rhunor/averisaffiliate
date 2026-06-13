@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Transaction from "@/models/Transaction";
+import "@/models/Product"; // register Product model so populate("productId") works
 import mongoose from "mongoose";
 
 export async function GET() {

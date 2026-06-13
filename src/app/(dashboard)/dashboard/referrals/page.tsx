@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, UserCheck, UserX } from "lucide-react";
+import { Users, UserCheck, UserX, AlertCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -25,13 +25,25 @@ interface SalesData {
 export default function AffiliateSalesPage() {
   const [data, setData] = useState<SalesData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  function load() {
+    setLoading(true);
+    setError(false);
     fetch("/api/dashboard/referrals")
-      .then((r) => r.json())
-      .then((d) => setData(d))
+      .then((r) => {
+        if (!r.ok) throw new Error("not ok");
+        return r.json();
+      })
+      .then((d) => {
+        if (d?.error) throw new Error(d.error);
+        setData(d);
+      })
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { load(); }, []);
 
   if (loading) {
     return (
@@ -41,7 +53,25 @@ export default function AffiliateSalesPage() {
     );
   }
 
-  if (!data) return null;
+  if (error || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <div className="w-12 h-12 rounded-xl bg-danger/10 flex items-center justify-center">
+          <AlertCircle className="h-6 w-6 text-danger" />
+        </div>
+        <p className="font-semibold text-foreground">This page couldn&apos;t load</p>
+        <p className="text-sm text-muted-foreground text-center max-w-xs">
+          Reload to try again or go back.
+        </p>
+        <button
+          onClick={load}
+          className="flex items-center gap-2 text-sm text-secondary hover:underline mt-1"
+        >
+          <RefreshCw className="h-4 w-4" /> Reload to try again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

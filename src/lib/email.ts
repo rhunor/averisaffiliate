@@ -284,7 +284,7 @@ export async function sendWithdrawalRequestEmail(params: {
       <div style="padding:20px;">
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
         <h2 style="color:#1a3a52;margin-top:0;">Withdrawal Request Received</h2>
-        <p style="color:#555;line-height:1.6;">Hi ${firstName}, your withdrawal request has been received and is being processed now via Korapay.</p>
+        <p style="color:#555;line-height:1.6;">Hi ${firstName}, your withdrawal request has been received and is being reviewed by our team. Please allow up to <strong>2 business days</strong> for processing — you will receive another email once the funds have been sent.</p>
         <div style="background:white;border-radius:8px;padding:20px;margin:16px 0;border:1px solid #e2e8f0;">
           <table style="width:100%;border-collapse:collapse;">
             <tr>
@@ -310,6 +310,111 @@ export async function sendWithdrawalRequestEmail(params: {
         </div>
         ${btn(`${appUrl}/dashboard/withdrawals`, "View / Cancel Withdrawal →")}
         <p style="color:#aaa;font-size:11px;text-align:center;margin-top:12px;">Reference: ${withdrawalId}</p>
+      </div>
+      ${footer()}
+      </div>
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
+export async function sendAdminWithdrawalNotificationEmail(params: {
+  affiliateName: string;
+  affiliateEmail: string;
+  amount: number;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  withdrawalId: string;
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL || "hello@averisacademy.com";
+  const appUrl = APP_URL;
+  const { affiliateName, affiliateEmail, amount, bankName, accountNumber, accountName, withdrawalId } = params;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: adminEmail,
+    subject: `💸 New Withdrawal Request — ₦${amount.toLocaleString()} | ${APP_NAME}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+      ${header(appUrl)}
+      <div style="padding:20px;">
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <h2 style="color:#1a3a52;margin-top:0;">New Withdrawal Request</h2>
+        <p style="color:#555;line-height:1.6;">An affiliate has requested a withdrawal. Please send the money manually and then mark it as paid in the admin panel.</p>
+        <div style="background:white;border-radius:8px;padding:20px;margin:16px 0;border:1px solid #e2e8f0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Affiliate</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;color:#333;">${affiliateName} (${affiliateEmail})</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Amount</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;color:#2d7f8f;font-size:18px;">₦${amount.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Bank</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;color:#333;">${bankName}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Account Number</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-family:monospace;font-size:16px;font-weight:bold;color:#333;">${accountNumber}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;color:#888;font-size:13px;">Account Name</td>
+              <td style="padding:10px 0;text-align:right;color:#333;">${accountName}</td>
+            </tr>
+          </table>
+        </div>
+        ${btn(`${appUrl}/admin/withdrawals`, "Go to Admin Panel →")}
+        <p style="color:#aaa;font-size:11px;text-align:center;margin-top:12px;">Withdrawal ID: ${withdrawalId}</p>
+      </div>
+      ${footer()}
+      </div>
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
+export async function sendWithdrawalCompletedEmail(params: {
+  email: string;
+  firstName: string;
+  amount: number;
+  bankName: string;
+  accountNumber: string;
+}) {
+  const appUrl = APP_URL;
+  const { email, firstName, amount, bankName, accountNumber } = params;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `Withdrawal Sent — ₦${amount.toLocaleString()} | ${APP_NAME}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+      ${header(appUrl)}
+      <div style="padding:20px;">
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="width:56px;height:56px;background:#d1fae5;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;">✅</div>
+        </div>
+        <h2 style="color:#1a3a52;margin-top:0;text-align:center;">Your withdrawal has been sent!</h2>
+        <p style="color:#555;line-height:1.6;text-align:center;">Hi ${firstName}, we've processed your withdrawal. The funds should reflect in your account within a few minutes depending on your bank.</p>
+        <div style="background:white;border-radius:8px;padding:20px;margin:16px 0;border:1px solid #e2e8f0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Amount Sent</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;color:#2d7f8f;font-size:18px;">₦${amount.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Bank</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;color:#333;">${bankName}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;color:#888;font-size:13px;">Account</td>
+              <td style="padding:10px 0;text-align:right;font-family:monospace;color:#333;">${accountNumber}</td>
+            </tr>
+          </table>
+        </div>
+        ${btn(`${appUrl}/dashboard/withdrawals`, "View Withdrawal History →")}
       </div>
       ${footer()}
       </div>

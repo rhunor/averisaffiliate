@@ -139,7 +139,7 @@ export default function WithdrawalsPage() {
       const json = await res.json();
       if (!res.ok) { setError(json.error || "Withdrawal failed."); return; }
 
-      setSuccess(`₦${amt.toLocaleString()} is being sent to your account. It should arrive within minutes.`);
+      setSuccess(`Withdrawal request submitted! Your ₦${amt.toLocaleString()} will be processed within 2 business days. You'll get an email when it's sent.`);
       setAmount(""); setBankCode(""); setBankName(""); setBankSearch(""); setAccountNumber("");
       setShowForm(false);
       loadData();
@@ -166,6 +166,14 @@ export default function WithdrawalsPage() {
       <div>
         <h1 className="text-xl font-bold text-foreground">Withdrawals</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Withdraw your earnings directly to your bank account</p>
+      </div>
+
+      {/* Processing time disclaimer */}
+      <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
+        <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+        <p className="text-sm text-foreground">
+          Withdrawals are processed <strong>manually</strong> and may take up to <strong>2 business days</strong>. You will receive an email confirmation once your funds have been sent.
+        </p>
       </div>
 
       {/* Bank support info */}

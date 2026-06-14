@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import Transaction from "@/models/Transaction";
 import Withdrawal from "@/models/Withdrawal";
-import { resolveAccount, initiatePayout, generatePayoutRef } from "@/lib/korapay";
+import { resolveAccount } from "@/lib/korapay";
 import { sendWithdrawalRequestEmail } from "@/lib/email";
 import { siteConfig } from "@/config/site";
 import { compareNames } from "@/lib/utils";
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const user = await User.findById(userId);
     if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
 
-    // Block if there's already an active payout in flight
+    // Block if there's already a pending or processing withdrawal
     const activeWithdrawal = await Withdrawal.findOne({
       userId,
       status: { $in: ["pending", "processing"] },
@@ -71,9 +71,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Attempt account name resolution via Korapay.
-    // Some microfinance banks (PalmPay, Kuda, OPay) may not support instant
-    // resolution — in that case we proceed without blocking the user.
+    // Attempt account name resolution — warn only, never block
     let accountName: string = `${user.firstName} ${user.lastName}`;
     let nameVerified = false;
     try {
@@ -84,9 +82,6 @@ export async function POST(req: NextRequest) {
       console.warn("[withdraw] Account resolution failed for bank", bankCode, "—", resolveErr instanceof Error ? resolveErr.message : resolveErr);
     }
 
-    // Name matching: only enforce when Korapay could resolve the name.
-    // Unresolvable banks (some MFBs) are allowed through — Korapay's payout
-    // API will reject the transaction if the account details are invalid.
     if (nameVerified) {
       const averisName = `${user.firstName} ${user.lastName}`;
       const nameScore = compareNames(accountName, averisName);
@@ -100,7 +95,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create withdrawal record first
+    // Save withdrawal as pending — admin will process manually
     const withdrawal = await Withdrawal.create({
       userId,
       amount,
@@ -108,51 +103,9 @@ export async function POST(req: NextRequest) {
       bankCode,
       accountNumber,
       accountName,
-      status: "processing",
-      processedAt: new Date(),
+      status: "pending",
     });
 
-    // Fire payout immediately
-    const payoutRef = generatePayoutRef(withdrawal._id.toString());
-    try {
-      const payout = await initiatePayout({
-        reference: payoutRef,
-        accountBank: bankCode,
-        accountNumber,
-        amount,
-        narration: `Averis Academy — ${accountName}`,
-        beneficiaryName: accountName,
-      });
-
-      withdrawal.transferReference = payout.data?.reference || payoutRef;
-      await withdrawal.save();
-    } catch (payoutErr) {
-      // Payout failed — roll back so the user can retry
-      await Withdrawal.findByIdAndDelete(withdrawal._id);
-      const errMsg = payoutErr instanceof Error ? payoutErr.message : String(payoutErr);
-      console.error("[withdraw/payout]", errMsg);
-      const isServiceIssue = errMsg.includes("not_authorized") || errMsg.includes("whitelist") || errMsg.includes("403");
-      return NextResponse.json(
-        {
-          error: isServiceIssue
-            ? "Withdrawals are temporarily unavailable. Our team is working to resolve this — please try again later or contact support."
-            : "Payout failed. Please try again or contact support.",
-        },
-        { status: 502 }
-      );
-    }
-
-    // Record in transactions
-    await Transaction.create({
-      userId,
-      type: "withdrawal",
-      amount,
-      status: "processing",
-      description: `Withdrawal to ${withdrawal.bankName} — ${accountNumber}`,
-      metadata: { withdrawalId: withdrawal._id.toString(), transferReference: withdrawal.transferReference },
-    });
-
-    // Notify user
     sendWithdrawalRequestEmail({
       email: user.email,
       firstName: user.firstName,

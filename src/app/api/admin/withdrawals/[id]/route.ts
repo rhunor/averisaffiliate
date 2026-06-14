@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Withdrawal from "@/models/Withdrawal";
 import Transaction from "@/models/Transaction";
-import { initiatePayout, generatePayoutRef } from "@/lib/korapay";
+import User from "@/models/User";
+import { sendWithdrawalCompletedEmail } from "@/lib/email";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const { id } = await params;
-    const { action, rejectionReason } = await req.json();
+    const { action, rejectionReason, transferReference } = await req.json();
     const sessionUser = session.user as unknown as Record<string, unknown>;
 
     await dbConnect();
@@ -25,30 +26,34 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: "Can only approve pending withdrawals." }, { status: 400 });
       }
 
-      const payoutRef = generatePayoutRef(id);
-      const payout = await initiatePayout({
-        reference: payoutRef,
-        accountBank: withdrawal.bankCode,
-        accountNumber: withdrawal.accountNumber,
-        amount: withdrawal.amount,
-        narration: `Averis Academy Withdrawal — ${id}`,
-        beneficiaryName: withdrawal.accountName,
-      });
-
-      withdrawal.status = "processing";
-      withdrawal.transferReference = payout.data?.reference || payoutRef;
+      // Mark as completed — admin has already sent the money manually
+      withdrawal.status = "completed";
+      withdrawal.transferReference = transferReference || null;
       withdrawal.processedAt = new Date();
       withdrawal.processedBy = sessionUser.id as unknown as typeof withdrawal.processedBy;
       await withdrawal.save();
 
+      // Record in transactions so balance updates immediately
       await Transaction.create({
         userId: withdrawal.userId,
         type: "withdrawal",
         amount: withdrawal.amount,
-        status: "processing",
+        status: "completed",
         description: `Withdrawal to ${withdrawal.bankName} — ${withdrawal.accountNumber}`,
-        metadata: { withdrawalId: id, transferReference: withdrawal.transferReference },
+        metadata: { withdrawalId: id, transferReference: transferReference || null },
       });
+
+      // Notify the affiliate
+      const user = await User.findById(withdrawal.userId).select("email firstName").lean() as { email: string; firstName: string } | null;
+      if (user) {
+        sendWithdrawalCompletedEmail({
+          email: user.email,
+          firstName: user.firstName,
+          amount: withdrawal.amount,
+          bankName: withdrawal.bankName,
+          accountNumber: withdrawal.accountNumber,
+        }).catch(console.error);
+      }
 
       return NextResponse.json({ success: true });
     }

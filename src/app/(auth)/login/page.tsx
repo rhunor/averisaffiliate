@@ -29,62 +29,22 @@ function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const justVerified = searchParams.get("verified") === "1";
 
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
-  const [form, setForm] = useState({ email: "", password: "", otp: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleCredentials(e: { preventDefault(): void }) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/pre-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || "Invalid email or password"); return; }
-
-      if (!data.requiresOTP) {
-        const result = await signIn("credentials", {
-          email: form.email,
-          password: form.password,
-          redirect: false,
-        });
-        if (result?.error) { setError("Login failed. Please try again."); return; }
-        router.push(callbackUrl);
-        return;
-      }
-      setStep("otp");
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleOTP(e: { preventDefault(): void }) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, otp: form.otp }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || "Invalid or expired code"); return; }
-
       const result = await signIn("credentials", {
         email: form.email,
         password: form.password,
         redirect: false,
       });
-      if (result?.error) { setError("Login failed. Please try again."); return; }
+      if (result?.error) { setError("Invalid email or password."); return; }
       router.push(callbackUrl);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -107,86 +67,51 @@ function LoginForm() {
         </div>
       )}
 
-      {step === "credentials" ? (
-        <form onSubmit={handleCredentials} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
+          <input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className={inputCls}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+          <div className="relative">
             <input
-              type="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={inputCls}
+              type={showPass ? "text" : "password"}
+              placeholder="Password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className={`${inputCls} pr-12`}
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-            <div className="relative">
-              <input
-                type={showPass ? "text" : "password"}
-                placeholder="Password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className={`${inputCls} pr-12`}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
+        <button type="submit" disabled={loading} className={btnCls}>
+          {loading ? "Signing in…" : "Log In"}
+        </button>
 
-          <button type="submit" disabled={loading} className={btnCls}>
-            {loading ? "Signing in…" : "Log In"}
-          </button>
-
-          <p className="text-center text-sm text-gray-500">
-            Forgot Password?{" "}
-            <Link href="/forgot-password" className="text-[#40D457] font-semibold hover:underline">
-              Click to Reset Password
-            </Link>
-          </p>
-        </form>
-      ) : (
-        <form onSubmit={handleOTP} className="space-y-5">
-          <p className="text-sm text-gray-500 text-center mb-1">
-            We sent a 6-digit code to{" "}
-            <span className="font-semibold text-gray-800">{form.email}</span>
-          </p>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Verification Code</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              value={form.otp}
-              onChange={(e) => setForm({ ...form, otp: e.target.value.replace(/\D/g, "") })}
-              className={`${inputCls} text-center tracking-[0.5em] text-lg font-mono`}
-              required
-            />
-          </div>
-
-          <button type="submit" disabled={loading} className={btnCls}>
-            {loading ? "Verifying…" : "Verify & Sign In"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStep("credentials")}
-            className="w-full text-sm text-gray-500 hover:text-gray-700 text-center transition-colors"
-          >
-            ← Back
-          </button>
-        </form>
-      )}
+        <p className="text-center text-sm text-gray-500">
+          Forgot Password?{" "}
+          <Link href="/forgot-password" className="text-[#40D457] font-semibold hover:underline">
+            Click to Reset Password
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }

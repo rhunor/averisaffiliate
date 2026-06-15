@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Withdrawal from "@/models/Withdrawal";
+import "@/models/User"; // register User model so populate("userId") works
 
 export async function GET(req: NextRequest) {
   try {

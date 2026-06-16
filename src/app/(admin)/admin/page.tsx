@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, Wallet, DollarSign, TrendingUp, ArrowRight, CheckCircle, Clock } from "lucide-react";
+import { Users, Wallet, DollarSign, TrendingUp, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -34,7 +34,7 @@ function StatCard({ title, value, icon: Icon, color, sub }: {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+            <p className="text-lg sm:text-2xl font-bold text-foreground mt-1 truncate">{value}</p>
             {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
           </div>
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>

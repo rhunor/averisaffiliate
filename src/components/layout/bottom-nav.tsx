@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true },
-  { label: "AA Products", href: "/dashboard/products", icon: ShoppingBag },
+  { label: "Products", href: "/dashboard/products", icon: ShoppingBag },
   { label: "Trainings", href: "/dashboard/academy", icon: GraduationCap },
   { label: "Withdraw", href: "/dashboard/withdrawals", icon: Wallet },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },

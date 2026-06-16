@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   DollarSign, Users, Wallet, TrendingUp, ArrowRight, CheckCircle, Clock,
@@ -36,7 +35,7 @@ function StatCard({ title, value, sub, icon: Icon, color }: { title: string; val
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+            <p className="text-lg sm:text-2xl font-bold text-foreground mt-1 truncate">{value}</p>
             {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
           </div>
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
@@ -49,7 +48,6 @@ function StatCard({ title, value, sub, icon: Icon, color }: { title: string; val
 }
 
 function DashboardContent() {
-  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const activated = searchParams.get("activated") === "1";
 
@@ -116,10 +114,10 @@ function DashboardContent() {
 
       {/* Pending earnings notice */}
       {data.stats.pendingEarnings > 0 && (
-        <div className="flex items-center gap-3 bg-warning/10 border border-warning/20 rounded-xl px-5 py-3">
-          <Clock className="h-4 w-4 text-warning shrink-0" />
+        <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
+          <Clock className="h-4 w-4 text-warning shrink-0 mt-0.5" />
           <p className="text-sm text-foreground">
-            <span className="font-semibold text-warning">{formatCurrency(data.stats.pendingEarnings)}</span> in commissions settling tomorrow and will be added to your available balance.
+            <span className="font-semibold text-warning">{formatCurrency(data.stats.pendingEarnings)}</span> settling tomorrow and will be added to your balance.
           </p>
         </div>
       )}
@@ -137,8 +135,8 @@ function DashboardContent() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
+              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+              <YAxis width={42} tick={{ fontSize: 10 }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v) => [formatCurrency(Number(v ?? 0)), "Earnings"]} />
               <Area type="monotone" dataKey="earnings" stroke="#40D457" fill="url(#grad)" strokeWidth={2} />
             </AreaChart>

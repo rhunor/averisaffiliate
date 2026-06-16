@@ -105,15 +105,15 @@ export default function EarningsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-5">
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Total Earned</p>
                 <p className="text-xl font-bold text-foreground mt-0.5">{formatCurrency(data.stats.totalEarnings)}</p>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
                 <DollarSign className="h-4 w-4 text-secondary" />
               </div>
             </div>
@@ -121,12 +121,12 @@ export default function EarningsPage() {
         </Card>
         <Card>
           <CardContent className="pt-5">
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">New Sales</p>
                 <p className="text-xl font-bold text-foreground mt-0.5">{data.stats.totalReferrals}</p>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <TrendingUp className="h-4 w-4 text-primary" />
               </div>
             </div>
@@ -134,12 +134,12 @@ export default function EarningsPage() {
         </Card>
         <Card>
           <CardContent className="pt-5">
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Renewals</p>
                 <p className="text-xl font-bold text-foreground mt-0.5">{data.stats.totalRenewals}</p>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
                 <Package className="h-4 w-4 text-success" />
               </div>
             </div>

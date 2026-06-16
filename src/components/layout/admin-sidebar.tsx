@@ -10,6 +10,7 @@ import {
   ReceiptText,
   ShoppingBag,
   BookOpen,
+  BadgeDollarSign,
   LogOut,
   X,
   Shield,
@@ -21,6 +22,7 @@ const navItems = [
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Withdrawals", href: "/admin/withdrawals", icon: Wallet },
   { label: "Transactions", href: "/admin/transactions", icon: ReceiptText },
+  { label: "Commissions", href: "/admin/commissions", icon: BadgeDollarSign },
   { label: "Products", href: "/admin/products", icon: ShoppingBag },
   { label: "Courses", href: "/admin/courses", icon: BookOpen },
 ];

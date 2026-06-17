@@ -133,8 +133,8 @@ export async function handleAverisJoin(
 
     let message =
       `✅ <b>Welcome to Averis Academy!</b>\n\n` +
-      `Hi <b>${user.firstName}</b>! Your subscription is confirmed.\n\n` +
-      `\u{1F4AC} <b>Next step — Join the Community Group:</b>\n${groupLink}\n\n`;
+      `Hi <b>${user.firstName}</b>! your telegram account has just been linked to your averis academy account to enable you access the communities.\n\n` +
+      `\u{1F4AC} <b>Next step — Join Averis Community Group:</b>\n${groupLink}\n\n`;
 
     if (channelLink) {
       message += `\u{1F4E2} <b>Join the Announcement Channel:</b>\n${channelLink}\n\n`;
@@ -142,6 +142,7 @@ export async function handleAverisJoin(
 
     message +=
       `⚠️ These links are single-use. Join now before they expire!\n\n` +
+      `If you're having issues joining the community, send us an email at admin@averisacademy.com\n\n` +
       `Your subscription is active until <b>${expiryStr}</b>.`;
 
     await bot.api.sendMessage(Number(telegramId), message, { parse_mode: "HTML" });

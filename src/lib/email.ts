@@ -98,7 +98,7 @@ export async function sendWelcomeEmail(email: string, firstName: string, referra
       <div style="padding:20px;">
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
         <h2 style="color:#fff;margin:0 0 8px;font-size:24px;">Welcome aboard, ${firstName}!</h2>
-        <p style="color:rgba(255,255,255,0.8);margin:0;">Your Averis Academy account is now active. Start learning and earning today.</p>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">Your Averis Academy account is now active, Start learning and earning today.</p>
       </div>
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
         <p style="color:#555;line-height:1.6;margin-top:0;font-weight:bold;">Your login details:</p>
@@ -483,7 +483,7 @@ export async function sendPaidSignupLinkEmail(params: {
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
         <p style="font-size:32px;margin:0;">🎉</p>
         <h2 style="color:#fff;margin:10px 0 6px;font-size:22px;">Payment Confirmed, ${firstName}!</h2>
-        <p style="color:rgba(255,255,255,0.8);margin:0;">Your Averis Academy access is waiting. Complete your registration below.</p>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">Your Averis Academy access is waiting, Complete your registration below.</p>
       </div>
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
         <p style="color:#555;line-height:1.6;margin-top:0;">Hi ${firstName}, your payment was successfully processed. Click the button below to set up your password and access your account.</p>

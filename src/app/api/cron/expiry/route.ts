@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { sendSubscriptionExpiryEmail } from "@/lib/email";
+import { processTelegramExpiry } from "@/bot/services/groupManager";
 
 // Runs every 6 hours via vercel cron: 0 */6 * * *
 // Handles: 30d, 15d, 7d, 3d, 24h, 6h reminders + expired deactivation
@@ -90,7 +91,21 @@ async function handler(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ expired: expiredCount, reminders: reminderCount });
+    // Telegram group management: remove expired members, send reminder DMs
+    let telegramStats = { expired: 0, reminders: 0 };
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.AVERIS_TELEGRAM_GROUP_ID) {
+      try {
+        telegramStats = await processTelegramExpiry();
+      } catch (err) {
+        console.error("[cron/expiry] Telegram processing failed:", err);
+      }
+    }
+
+    return NextResponse.json({
+      expired: expiredCount,
+      reminders: reminderCount,
+      telegram: telegramStats,
+    });
   } catch (err) {
     console.error("[cron/expiry]", err);
     return NextResponse.json({ error: "Cron failed." }, { status: 500 });

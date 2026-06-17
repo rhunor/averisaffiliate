@@ -78,7 +78,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
 
-    const { transactionId } = await req.json();
+    const transactionId = req.nextUrl.searchParams.get("id");
     if (!transactionId) {
       return NextResponse.json({ error: "transactionId is required." }, { status: 400 });
     }

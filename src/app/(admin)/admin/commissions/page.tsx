@@ -102,10 +102,8 @@ export default function AdminCommissionsPage() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch("/api/admin/commissions", {
+      const res = await fetch(`/api/admin/commissions?id=${encodeURIComponent(reverseId)}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionId: reverseId }),
       });
       const data = await res.json();
       setResult(data);

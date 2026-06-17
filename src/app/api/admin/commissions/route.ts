@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
 
-    const { affiliateEmail, buyerName, amount, productName, emailOnly, transactionId } = await req.json();
+    const { affiliateEmail, buyerName, amount, productName, emailOnly, transactionId, forceCredit } = await req.json();
 
     if (!affiliateEmail || !buyerName || !amount) {
       return NextResponse.json({ error: "affiliateEmail, buyerName, and amount are required." }, { status: 400 });
@@ -43,6 +43,26 @@ export async function POST(req: NextRequest) {
       });
 
       return NextResponse.json({ success: true, action: "email_resent" });
+    }
+
+    // Warn if a recent commission already exists (within 48 hours) — prevents accidental double credit
+    // Pass forceCredit: true to bypass this check
+    if (!forceCredit) {
+      const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+      const recent = await Transaction.findOne({
+        userId: affiliate._id,
+        type: "commission",
+        createdAt: { $gte: cutoff },
+      }).sort({ createdAt: -1 });
+
+      if (recent) {
+        return NextResponse.json({
+          success: false,
+          warning: true,
+          message: `This affiliate already has a commission in the last 48 hours (₦${recent.amount?.toLocaleString()}, created ${new Date(recent.createdAt).toLocaleString("en-NG")}). Tick "I know there's already a commission" to proceed anyway.`,
+          existingTransaction: { _id: recent._id, amount: recent.amount, createdAt: recent.createdAt },
+        }, { status: 409 });
+      }
     }
 
     // Create a new commission transaction and send the email

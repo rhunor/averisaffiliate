@@ -9,10 +9,13 @@ type Mode = "credit" | "resend" | "reverse";
 
 interface Result {
   success: boolean;
+  warning?: boolean;
   action?: string;
   transaction?: { _id: string; amount: number; orderId: string; description: string };
+  existingTransaction?: { _id: string; amount: number; createdAt: string };
   amount?: number;
   error?: string;
+  message?: string;
 }
 
 const inputCls =
@@ -28,6 +31,7 @@ export default function AdminCommissionsPage() {
   const [buyerName, setBuyerName] = useState("");
   const [amount, setAmount] = useState("17500");
   const [productName, setProductName] = useState("Averis Academy");
+  const [forceCredit, setForceCredit] = useState(false);
 
   // Reverse form
   const [reverseId, setReverseId] = useState("");
@@ -48,7 +52,7 @@ export default function AdminCommissionsPage() {
       const res = await fetch("/api/admin/commissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ affiliateEmail, buyerName, amount: Number(amount), productName }),
+        body: JSON.stringify({ affiliateEmail, buyerName, amount: Number(amount), productName, forceCredit }),
       });
       const data = await res.json();
       setResult(data);
@@ -57,6 +61,7 @@ export default function AdminCommissionsPage() {
         setBuyerName("");
         setAmount("17500");
         setProductName("Averis Academy");
+        setForceCredit(false);
       }
     } catch {
       setResult({ success: false, error: "Network error — please try again." });
@@ -171,16 +176,29 @@ export default function AdminCommissionsPage() {
       {/* Result banner */}
       {result && (
         <div className={`flex items-start gap-3 rounded-xl px-4 py-3 border ${
-          result.success
+          result.warning
+            ? "bg-warning/10 border-warning/20"
+            : result.success
             ? "bg-success/10 border-success/20"
             : "bg-danger/10 border-danger/20"
         }`}>
-          {result.success ? (
+          {result.warning ? (
+            <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+          ) : result.success ? (
             <CheckCircle className="h-4 w-4 text-success shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
           )}
           <div className="text-sm">
+            {result.warning && (
+              <>
+                <p className="font-semibold text-warning">Commission already exists — double-check before proceeding</p>
+                <p className="text-foreground mt-1">{result.message}</p>
+                {result.existingTransaction && (
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">Existing ID: {result.existingTransaction._id}</p>
+                )}
+              </>
+            )}
             {result.success && result.action === "credited" && result.transaction && (
               <>
                 <p className="font-semibold text-success">Commission credited successfully</p>
@@ -199,7 +217,7 @@ export default function AdminCommissionsPage() {
                 {result.amount && <p className="text-muted-foreground mt-0.5">{formatCurrency(result.amount)} removed from affiliate&apos;s balance</p>}
               </>
             )}
-            {!result.success && (
+            {!result.success && !result.warning && (
               <p className="text-danger">{result.error || "Something went wrong."}</p>
             )}
           </div>
@@ -265,9 +283,21 @@ export default function AdminCommissionsPage() {
                 />
               </div>
 
+              {result?.warning && (
+                <label className="flex items-start gap-3 cursor-pointer bg-warning/5 border border-warning/20 rounded-xl px-3 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={forceCredit}
+                    onChange={(e) => setForceCredit(e.target.checked)}
+                    className="mt-0.5 accent-warning"
+                  />
+                  <span className="text-xs text-foreground">I know there&apos;s already a commission — credit again anyway</span>
+                </label>
+              )}
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (result?.warning === true && !forceCredit)}
                 className="w-full py-3 bg-secondary text-white font-semibold text-sm rounded-xl hover:bg-secondary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Processing…" : "Credit Commission & Send Email"}

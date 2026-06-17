@@ -126,33 +126,44 @@ export async function POST(req: NextRequest) {
       if (user.referredBy) {
         const referrer = await User.findById(user.referredBy);
         if (referrer) {
-          await Transaction.create({
+          // Idempotency: check if commission already exists for this pair (e.g. manually credited by admin)
+          const existingCommission = await Transaction.findOne({
             userId: referrer._id,
-            type: "commission",
-            amount: commissionAmount,
-            status: "pending",
-            referralId: null,
             sourceUserId: user._id,
-            productId: productId || null,
-            paymentReference: reference,
-            orderId,
-            description: `50% renewal commission — ${user.firstName} ${user.lastName} renewed`,
+            type: "commission",
           });
 
-          await Referral.findOneAndUpdate(
-            { referrerId: referrer._id, referredUserId: user._id },
-            { $set: { status: "active", commissionAmount, isRenewal: true }, $setOnInsert: { referrerId: referrer._id, referredUserId: user._id, productId: null } },
-            { upsert: true }
-          );
+          if (!existingCommission) {
+            await Transaction.create({
+              userId: referrer._id,
+              type: "commission",
+              amount: commissionAmount,
+              status: "pending",
+              referralId: null,
+              sourceUserId: user._id,
+              productId: productId || null,
+              paymentReference: reference,
+              orderId,
+              description: `50% renewal commission — ${user.firstName} ${user.lastName} renewed`,
+            });
 
-          sendPendingCommissionEmail({
-            affiliateEmail: referrer.email,
-            affiliateFirstName: referrer.firstName,
-            buyerName: `${user.firstName} ${user.lastName}`,
-            commissionAmount,
-            orderId,
-            productName: (productRecord?.name as string) ?? "Averis Academy Renewal",
-          }).catch(console.error);
+            await Referral.findOneAndUpdate(
+              { referrerId: referrer._id, referredUserId: user._id },
+              { $set: { status: "active", commissionAmount, isRenewal: true }, $setOnInsert: { referrerId: referrer._id, referredUserId: user._id, productId: null } },
+              { upsert: true }
+            );
+
+            sendPendingCommissionEmail({
+              affiliateEmail: referrer.email,
+              affiliateName: `${referrer.firstName} ${referrer.lastName}`,
+              buyerName: `${user.firstName} ${user.lastName}`,
+              commissionAmount,
+              orderId,
+              productName: (productRecord?.name as string) ?? "Averis Academy Renewal",
+            }).catch(console.error);
+          } else {
+            console.log("[webhook] Commission already exists for referrer+buyer pair, skipping duplicate");
+          }
         }
       }
 
@@ -187,36 +198,47 @@ export async function POST(req: NextRequest) {
     if (user.referredBy) {
       const referrer = await User.findById(user.referredBy);
       if (referrer) {
-        const referral = await Referral.create({
-          referrerId: referrer._id,
-          referredUserId: user._id,
-          productId: productId || null,
-          status: "active",
-          commissionAmount,
-          isRenewal: false,
-        });
-
-        await Transaction.create({
+        // Idempotency: check if commission already exists for this pair (e.g. manually credited by admin)
+        const existingCommission = await Transaction.findOne({
           userId: referrer._id,
-          type: "commission",
-          amount: commissionAmount,
-          status: "pending",
-          referralId: referral._id,
           sourceUserId: user._id,
-          productId: productId || null,
-          paymentReference: reference,
-          orderId,
-          description: `50% commission — ${user.firstName} ${user.lastName} subscribed`,
+          type: "commission",
         });
 
-        sendPendingCommissionEmail({
-          affiliateEmail: referrer.email,
-          affiliateFirstName: referrer.firstName,
-          buyerName: `${user.firstName} ${user.lastName}`,
-          commissionAmount,
-          orderId,
-          productName: (productRecord?.name as string) ?? "Averis Academy",
-        }).catch(console.error);
+        if (!existingCommission) {
+          const referral = await Referral.create({
+            referrerId: referrer._id,
+            referredUserId: user._id,
+            productId: productId || null,
+            status: "active",
+            commissionAmount,
+            isRenewal: false,
+          });
+
+          await Transaction.create({
+            userId: referrer._id,
+            type: "commission",
+            amount: commissionAmount,
+            status: "pending",
+            referralId: referral._id,
+            sourceUserId: user._id,
+            productId: productId || null,
+            paymentReference: reference,
+            orderId,
+            description: `50% commission — ${user.firstName} ${user.lastName} subscribed`,
+          });
+
+          sendPendingCommissionEmail({
+            affiliateEmail: referrer.email,
+            affiliateName: `${referrer.firstName} ${referrer.lastName}`,
+            buyerName: `${user.firstName} ${user.lastName}`,
+            commissionAmount,
+            orderId,
+            productName: (productRecord?.name as string) ?? "Averis Academy",
+          }).catch(console.error);
+        } else {
+          console.log("[webhook] Commission already exists for referrer+buyer pair, skipping duplicate");
+        }
       }
     }
 

@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
 
           sendPendingCommissionEmail({
             affiliateEmail: referrer.email,
-            affiliateFirstName: referrer.firstName,
+            affiliateName: `${referrer.firstName} ${referrer.lastName}`,
             buyerName: `${user.firstName} ${user.lastName}`,
             commissionAmount,
             orderId,
@@ -185,7 +185,7 @@ export async function GET(req: NextRequest) {
 
         sendPendingCommissionEmail({
           affiliateEmail: referrer.email,
-          affiliateFirstName: referrer.firstName,
+          affiliateName: `${referrer.firstName} ${referrer.lastName}`,
           buyerName: `${user.firstName} ${user.lastName}`,
           commissionAmount,
           orderId,

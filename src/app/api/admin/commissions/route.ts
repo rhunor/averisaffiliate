@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
       await sendPendingCommissionEmail({
         affiliateEmail: affiliate.email,
-        affiliateFirstName: affiliate.firstName,
+        affiliateName: `${affiliate.firstName} ${affiliate.lastName}`,
         buyerName,
         commissionAmount: tx.amount,
         orderId: tx.orderId || orderId,
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     await sendPendingCommissionEmail({
       affiliateEmail: affiliate.email,
-      affiliateFirstName: affiliate.firstName,
+      affiliateName: `${affiliate.firstName} ${affiliate.lastName}`,
       buyerName,
       commissionAmount: Number(amount),
       orderId,
@@ -68,5 +68,34 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[admin/commissions]", err);
     return NextResponse.json({ error: "Failed to credit commission." }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.role || session.user.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
+    }
+
+    const { transactionId } = await req.json();
+    if (!transactionId) {
+      return NextResponse.json({ error: "transactionId is required." }, { status: 400 });
+    }
+
+    await dbConnect();
+
+    const tx = await Transaction.findById(transactionId);
+    if (!tx) return NextResponse.json({ error: "Transaction not found." }, { status: 404 });
+    if (tx.type !== "commission") {
+      return NextResponse.json({ error: "Can only reverse commission transactions." }, { status: 400 });
+    }
+
+    await Transaction.findByIdAndDelete(transactionId);
+
+    return NextResponse.json({ success: true, action: "reversed", amount: tx.amount });
+  } catch (err) {
+    console.error("[admin/commissions DELETE]", err);
+    return NextResponse.json({ error: "Failed to reverse commission." }, { status: 500 });
   }
 }

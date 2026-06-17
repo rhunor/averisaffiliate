@@ -118,7 +118,7 @@ export async function sendWelcomeEmail(email: string, firstName: string, referra
         ${btn(`${appUrl}/dashboard`, "Go to Your Dashboard →")}
         ${botDeepLink ? `
         <div style="margin-top:20px;padding:20px;background:#1a3a52;border-radius:10px;text-align:center;">
-          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Step 1 — Join the Averis Academy Community</p>
+          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Next step — Join the Averis Academy Community</p>
           <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:0 0 14px;">Tap the button below to connect your account to Telegram. The bot will verify your subscription and send you invite links to the community and announcement channel instantly.</p>
           <a href="${botDeepLink}" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">Join Community via Bot →</a>
           <p style="color:rgba(255,255,255,0.5);font-size:11px;margin:10px 0 0;">Or open Telegram and message: <strong style="color:rgba(255,255,255,0.8);">@${botUsername}</strong> with the command: <code style="color:#40D457;">/start averis_link_${referralCode}</code></p>
@@ -162,19 +162,19 @@ export async function sendOTPEmail(email: string, firstName: string, otp: string
 
 export async function sendPendingCommissionEmail(params: {
   affiliateEmail: string;
-  affiliateFirstName: string;
+  affiliateName: string;
   buyerName: string;
   commissionAmount: number;
   orderId: string;
   productName: string;
 }) {
   const appUrl = APP_URL;
-  const { affiliateEmail, affiliateFirstName, buyerName, commissionAmount, orderId, productName } = params;
+  const { affiliateEmail, affiliateName, commissionAmount, orderId, productName } = params;
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: affiliateEmail,
-    subject: `Sale Confirmed 一₦${commissionAmount.toLocaleString()} affiliate commission earned | ${APP_NAME}`,
+    subject: `Sale Confirmed! ₦${commissionAmount.toLocaleString()} affiliate commission earned`,
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
       ${header(appUrl)}
       <div style="padding:20px;">
@@ -183,7 +183,7 @@ export async function sendPendingCommissionEmail(params: {
         <p style="color:rgba(255,255,255,0.8);margin:0;">${productName}</p>
       </div>
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
-        <p style="color:#555;line-height:1.6;margin-top:0;">Hi ${affiliateFirstName}, great news — a sale was just confirmed through your affiliate link!</p>
+        <p style="color:#555;line-height:1.6;margin-top:0;">Hi <strong style="color:#122F38;">${affiliateName}</strong>, great news: a sale was just confirmed through your affiliate link!</p>
         <div style="background:white;border-radius:8px;padding:20px;margin:16px 0;border:1px solid #e2e8f0;">
           <table style="width:100%;border-collapse:collapse;">
             <tr>
@@ -193,10 +193,6 @@ export async function sendPendingCommissionEmail(params: {
             <tr>
               <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Order ID</td>
               <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;font-family:monospace;color:#2d7f8f;">${orderId}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Buyer</td>
-              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;color:#333;">${buyerName}</td>
             </tr>
             <tr>
               <td style="padding:10px 0;color:#1a3a52;font-weight:bold;">Your Commission</td>

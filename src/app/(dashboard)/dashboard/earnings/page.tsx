@@ -97,50 +97,50 @@ export default function EarningsPage() {
       </div>
 
       {/* Settlement notice */}
-      <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-5 py-3">
+      <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
         <Info className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-        <p className="text-sm text-foreground">
-          Commissions are credited to your available balance the <strong>day after</strong> a confirmed sale. Pending commissions are shown immediately under &ldquo;Total Earned&rdquo; but cannot be withdrawn until settled.
+        <p className="text-sm text-foreground leading-relaxed">
+          Commissions are credited to your available balance the{" "}<strong>day after</strong>{" "}a confirmed sale. Pending commissions appear under &ldquo;Total Earned&rdquo; but cannot be withdrawn until settled.
         </p>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         <Card>
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Total Earned</p>
-                <p className="text-xl font-bold text-foreground mt-0.5">{formatCurrency(data.stats.totalEarnings)}</p>
-              </div>
-              <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+          <CardContent className="pt-4 pb-4 px-3">
+            <div className="flex flex-col gap-2">
+              <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
                 <DollarSign className="h-4 w-4 text-secondary" />
               </div>
+              <div>
+                <p className="text-xs text-muted-foreground leading-tight">Total Earned</p>
+                <p className="text-base font-bold text-foreground mt-0.5 leading-tight">{formatCurrency(data.stats.totalEarnings)}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">New Sales</p>
-                <p className="text-xl font-bold text-foreground mt-0.5">{data.stats.totalReferrals}</p>
-              </div>
-              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <CardContent className="pt-4 pb-4 px-3">
+            <div className="flex flex-col gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <TrendingUp className="h-4 w-4 text-primary" />
               </div>
+              <div>
+                <p className="text-xs text-muted-foreground leading-tight">New Sales</p>
+                <p className="text-base font-bold text-foreground mt-0.5 leading-tight">{data.stats.totalReferrals}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Renewals</p>
-                <p className="text-xl font-bold text-foreground mt-0.5">{data.stats.totalRenewals}</p>
-              </div>
-              <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+          <CardContent className="pt-4 pb-4 px-3">
+            <div className="flex flex-col gap-2">
+              <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
                 <Package className="h-4 w-4 text-success" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground leading-tight">Renewals</p>
+                <p className="text-base font-bold text-foreground mt-0.5 leading-tight">{data.stats.totalRenewals}</p>
               </div>
             </div>
           </CardContent>

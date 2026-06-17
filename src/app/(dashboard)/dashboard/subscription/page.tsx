@@ -96,7 +96,7 @@ function SubscriptionContent() {
               "Full access to all Academy video trainings",
               "Multi-product affiliate dashboard",
               "QR code & shareable affiliate links",
-              "Instant bank withdrawals via Korapay",
+              "Instant bank withdrawals",
               "Real-time earnings tracking",
               "Lifetime membership — never expires",
             ].map((feature) => (
@@ -199,7 +199,7 @@ function SubscriptionContent() {
             "Full access to all Academy video trainings",
             "Multi-product affiliate dashboard",
             "QR code & shareable affiliate links",
-            "Instant bank withdrawals via Korapay",
+            "Instant bank withdrawals",
             "Real-time earnings tracking",
             "6-month membership validity",
           ].map((feature) => (

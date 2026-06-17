@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, Mail, AlertCircle, Info } from "lucide-react";
+import { CheckCircle, Mail, AlertCircle, Info, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 
-type Mode = "credit" | "resend";
+type Mode = "credit" | "resend" | "reverse";
 
 interface Result {
   success: boolean;
   action?: string;
   transaction?: { _id: string; amount: number; orderId: string; description: string };
+  amount?: number;
   error?: string;
 }
 
@@ -27,6 +28,10 @@ export default function AdminCommissionsPage() {
   const [buyerName, setBuyerName] = useState("");
   const [amount, setAmount] = useState("17500");
   const [productName, setProductName] = useState("Averis Academy");
+
+  // Reverse form
+  const [reverseId, setReverseId] = useState("");
+  const [reverseConfirm, setReverseConfirm] = useState(false);
 
   // Resend-only form
   const [resendEmail, setResendEmail] = useState("");
@@ -91,6 +96,27 @@ export default function AdminCommissionsPage() {
     }
   }
 
+  async function handleReverse(e: React.FormEvent) {
+    e.preventDefault();
+    if (!reverseConfirm) { setResult({ success: false, error: "Please tick the confirmation checkbox first." }); return; }
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/commissions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId: reverseId }),
+      });
+      const data = await res.json();
+      setResult(data);
+      if (data.success) { setReverseId(""); setReverseConfirm(false); }
+    } catch {
+      setResult({ success: false, error: "Network error — please try again." });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -106,14 +132,15 @@ export default function AdminCommissionsPage() {
         <div className="text-sm text-foreground">
           <p className="font-semibold">When to use this</p>
           <p className="text-muted-foreground mt-0.5">
-            Use <strong>Credit Commission</strong> for affiliates who made a sale but received no commission and no email.
-            Use <strong>Resend Email Only</strong> if the commission was already credited (transaction exists) but the email was not delivered.
+            Use <strong>Credit Commission</strong> for affiliates missed entirely.
+            Use <strong>Resend Email</strong> if the commission exists but the email failed.
+            Use <strong>Reverse Commission</strong> to delete a duplicate that was credited twice.
           </p>
         </div>
       </div>
 
       {/* Mode tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={() => { setMode("credit"); setResult(null); }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
@@ -130,7 +157,16 @@ export default function AdminCommissionsPage() {
           }`}
         >
           <Mail className="h-4 w-4" />
-          Resend Email Only
+          Resend Email
+        </button>
+        <button
+          onClick={() => { setMode("reverse"); setResult(null); }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+            mode === "reverse" ? "bg-danger text-white" : "bg-muted text-muted-foreground hover:bg-border"
+          }`}
+        >
+          <Trash2 className="h-4 w-4" />
+          Reverse Commission
         </button>
       </div>
 
@@ -153,11 +189,17 @@ export default function AdminCommissionsPage() {
                 <p className="text-muted-foreground mt-0.5">
                   {formatCurrency(result.transaction.amount)} added · Order ID: <span className="font-mono">{result.transaction.orderId}</span>
                 </p>
-                <p className="text-muted-foreground text-xs mt-1">Transaction ID: <span className="font-mono">{result.transaction._id}</span> (copy this if you need to resend the email later)</p>
+                <p className="text-muted-foreground text-xs mt-1">Transaction ID: <span className="font-mono">{result.transaction._id}</span></p>
               </>
             )}
             {result.success && result.action === "email_resent" && (
               <p className="font-semibold text-success">Commission email resent successfully</p>
+            )}
+            {result.success && result.action === "reversed" && (
+              <>
+                <p className="font-semibold text-success">Commission reversed and deleted</p>
+                {result.amount && <p className="text-muted-foreground mt-0.5">{formatCurrency(result.amount)} removed from affiliate&apos;s balance</p>}
+              </>
             )}
             {!result.success && (
               <p className="text-danger">{result.error || "Something went wrong."}</p>
@@ -235,7 +277,7 @@ export default function AdminCommissionsPage() {
             </form>
           </CardContent>
         </Card>
-      ) : (
+      ) : mode === "resend" ? (
         <Card>
           <CardHeader>
             <h2 className="font-semibold text-foreground">Resend Commission Email Only</h2>
@@ -310,6 +352,47 @@ export default function AdminCommissionsPage() {
                 className="w-full py-3 bg-secondary text-white font-semibold text-sm rounded-xl hover:bg-secondary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Sending…" : "Resend Commission Email"}
+              </button>
+            </form>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-foreground text-danger">Reverse Commission</h2>
+            <p className="text-xs text-muted-foreground">Permanently deletes a commission transaction. Use this to remove a duplicate that was credited twice.</p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleReverse} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-1.5">Transaction ID to Delete <span className="text-danger">*</span></label>
+                <input
+                  type="text"
+                  value={reverseId}
+                  onChange={(e) => setReverseId(e.target.value)}
+                  placeholder="MongoDB ObjectId of the duplicate commission"
+                  className={`${inputCls} font-mono`}
+                  required
+                />
+                <p className="text-xs text-muted-foreground mt-1">You can find this in the Transaction ID shown after crediting, or look it up in MongoDB</p>
+              </div>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={reverseConfirm}
+                  onChange={(e) => setReverseConfirm(e.target.checked)}
+                  className="mt-0.5 accent-danger"
+                />
+                <span className="text-xs text-foreground">I confirm this is a duplicate commission and I want to permanently delete it</span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={loading || !reverseConfirm}
+                className="w-full py-3 bg-danger text-white font-semibold text-sm rounded-xl hover:bg-danger/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading ? "Reversing…" : "Reverse & Delete Commission"}
               </button>
             </form>
           </CardContent>

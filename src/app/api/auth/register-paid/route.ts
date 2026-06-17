@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
 
         sendPendingCommissionEmail({
           affiliateEmail: referrer.email,
-          affiliateFirstName: referrer.firstName,
+          affiliateName: `${referrer.firstName} ${referrer.lastName}`,
           buyerName: `${pending.firstName} ${pending.lastName}`,
           commissionAmount: siteConfig.commission.newSubscription,
           orderId,

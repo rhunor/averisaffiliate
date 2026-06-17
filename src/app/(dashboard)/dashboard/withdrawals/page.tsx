@@ -172,7 +172,7 @@ export default function WithdrawalsPage() {
       <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
         <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
-          Withdrawals are processed <strong>manually</strong> and may take up to <strong>2 business days</strong>. You will receive an email confirmation once your funds have been sent.
+          Withdrawals are processed <strong>manually</strong> and may take up to <strong>24 hours</strong>. You will receive an email confirmation once your money has been sent.
         </p>
       </div>
 
@@ -180,7 +180,7 @@ export default function WithdrawalsPage() {
       <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground text-xs">Supported banks</p>
         <p>All major commercial banks are fully supported — GTBank, Access, Zenith, UBA, First Bank, Fidelity, Sterling, Stanbic, and more.</p>
-        <p>Popular fintech accounts are also supported: <span className="font-medium text-foreground">Kuda, OPay, PalmPay, Moniepoint, VFD</span>. Account name auto-verification may not be available for some of these, but payouts still go through normally.</p>
+        <p>Popular fintech accounts are also supported: <span className="font-medium text-foreground">Kuda, OPay, PalmPay, Moniepoint, VFD</span>. Account name auto-verification may not be available for some of these, but payouts will still be processed.</p>
       </div>
 
       {/* Balance card */}

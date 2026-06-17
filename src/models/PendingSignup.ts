@@ -11,6 +11,8 @@ export interface IPendingSignup extends Document {
   used: boolean;
   amount: number;
   expiresAt: Date;
+  commissionEmailSent: boolean;
+  commissionOrderId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,6 +32,8 @@ const PendingSignupSchema = new Schema<IPendingSignup>(
     used: { type: Boolean, default: false },
     amount: { type: Number, required: true },
     expiresAt: { type: Date, required: true },
+    commissionEmailSent: { type: Boolean, default: false },
+    commissionOrderId: { type: String, default: null },
   },
   { timestamps: true }
 );

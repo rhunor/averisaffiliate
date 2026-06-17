@@ -5,6 +5,8 @@ export interface ILesson extends Document {
   title: string;
   description: string;
   youtubeVideoId: string;
+  cloudinaryVideoUrl: string;
+  cloudinaryPublicId: string;
   duration: number;
   sortOrder: number;
   isPublished: boolean;
@@ -19,7 +21,9 @@ const LessonSchema = new Schema<ILesson>(
     courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true, index: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
-    youtubeVideoId: { type: String, required: true },
+    youtubeVideoId: { type: String, default: "" },
+    cloudinaryVideoUrl: { type: String, default: "" },
+    cloudinaryPublicId: { type: String, default: "" },
     duration: { type: Number, default: 0 },
     sortOrder: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },

@@ -12,11 +12,18 @@ interface Lesson {
   title: string;
   description: string;
   youtubeVideoId: string;
+  cloudinaryVideoUrl: string;
   duration: number;
   sortOrder: number;
   completed: boolean;
   resources: Resource[];
   group: string | null;
+}
+
+function getCloudinaryThumb(url: string): string {
+  return url
+    .replace("/video/upload/", "/video/upload/so_0,w_320,h_226,c_fill/")
+    .replace(/\.(mp4|mov|avi|webm|mkv)(\?.*)?$/i, ".jpg");
 }
 
 interface SectionData {
@@ -188,7 +195,11 @@ export default function GroupPage() {
                 style={{ width: 72, height: 52 }}
               >
                 <img
-                  src={`https://img.youtube.com/vi/${lesson.youtubeVideoId}/mqdefault.jpg`}
+                  src={
+                    lesson.cloudinaryVideoUrl
+                      ? getCloudinaryThumb(lesson.cloudinaryVideoUrl)
+                      : `https://img.youtube.com/vi/${lesson.youtubeVideoId}/mqdefault.jpg`
+                  }
                   alt=""
                   className="w-full h-full object-cover"
                   loading="lazy"

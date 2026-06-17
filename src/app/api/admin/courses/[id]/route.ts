@@ -61,15 +61,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
     const { id } = await params;
     const body = await req.json();
-    const { title, description, youtubeUrl, duration, sortOrder, resources } = body;
+    const { title, description, youtubeUrl, cloudinaryVideoUrl, cloudinaryPublicId, duration, sortOrder, resources } = body;
 
-    if (!title || !youtubeUrl) {
-      return NextResponse.json({ error: "Title and YouTube URL are required." }, { status: 400 });
+    if (!title || (!youtubeUrl && !cloudinaryVideoUrl)) {
+      return NextResponse.json({ error: "Title and either a YouTube URL or an uploaded video are required." }, { status: 400 });
     }
 
-    const youtubeVideoId = extractYouTubeId(youtubeUrl);
-    if (!youtubeVideoId) {
-      return NextResponse.json({ error: "Could not extract a valid YouTube video ID from that URL." }, { status: 400 });
+    let youtubeVideoId = "";
+    if (youtubeUrl) {
+      const extracted = extractYouTubeId(youtubeUrl);
+      if (!extracted) {
+        return NextResponse.json({ error: "Could not extract a valid YouTube video ID from that URL." }, { status: 400 });
+      }
+      youtubeVideoId = extracted;
     }
 
     await dbConnect();
@@ -82,6 +86,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       title,
       description: description || "",
       youtubeVideoId,
+      cloudinaryVideoUrl: cloudinaryVideoUrl || "",
+      cloudinaryPublicId: cloudinaryPublicId || "",
       duration: duration || 0,
       sortOrder: sortOrder ?? existingCount,
       resources: resources || [],

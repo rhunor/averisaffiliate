@@ -12,6 +12,7 @@ interface LessonDetail {
   title: string;
   description: string;
   youtubeVideoId: string;
+  cloudinaryVideoUrl: string;
   duration: number;
   resources: LessonResource[];
   completed: boolean;
@@ -78,6 +79,7 @@ export default function LessonPage() {
   const watchedRef = useRef(0);
   const tickRef = useRef<NodeJS.Timeout | null>(null);
   const playerRef = useRef<{ destroy(): void } | null>(null);
+  const cloudVideoRef = useRef<HTMLVideoElement>(null);
   const playerDivId = "yt-player-" + lessonId;
 
   useEffect(() => {
@@ -117,13 +119,22 @@ export default function LessonPage() {
     }, 5000);
   }, [saveProgress]);
 
+  // For Cloudinary video: tick only saves (watchedRef updated via onTimeUpdate)
+  const startCloudTick = useCallback(() => {
+    if (tickRef.current) return;
+    tickRef.current = setInterval(() => {
+      saveProgress(false);
+    }, 5000);
+  }, [saveProgress]);
+
   const stopTick = useCallback(() => {
     if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
     saveProgress(false);
   }, [saveProgress]);
 
+  // YouTube player setup
   useEffect(() => {
-    if (!lesson?.youtubeVideoId) return;
+    if (!lesson?.youtubeVideoId || lesson.cloudinaryVideoUrl) return;
 
     const initPlayer = () => {
       if (playerRef.current) { playerRef.current.destroy(); playerRef.current = null; }
@@ -164,7 +175,7 @@ export default function LessonPage() {
       playerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lesson?.youtubeVideoId, playerDivId]);
+  }, [lesson?.youtubeVideoId, lesson?.cloudinaryVideoUrl, playerDivId]);
 
   async function handleMarkComplete() {
     if (markingComplete || lesson?.completed) return;
@@ -195,6 +206,8 @@ export default function LessonPage() {
     { key: "next", label: "Up Next" },
   ] as { key: "overview" | "resources" | "next"; label: string }[];
 
+  const isCloudinary = !!lesson.cloudinaryVideoUrl;
+
   return (
     <div className="animate-fade-in pb-24">
       {/* Back nav */}
@@ -206,9 +219,27 @@ export default function LessonPage() {
         {lesson.group ?? lesson.courseTitle}
       </button>
 
-      {/* YouTube player */}
+      {/* Video player */}
       <div className="rounded-2xl overflow-hidden bg-black aspect-video w-full mb-4">
-        <div id={playerDivId} className="w-full h-full" />
+        {isCloudinary ? (
+          <video
+            ref={cloudVideoRef}
+            src={lesson.cloudinaryVideoUrl}
+            controls
+            playsInline
+            className="w-full h-full"
+            onPlay={startCloudTick}
+            onPause={stopTick}
+            onEnded={() => { stopTick(); handleMarkComplete(); }}
+            onTimeUpdate={() => {
+              if (cloudVideoRef.current) {
+                watchedRef.current = Math.floor(cloudVideoRef.current.currentTime);
+              }
+            }}
+          />
+        ) : (
+          <div id={playerDivId} className="w-full h-full" />
+        )}
       </div>
 
       {/* Lesson meta + complete button */}

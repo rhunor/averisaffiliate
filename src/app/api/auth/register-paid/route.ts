@@ -70,7 +70,8 @@ export async function POST(req: NextRequest) {
     if (pending.affiliateUserId) {
       const referrer = await User.findById(pending.affiliateUserId);
       if (referrer) {
-        const orderId = generateOrderId();
+        // Reuse the orderId from payment time so commission records match the email already sent
+        const orderId = pending.commissionOrderId || generateOrderId();
 
         const referral = await Referral.create({
           referrerId: referrer._id,
@@ -93,14 +94,17 @@ export async function POST(req: NextRequest) {
           description: `50% commission — ${pending.firstName} ${pending.lastName} subscribed`,
         });
 
-        sendPendingCommissionEmail({
-          affiliateEmail: referrer.email,
-          affiliateName: `${referrer.firstName} ${referrer.lastName}`,
-          buyerName: `${pending.firstName} ${pending.lastName}`,
-          commissionAmount: siteConfig.commission.newSubscription,
-          orderId,
-          productName: "Averis Academy",
-        }).catch(console.error);
+        // Email was already sent at payment time — only send now if it failed then
+        if (!pending.commissionEmailSent) {
+          sendPendingCommissionEmail({
+            affiliateEmail: referrer.email,
+            affiliateName: `${referrer.firstName} ${referrer.lastName}`,
+            buyerName: `${pending.firstName} ${pending.lastName}`,
+            commissionAmount: siteConfig.commission.newSubscription,
+            orderId,
+            productName: "Averis Academy",
+          }).catch(console.error);
+        }
       }
     }
 

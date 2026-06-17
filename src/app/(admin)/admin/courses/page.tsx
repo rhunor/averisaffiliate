@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, BookOpen, Trash2, ChevronDown, ChevronRight, CheckCircle, XCircle, PlayCircle } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Plus, BookOpen, Trash2, ChevronDown, ChevronRight, CheckCircle, XCircle, PlayCircle, Cloud, Upload, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/utils";
@@ -11,6 +11,8 @@ interface Lesson {
   title: string;
   description: string;
   youtubeVideoId: string;
+  cloudinaryVideoUrl: string;
+  cloudinaryPublicId: string;
   duration: number;
   isPublished: boolean;
   sortOrder: number;
@@ -36,6 +38,12 @@ function extractYouTubeId(input: string): string | null {
   return m ? m[1] : null;
 }
 
+function getCloudinaryThumb(url: string): string {
+  return url
+    .replace("/video/upload/", "/video/upload/so_0,w_120,h_90,c_fill/")
+    .replace(/\.(mp4|mov|avi|webm|mkv)(\?.*)?$/i, ".jpg");
+}
+
 const defaultCourseForm = { title: "", description: "", moduleNumber: "", sortOrder: "" };
 const defaultLessonForm = { title: "", description: "", youtubeUrl: "", duration: "" };
 
@@ -55,7 +63,38 @@ export default function AdminCoursesPage() {
   const [addingLesson, setAddingLesson] = useState(false);
   const [lessonError, setLessonError] = useState("");
 
+  // Video source toggle
+  const [videoSource, setVideoSource] = useState<"youtube" | "cloudinary">("youtube");
+
+  // Cloudinary direct-upload state
+  const [cloudFile, setCloudFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [cloudUploadedUrl, setCloudUploadedUrl] = useState("");
+  const [cloudUploadedPublicId, setCloudUploadedPublicId] = useState("");
+  const [cloudUploadedDuration, setCloudUploadedDuration] = useState(0);
+  const [cloudError, setCloudError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const previewId = extractYouTubeId(lessonForm.youtubeUrl);
+
+  function resetCloudinary() {
+    setCloudFile(null);
+    setUploading(false);
+    setUploadProgress(0);
+    setCloudUploadedUrl("");
+    setCloudUploadedPublicId("");
+    setCloudUploadedDuration(0);
+    setCloudError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function resetLessonForm() {
+    setLessonForm(defaultLessonForm);
+    setVideoSource("youtube");
+    resetCloudinary();
+    setLessonError("");
+  }
 
   function fetchCourses() {
     setLoading(true);
@@ -118,25 +157,86 @@ export default function AdminCoursesPage() {
     fetchCourses();
   }
 
+  async function uploadToCloudinary() {
+    if (!cloudFile) return;
+    setCloudError("");
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Get signed upload params from server
+      const sigRes = await fetch("/api/admin/upload/signature", { method: "POST" });
+      if (!sigRes.ok) throw new Error("Failed to get upload signature.");
+      const { signature, timestamp, folder, cloudName, apiKey } = await sigRes.json();
+
+      // Upload directly to Cloudinary via XHR (supports progress)
+      await new Promise<void>((resolve, reject) => {
+        const formData = new FormData();
+        formData.append("file", cloudFile);
+        formData.append("api_key", apiKey);
+        formData.append("timestamp", String(timestamp));
+        formData.append("signature", signature);
+        formData.append("folder", folder);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setUploadProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const data = JSON.parse(xhr.responseText);
+            setCloudUploadedUrl(data.secure_url);
+            setCloudUploadedPublicId(data.public_id);
+            setCloudUploadedDuration(data.duration || 0);
+            setUploadProgress(100);
+            resolve();
+          } else {
+            reject(new Error("Upload failed. Try again."));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error during upload."));
+        xhr.send(formData);
+      });
+    } catch (err) {
+      setCloudError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function addLesson(e: { preventDefault(): void }, courseId: string) {
     e.preventDefault();
     setLessonError("");
     setAddingLesson(true);
     try {
+      const body: Record<string, unknown> = {
+        title: lessonForm.title,
+        description: lessonForm.description,
+        duration: parseInt(lessonForm.duration) || (videoSource === "cloudinary" ? Math.round(cloudUploadedDuration) : 0),
+      };
+
+      if (videoSource === "youtube") {
+        body.youtubeUrl = lessonForm.youtubeUrl;
+      } else {
+        body.cloudinaryVideoUrl = cloudUploadedUrl;
+        body.cloudinaryPublicId = cloudUploadedPublicId;
+      }
+
       const res = await fetch(`/api/admin/courses/${courseId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: lessonForm.title,
-          description: lessonForm.description,
-          youtubeUrl: lessonForm.youtubeUrl,
-          duration: parseInt(lessonForm.duration) || 0,
-        }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!res.ok) { setLessonError(json.error || "Failed."); return; }
       setShowLessonForm(null);
-      setLessonForm(defaultLessonForm);
+      resetLessonForm();
       await fetchLessons(courseId);
       fetchCourses();
     } finally {
@@ -154,6 +254,9 @@ export default function AdminCoursesPage() {
     await fetchLessons(courseId);
     fetchCourses();
   }
+
+  const canSubmitLesson =
+    videoSource === "youtube" ? !!previewId : !!cloudUploadedUrl;
 
   const inputCls = "w-full bg-muted border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30";
 
@@ -185,8 +288,8 @@ export default function AdminCoursesPage() {
       <div className="flex items-start gap-3 bg-[#ff0000]/5 border border-[#ff0000]/20 rounded-xl px-4 py-3 text-sm">
         <PlayCircle className="h-4 w-4 text-[#ff0000] mt-0.5 shrink-0" />
         <div>
-          <strong className="text-foreground">YouTube upload flow:</strong>
-          <span className="text-muted-foreground"> Upload your video to YouTube (set to <em>Unlisted</em>), then paste the YouTube URL below when adding a lesson. The video ID is extracted automatically.</span>
+          <strong className="text-foreground">Video hosting:</strong>
+          <span className="text-muted-foreground"> Paste a YouTube URL (set to <em>Unlisted</em>) or upload directly to Cloudinary for videos that can&apos;t go on YouTube.</span>
         </div>
       </div>
 
@@ -285,7 +388,19 @@ export default function AdminCoursesPage() {
                           {(lessons[course._id] || []).map((lesson, idx) => (
                             <div key={lesson._id} className="flex items-center justify-between px-5 py-3 bg-muted/20">
                               <div className="flex items-center gap-3">
-                                {lesson.youtubeVideoId ? (
+                                {lesson.cloudinaryVideoUrl ? (
+                                  <div className="relative w-12 h-9 rounded-md overflow-hidden bg-black shrink-0">
+                                    <img
+                                      src={getCloudinaryThumb(lesson.cloudinaryVideoUrl)}
+                                      alt=""
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                    />
+                                    <div className="absolute bottom-0 right-0 bg-blue-600 rounded-tl px-1 py-0.5">
+                                      <Cloud className="h-2.5 w-2.5 text-white" />
+                                    </div>
+                                  </div>
+                                ) : lesson.youtubeVideoId ? (
                                   <img
                                     src={`https://img.youtube.com/vi/${lesson.youtubeVideoId}/default.jpg`}
                                     alt=""
@@ -297,7 +412,10 @@ export default function AdminCoursesPage() {
                                 <div>
                                   <p className="text-sm font-medium text-foreground">{lesson.title}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    {lesson.youtubeVideoId && <span className="font-mono">{lesson.youtubeVideoId}</span>}
+                                    {lesson.cloudinaryVideoUrl
+                                      ? <span className="text-blue-500 font-medium">Cloudinary</span>
+                                      : lesson.youtubeVideoId && <span className="font-mono">{lesson.youtubeVideoId}</span>
+                                    }
                                     {lesson.duration > 0 && ` · ${formatDuration(lesson.duration)}`}
                                   </p>
                                 </div>
@@ -325,48 +443,171 @@ export default function AdminCoursesPage() {
                             <div>
                               <label className="text-xs font-medium text-muted-foreground block mb-1.5">Duration (seconds)</label>
                               <input type="number" value={lessonForm.duration} onChange={(e) => setLessonForm((f) => ({ ...f, duration: e.target.value }))} min={0}
-                                placeholder="e.g. 600 for 10 min"
+                                placeholder={videoSource === "cloudinary" && cloudUploadedDuration ? String(Math.round(cloudUploadedDuration)) : "e.g. 600 for 10 min"}
                                 className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30" />
                             </div>
                           </div>
 
+                          {/* Video source toggle */}
                           <div>
-                            <label className="text-xs font-medium text-muted-foreground block mb-1.5">YouTube URL</label>
-                            <input
-                              type="text"
-                              value={lessonForm.youtubeUrl}
-                              onChange={(e) => setLessonForm((f) => ({ ...f, youtubeUrl: e.target.value }))}
-                              required
-                              placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
-                              className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30"
-                            />
-                            {lessonForm.youtubeUrl && (
-                              <p className={`text-xs mt-1 ${previewId ? "text-success" : "text-danger"}`}>
-                                {previewId ? `✓ Video ID: ${previewId}` : "✗ Could not extract video ID — check the URL"}
-                              </p>
-                            )}
+                            <label className="text-xs font-medium text-muted-foreground block mb-1.5">Video source</label>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => { setVideoSource("youtube"); resetCloudinary(); }}
+                                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                                  videoSource === "youtube"
+                                    ? "bg-[#ff0000]/10 text-[#ff0000] border border-[#ff0000]/20"
+                                    : "bg-muted text-muted-foreground border border-transparent hover:bg-border"
+                                }`}
+                              >
+                                <PlayCircle className="h-3.5 w-3.5" />
+                                YouTube
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setVideoSource("cloudinary"); setLessonForm((f) => ({ ...f, youtubeUrl: "" })); }}
+                                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                                  videoSource === "cloudinary"
+                                    ? "bg-blue-50 text-blue-600 border border-blue-200"
+                                    : "bg-muted text-muted-foreground border border-transparent hover:bg-border"
+                                }`}
+                              >
+                                <Cloud className="h-3.5 w-3.5" />
+                                Upload to Cloudinary
+                              </button>
+                            </div>
                           </div>
 
-                          {/* Thumbnail preview */}
-                          {previewId && (
-                            <div className="flex items-center gap-3 p-3 bg-white border border-border rounded-xl">
-                              <img
-                                src={`https://img.youtube.com/vi/${previewId}/hqdefault.jpg`}
-                                alt="Thumbnail"
-                                className="w-24 h-16 object-cover rounded-lg bg-black"
-                              />
+                          {/* YouTube section */}
+                          {videoSource === "youtube" && (
+                            <>
                               <div>
-                                <p className="text-xs font-semibold text-foreground">Thumbnail preview</p>
-                                <p className="text-xs text-muted-foreground font-mono mt-0.5">{previewId}</p>
-                                <a
-                                  href={`https://youtu.be/${previewId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-secondary hover:underline mt-1 inline-block"
-                                >
-                                  Open on YouTube →
-                                </a>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1.5">YouTube URL</label>
+                                <input
+                                  type="text"
+                                  value={lessonForm.youtubeUrl}
+                                  onChange={(e) => setLessonForm((f) => ({ ...f, youtubeUrl: e.target.value }))}
+                                  placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
+                                  className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30"
+                                />
+                                {lessonForm.youtubeUrl && (
+                                  <p className={`text-xs mt-1 ${previewId ? "text-success" : "text-danger"}`}>
+                                    {previewId ? `✓ Video ID: ${previewId}` : "✗ Could not extract video ID — check the URL"}
+                                  </p>
+                                )}
                               </div>
+                              {previewId && (
+                                <div className="flex items-center gap-3 p-3 bg-white border border-border rounded-xl">
+                                  <img
+                                    src={`https://img.youtube.com/vi/${previewId}/hqdefault.jpg`}
+                                    alt="Thumbnail"
+                                    className="w-24 h-16 object-cover rounded-lg bg-black"
+                                  />
+                                  <div>
+                                    <p className="text-xs font-semibold text-foreground">Thumbnail preview</p>
+                                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{previewId}</p>
+                                    <a
+                                      href={`https://youtu.be/${previewId}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-secondary hover:underline mt-1 inline-block"
+                                    >
+                                      Open on YouTube →
+                                    </a>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {/* Cloudinary upload section */}
+                          {videoSource === "cloudinary" && (
+                            <div className="space-y-3">
+                              {!cloudUploadedUrl ? (
+                                <>
+                                  <div
+                                    className="border-2 border-dashed border-blue-200 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+                                    onClick={() => fileInputRef.current?.click()}
+                                  >
+                                    <Upload className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                                    <p className="text-sm font-medium text-foreground">
+                                      {cloudFile ? cloudFile.name : "Click to choose a video file"}
+                                    </p>
+                                    {cloudFile && (
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        {(cloudFile.size / 1024 / 1024).toFixed(1)} MB
+                                      </p>
+                                    )}
+                                    {!cloudFile && (
+                                      <p className="text-xs text-muted-foreground mt-1">MP4, MOV, AVI, WebM supported</p>
+                                    )}
+                                  </div>
+                                  <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="video/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const f = e.target.files?.[0];
+                                      if (f) { setCloudFile(f); setCloudError(""); }
+                                    }}
+                                  />
+
+                                  {cloudError && (
+                                    <p className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-xl px-3 py-2">{cloudError}</p>
+                                  )}
+
+                                  {uploading && (
+                                    <div>
+                                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                        <span>Uploading…</span>
+                                        <span>{uploadProgress}%</span>
+                                      </div>
+                                      <div className="w-full bg-border rounded-full h-2">
+                                        <div
+                                          className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                          style={{ width: `${uploadProgress}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {cloudFile && !uploading && (
+                                    <button
+                                      type="button"
+                                      onClick={uploadToCloudinary}
+                                      className="flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors"
+                                    >
+                                      <Upload className="h-4 w-4" />
+                                      Upload video
+                                    </button>
+                                  )}
+                                </>
+                              ) : (
+                                <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                                  <img
+                                    src={getCloudinaryThumb(cloudUploadedUrl)}
+                                    alt="Video thumbnail"
+                                    className="w-20 h-14 object-cover rounded-lg bg-black shrink-0"
+                                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">
+                                      <CheckCircle className="h-3.5 w-3.5" /> Uploaded successfully
+                                    </p>
+                                    {cloudUploadedDuration > 0 && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">
+                                        Duration: {formatDuration(Math.round(cloudUploadedDuration))}
+                                      </p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground font-mono truncate mt-0.5">{cloudUploadedPublicId}</p>
+                                  </div>
+                                  <button type="button" onClick={resetCloudinary} className="p-1 text-muted-foreground hover:text-danger transition-colors shrink-0">
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -377,11 +618,11 @@ export default function AdminCoursesPage() {
                           </div>
 
                           <div className="flex gap-3">
-                            <button type="submit" disabled={addingLesson || !previewId}
+                            <button type="submit" disabled={addingLesson || !canSubmitLesson}
                               className="bg-secondary text-white font-semibold px-4 py-2 rounded-xl hover:bg-secondary-dark transition-colors disabled:opacity-60 text-sm">
                               {addingLesson ? "Adding…" : "Add lesson"}
                             </button>
-                            <button type="button" onClick={() => { setShowLessonForm(null); setLessonForm(defaultLessonForm); setLessonError(""); }}
+                            <button type="button" onClick={() => { setShowLessonForm(null); resetLessonForm(); }}
                               className="bg-muted text-muted-foreground font-semibold px-4 py-2 rounded-xl hover:bg-border transition-colors text-sm">
                               Cancel
                             </button>
@@ -390,7 +631,7 @@ export default function AdminCoursesPage() {
                       ) : (
                         <div className="px-5 py-3 border-t border-border">
                           <button
-                            onClick={() => { setShowLessonForm(course._id); setLessonForm(defaultLessonForm); setLessonError(""); }}
+                            onClick={() => { setShowLessonForm(course._id); resetLessonForm(); }}
                             className="flex items-center gap-2 text-sm text-secondary hover:text-secondary-dark transition-colors"
                           >
                             <Plus className="h-4 w-4" />

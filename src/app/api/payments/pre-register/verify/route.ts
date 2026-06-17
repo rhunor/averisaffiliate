@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import dbConnect from "@/lib/db";
 import PendingSignup from "@/models/PendingSignup";
+import User from "@/models/User";
 import { verifyCharge } from "@/lib/korapay";
-import { sendPaidSignupLinkEmail } from "@/lib/email";
+import { sendPaidSignupLinkEmail, sendPendingCommissionEmail } from "@/lib/email";
+import { generateOrderId } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
 
 export async function GET(req: NextRequest) {
   const reference = req.nextUrl.searchParams.get("reference");
@@ -46,11 +49,39 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL("/join?error=not_found", appUrl));
     }
 
+    // Send signup link to the buyer
     await sendPaidSignupLinkEmail({
       email: updated.email,
       firstName: updated.firstName,
       signupToken,
     });
+
+    // Notify the affiliate immediately on payment — don't wait for registration
+    if (updated.affiliateUserId) {
+      try {
+        const referrer = await User.findById(updated.affiliateUserId);
+        if (referrer) {
+          const orderId = generateOrderId();
+
+          await sendPendingCommissionEmail({
+            affiliateEmail: referrer.email,
+            affiliateName: `${referrer.firstName} ${referrer.lastName}`,
+            buyerName: `${updated.firstName} ${updated.lastName}`,
+            commissionAmount: siteConfig.commission.newSubscription,
+            orderId,
+            productName: "Averis Academy",
+          });
+
+          // Store flag + orderId so register-paid reuses the same orderId and skips resending
+          updated.commissionEmailSent = true;
+          updated.commissionOrderId = orderId;
+          await updated.save();
+        }
+      } catch (emailErr) {
+        // Non-fatal — commission records will still be created at registration
+        console.error("[pre-register/verify] commission email failed:", emailErr);
+      }
+    }
 
     return NextResponse.redirect(
       new URL(`/check-email?email=${encodeURIComponent(updated.email)}`, appUrl)

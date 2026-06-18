@@ -15,13 +15,12 @@ async function handler(req: NextRequest) {
     await dbConnect();
 
     const now = new Date();
-    // Settle all pending commissions created before the start of today (midnight WAT = UTC-1 = 23:00 UTC previous day)
-    const settleBefore = new Date(now);
-    settleBefore.setUTCHours(0, 0, 0, 0); // midnight UTC today — anything older than today
+    // Settle all pending commissions older than 24 hours
+    const settleBefore = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const result = await Transaction.updateMany(
       {
-        type: { $in: ["commission", "renewal_commission"] },
+        type: "commission",
         status: "pending",
         createdAt: { $lt: settleBefore },
       },

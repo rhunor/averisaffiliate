@@ -19,6 +19,13 @@ interface Migration {
 
 const migrations: Migration[] = [
   {
+    id: "settle-commissions",
+    title: "Settle Pending Commissions",
+    description:
+      "Immediately marks all pending commissions older than 24 hours as completed so affiliates can withdraw. Safe to run anytime — the nightly cron does this automatically.",
+    endpoint: "/api/admin/settle-commissions",
+  },
+  {
     id: "diagnose",
     title: "Diagnose: Show Lessons in DB",
     description:

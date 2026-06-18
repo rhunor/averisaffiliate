@@ -19,6 +19,13 @@ interface Migration {
 
 const migrations: Migration[] = [
   {
+    id: "diagnose",
+    title: "Diagnose: Show Lessons in DB",
+    description:
+      "Read-only. Lists every lesson in the Mindset and Affiliate Marketing courses so you can confirm what's actually in the database.",
+    endpoint: "/api/admin/migrate/diagnose",
+  },
+  {
     id: "cloudinary-lessons",
     title: "Add Cloudinary Videos to Lessons",
     description:

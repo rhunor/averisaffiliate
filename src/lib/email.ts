@@ -182,6 +182,8 @@ export async function sendPendingCommissionEmail(params: {
   productName: string;
 }) {
   const appUrl = APP_URL;
+
+  
   const { affiliateEmail, affiliateName, commissionAmount, orderId, productName } = params;
 
   const { error } = await resend.emails.send({

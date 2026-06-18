@@ -117,7 +117,7 @@ function DashboardContent() {
         <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
           <Clock className="h-4 w-4 text-warning shrink-0 mt-0.5" />
           <p className="text-sm text-foreground">
-            <span className="font-semibold text-warning">{formatCurrency(data.stats.pendingEarnings)}</span> settling tomorrow and will be added to your balance.
+            <span className="font-semibold text-warning">{formatCurrency(data.stats.pendingEarnings)}</span> settling within 24 hours and will be added to your balance.
           </p>
         </div>
       )}

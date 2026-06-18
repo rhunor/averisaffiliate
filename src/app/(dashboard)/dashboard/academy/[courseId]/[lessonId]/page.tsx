@@ -227,6 +227,8 @@ export default function LessonPage() {
             src={lesson.cloudinaryVideoUrl}
             controls
             playsInline
+            crossOrigin="anonymous"
+            preload="metadata"
             className="w-full h-full"
             onPlay={startCloudTick}
             onPause={stopTick}

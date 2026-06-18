@@ -32,39 +32,35 @@ export async function POST() {
     const courseId = course._id;
     const results: string[] = [];
 
-    // ── Step 1: Add lesson at sortOrder 9 (Lesson 10) if not already there ─────
-    const existingLesson10 = await Lesson.findOne({
+    // ── Step 1: Add DM Sales Closing lesson if not already there ────────────────
+    const existingDMLesson = await Lesson.findOne({
       courseId,
-      $or: [
-        { sortOrder: 9 },
-        { youtubeVideoId: "mRgAe6KSmiI" },
-      ],
+      youtubeVideoId: "mRgAe6KSmiI",
     });
 
-    if (!existingLesson10) {
+    if (!existingDMLesson) {
+      const totalNow = await Lesson.countDocuments({ courseId });
       await Lesson.create({
         courseId,
         title: "DM Sales Closing",
         description: "",
         youtubeVideoId: "mRgAe6KSmiI",
-        group: "Part 3: DM Sales Closing",
-        sortOrder: 9,
+        group: "Lesson 10: DM Sales Closing",
+        sortOrder: totalNow,
         isPublished: true,
         duration: 0,
       });
       await Course.findByIdAndUpdate(courseId, { $inc: { totalLessons: 1 } });
-      results.push("✓ Added lesson 10: DM Sales Closing (Part 3)");
+      results.push("✓ Added DM Sales Closing lesson");
     } else {
-      results.push("– Lesson 10 (DM Sales Closing) already exists — skipped");
+      results.push("– DM Sales Closing already exists — skipped");
     }
 
-    // ── Step 2: Update Part 5 lesson (sortOrder 11 / lesson 12) video link ──────
+    // ── Step 2: Update Lesson 12 AI Videos Part 5 video link ────────────────────
     const part5Lesson = await Lesson.findOne({
       courseId,
-      $or: [
-        { group: { $regex: /part.?5/i } },
-        { sortOrder: 11 },
-      ],
+      group: { $regex: /lesson.?12|ai.?video/i },
+      title: { $regex: /part.?5/i },
     });
 
     if (part5Lesson) {
@@ -72,12 +68,12 @@ export async function POST() {
         const old = part5Lesson.youtubeVideoId;
         part5Lesson.youtubeVideoId = "ttfUeyRQAkw";
         await part5Lesson.save();
-        results.push(`✓ Updated Part 5 lesson "${part5Lesson.title}" video: ${old} → ttfUeyRQAkw`);
+        results.push(`✓ Updated Lesson 12 Part 5 "${part5Lesson.title}" video: ${old} → ttfUeyRQAkw`);
       } else {
-        results.push("– Part 5 lesson already has the new video ID — skipped");
+        results.push("– Lesson 12 Part 5 already has the new video ID — skipped");
       }
     } else {
-      results.push("⚠ Part 5 lesson not found (check sort order or group name manually)");
+      results.push("⚠ Lesson 12 AI Videos Part 5 not found");
     }
 
     // ── Step 3: Add Conclusion lesson if not already there ───────────────────────

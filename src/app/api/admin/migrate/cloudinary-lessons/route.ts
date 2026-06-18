@@ -7,7 +7,7 @@ import Lesson from "@/models/Lesson";
 /**
  * POST /api/admin/migrate/cloudinary-lessons
  *
- * 1. Finds the Mindset course → updates/adds Lesson 1 with Cloudinary video
+ * 1. Finds Affiliate Marketing course → adds Lesson 1 as the first lesson (sortOrder -1)
  * 2. Finds Affiliate Marketing course → updates/adds Part 4 Bonus lesson with Cloudinary video
  */
 export async function POST() {
@@ -20,42 +20,39 @@ export async function POST() {
     await dbConnect();
     const results: string[] = [];
 
-    // ── 1. Lesson 1: Mindset and getting into Result mode ────────────────────────
-    const mindsetCourse = await Course.findOne({
-      title: { $regex: /mindset/i },
+    // ── 1. Lesson 1: Mindset and getting into Result mode (goes in Affiliate Marketing) ──
+    const affiliateCourseForLesson1 = await Course.findOne({
+      title: { $regex: /affiliate marketing/i },
     });
 
-    if (!mindsetCourse) {
-      // List all courses so we can see what names exist
+    if (!affiliateCourseForLesson1) {
       const allCourses = await Course.find().select("title").lean();
-      results.push(`⚠ No course with "mindset" in title found. All courses: ${allCourses.map((c) => (c as Record<string,unknown>).title).join(", ")}`);
+      results.push(`⚠ Affiliate Marketing course not found. All courses: ${allCourses.map((c) => (c as Record<string, unknown>).title).join(", ")}`);
     } else {
-      results.push(`✓ Found mindset course: "${mindsetCourse.title}"`);
+      results.push(`✓ Found course: "${affiliateCourseForLesson1.title}"`);
 
-      // Only skip if already added (idempotency check by video URL)
       const alreadyExists = await Lesson.findOne({
-        courseId: mindsetCourse._id,
+        courseId: affiliateCourseForLesson1._id,
         cloudinaryVideoUrl: "https://res.cloudinary.com/dlvac2rkb/video/upload/v1781781445/Lesson_1v_0_20260618094004_wfmdsj.mp4",
       });
 
       if (alreadyExists) {
         results.push(`– Lesson 1 already added — skipped`);
       } else {
-        const lessonCount = await Lesson.countDocuments({ courseId: mindsetCourse._id });
         await Lesson.create({
-          courseId: mindsetCourse._id,
-          title: "Mindset and getting into Result mode",
+          courseId: affiliateCourseForLesson1._id,
+          title: "Lesson 1: Mindset and getting into Result mode",
           description: "",
           youtubeVideoId: "",
           cloudinaryVideoUrl: "https://res.cloudinary.com/dlvac2rkb/video/upload/v1781781445/Lesson_1v_0_20260618094004_wfmdsj.mp4",
           cloudinaryPublicId: "Lesson_1v_0_20260618094004_wfmdsj",
           group: null,
-          sortOrder: lessonCount === 0 ? 0 : lessonCount,
+          sortOrder: -1,
           isPublished: true,
           duration: 0,
         });
-        await Course.findByIdAndUpdate(mindsetCourse._id, { $inc: { totalLessons: 1 } });
-        results.push(`✓ Created Lesson 1 "Mindset and getting into Result mode" in "${mindsetCourse.title}"`);
+        await Course.findByIdAndUpdate(affiliateCourseForLesson1._id, { $inc: { totalLessons: 1 } });
+        results.push(`✓ Added Lesson 1 "Mindset and getting into Result mode" as the first lesson`);
       }
     }
 

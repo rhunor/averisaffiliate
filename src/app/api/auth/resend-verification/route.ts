@@ -8,20 +8,29 @@ import { sendVerificationEmail } from "@/lib/email";
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    let email: string | undefined;
-
-    if (session?.user?.email) {
-      email = session.user.email;
-    } else {
-      const body = await req.json().catch(() => ({}));
-      email = body.email;
-    }
-
-    if (!email) return NextResponse.json({ error: "Email required." }, { status: 400 });
+    const sessionUser = session?.user as unknown as Record<string, unknown> | undefined;
 
     await dbConnect();
-    const user = await User.findOne({ email });
-    if (!user) return NextResponse.json({ success: true }); // silent for security
+
+    let user;
+
+    // Primary: look up by session user ID — always present in the JWT as token.sub,
+    // regardless of when the user last logged in.
+    if (sessionUser?.id) {
+      user = await User.findById(sessionUser.id as string);
+    }
+
+    // Fallback: email from session or request body (covers unauthenticated edge cases)
+    if (!user) {
+      let email: string | undefined = sessionUser?.email as string | undefined;
+      if (!email) {
+        const body = await req.json().catch(() => ({}));
+        email = (body as Record<string, unknown>).email as string | undefined;
+      }
+      if (email) user = await User.findOne({ email });
+    }
+
+    if (!user) return NextResponse.json({ success: true }); // silent — don't leak existence
 
     if (user.isEmailVerified) {
       return NextResponse.json({ error: "Email already verified." }, { status: 400 });
@@ -32,7 +41,7 @@ export async function POST(req: NextRequest) {
     user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save();
 
-    await sendVerificationEmail(email, user.firstName, token);
+    await sendVerificationEmail(user.email, user.firstName, token);
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[resend-verification]", err);

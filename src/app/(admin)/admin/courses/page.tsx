@@ -73,7 +73,9 @@ export default function AdminCoursesPage() {
   // Video source toggle
   const [videoSource, setVideoSource] = useState<"youtube" | "cloudinary">("youtube");
 
-  // Cloudinary direct-upload state
+  // Cloudinary state
+  const [cloudInputMode, setCloudInputMode] = useState<"paste" | "upload">("paste");
+  const [cloudPastedUrl, setCloudPastedUrl] = useState("");
   const [cloudFile, setCloudFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -83,9 +85,28 @@ export default function AdminCoursesPage() {
   const [cloudError, setCloudError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  function extractCloudinaryPublicId(url: string): string {
+    const m = url.match(/\/upload\/(?:v\d+\/)?(.+?)(\.[a-z0-9]+)?$/i);
+    return m ? m[1] : url;
+  }
+
+  function applyPastedCloudinaryUrl(url: string) {
+    const trimmed = url.trim();
+    setCloudPastedUrl(trimmed);
+    if (trimmed && trimmed.includes("res.cloudinary.com")) {
+      setCloudUploadedUrl(trimmed);
+      setCloudUploadedPublicId(extractCloudinaryPublicId(trimmed));
+    } else {
+      setCloudUploadedUrl("");
+      setCloudUploadedPublicId("");
+    }
+  }
+
   const previewId = extractYouTubeId(lessonForm.youtubeUrl);
 
   function resetCloudinary() {
+    setCloudInputMode("paste");
+    setCloudPastedUrl("");
     setCloudFile(null);
     setUploading(false);
     setUploadProgress(0);
@@ -631,10 +652,47 @@ export default function AdminCoursesPage() {
                             </>
                           )}
 
-                          {/* Cloudinary upload section */}
+                          {/* Cloudinary section */}
                           {videoSource === "cloudinary" && (
                             <div className="space-y-3">
-                              {!cloudUploadedUrl ? (
+                              {/* Sub-toggle: Paste URL / Upload file */}
+                              {!cloudUploadedUrl && (
+                                <div className="flex rounded-xl border border-border overflow-hidden text-xs font-semibold w-fit">
+                                  <button
+                                    type="button"
+                                    onClick={() => { setCloudInputMode("paste"); setCloudFile(null); setCloudError(""); }}
+                                    className={`px-3 py-1.5 transition-colors ${cloudInputMode === "paste" ? "bg-blue-600 text-white" : "text-muted-foreground hover:bg-muted"}`}
+                                  >
+                                    Paste URL
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setCloudInputMode("upload"); setCloudPastedUrl(""); setCloudUploadedUrl(""); setCloudUploadedPublicId(""); }}
+                                    className={`px-3 py-1.5 transition-colors ${cloudInputMode === "upload" ? "bg-blue-600 text-white" : "text-muted-foreground hover:bg-muted"}`}
+                                  >
+                                    Upload file
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* Paste URL mode */}
+                              {cloudInputMode === "paste" && !cloudUploadedUrl && (
+                                <div>
+                                  <input
+                                    type="url"
+                                    value={cloudPastedUrl}
+                                    onChange={(e) => applyPastedCloudinaryUrl(e.target.value)}
+                                    placeholder="https://res.cloudinary.com/..."
+                                    className="w-full bg-white border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 font-mono"
+                                  />
+                                  {cloudPastedUrl && !cloudUploadedUrl && (
+                                    <p className="text-xs text-danger mt-1">Not a valid Cloudinary URL</p>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Upload file mode */}
+                              {cloudInputMode === "upload" && !cloudUploadedUrl && (
                                 <>
                                   <div
                                     className="border-2 border-dashed border-blue-200 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
@@ -644,12 +702,9 @@ export default function AdminCoursesPage() {
                                     <p className="text-sm font-medium text-foreground">
                                       {cloudFile ? cloudFile.name : "Click to choose a video file"}
                                     </p>
-                                    {cloudFile && (
-                                      <p className="text-xs text-muted-foreground mt-1">
-                                        {(cloudFile.size / 1024 / 1024).toFixed(1)} MB
-                                      </p>
-                                    )}
-                                    {!cloudFile && (
+                                    {cloudFile ? (
+                                      <p className="text-xs text-muted-foreground mt-1">{(cloudFile.size / 1024 / 1024).toFixed(1)} MB</p>
+                                    ) : (
                                       <p className="text-xs text-muted-foreground mt-1">MP4, MOV, AVI, WebM supported</p>
                                     )}
                                   </div>
@@ -694,7 +749,10 @@ export default function AdminCoursesPage() {
                                     </button>
                                   )}
                                 </>
-                              ) : (
+                              )}
+
+                              {/* Success state (shared between paste and upload) */}
+                              {cloudUploadedUrl && (
                                 <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
                                   <img
                                     src={getCloudinaryThumb(cloudUploadedUrl)}
@@ -704,7 +762,7 @@ export default function AdminCoursesPage() {
                                   />
                                   <div className="flex-1 min-w-0">
                                     <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">
-                                      <CheckCircle className="h-3.5 w-3.5" /> Uploaded successfully
+                                      <CheckCircle className="h-3.5 w-3.5" /> Video ready
                                     </p>
                                     {cloudUploadedDuration > 0 && (
                                       <p className="text-xs text-muted-foreground mt-0.5">

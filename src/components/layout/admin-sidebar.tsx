@@ -14,6 +14,7 @@ import {
   LogOut,
   X,
   Shield,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Commissions", href: "/admin/commissions", icon: BadgeDollarSign },
   { label: "Products", href: "/admin/products", icon: ShoppingBag },
   { label: "Courses", href: "/admin/courses", icon: BookOpen },
+  { label: "Migrations", href: "/admin/migrations", icon: Wrench },
 ];
 
 interface AdminSidebarProps {

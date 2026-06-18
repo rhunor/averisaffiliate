@@ -46,6 +46,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         const u = user as unknown as Record<string, unknown>;
+        (token as Record<string, unknown>).email = u.email;
         (token as Record<string, unknown>).role = u.role;
         (token as Record<string, unknown>).referralCode = u.referralCode;
         (token as Record<string, unknown>).isActive = u.isActive;
@@ -83,6 +84,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const tok = token as Record<string, unknown>;
         const s = session.user as unknown as Record<string, unknown>;
         s.id = tok.sub as string;
+        s.email = tok.email as string;
         s.role = tok.role as string;
         s.referralCode = tok.referralCode as string;
         s.isActive = tok.isActive as boolean;

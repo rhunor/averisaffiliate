@@ -5,6 +5,8 @@ const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM)!;
 const APP_NAME = "Averis Academy";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
+const SETUP_VIDEO_URL = "https://res.cloudinary.com/dlvac2rkb/video/upload/v1781781956/lv_0_20260618102001_2_syjxeo.mp4";
+
 // Logo wrapped in a dark background strip so it renders on both light and dark email clients
 function header(appUrl: string) {
   return `
@@ -116,6 +118,17 @@ export async function sendWelcomeEmail(email: string, firstName: string, referra
         </div>
         <p style="color:#888;font-size:12px;margin:0 0 20px;">Use the password you set during registration to sign in.</p>
         ${btn(`${appUrl}/dashboard`, "Go to Your Dashboard →")}
+        ${SETUP_VIDEO_URL ? `
+        <div style="margin-top:20px;">
+          <p style="color:#333;font-weight:bold;font-size:14px;margin:0 0 10px;">🎬 Watch: How to set up your Averis Academy account</p>
+          <a href="${SETUP_VIDEO_URL}" target="_blank" style="display:block;text-decoration:none;border-radius:10px;overflow:hidden;position:relative;line-height:0;">
+            <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:10px;padding:48px 20px;text-align:center;">
+              <div style="display:inline-block;width:56px;height:56px;background:rgba(255,255,255,0.15);border-radius:50%;line-height:56px;font-size:24px;margin-bottom:10px;">▶</div>
+              <p style="color:#fff;font-weight:bold;font-size:15px;margin:0 0 4px;">Account Setup Guide</p>
+              <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;">Click to watch the video</p>
+            </div>
+          </a>
+        </div>` : ""}
         ${botDeepLink ? `
         <div style="margin-top:20px;padding:20px;background:#1a3a52;border-radius:10px;text-align:center;">
           <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Next step — Join the Averis Academy Community</p>

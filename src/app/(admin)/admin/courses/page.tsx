@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Plus, BookOpen, Trash2, ChevronDown, ChevronRight, CheckCircle, XCircle, PlayCircle, Cloud, Upload, X } from "lucide-react";
+import { Plus, BookOpen, Trash2, ChevronDown, ChevronRight, CheckCircle, XCircle, PlayCircle, Cloud, Upload, X, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/utils";
@@ -16,6 +16,7 @@ interface Lesson {
   duration: number;
   isPublished: boolean;
   sortOrder: number;
+  group: string | null;
 }
 
 interface Course {
@@ -62,6 +63,12 @@ export default function AdminCoursesPage() {
   const [lessonForm, setLessonForm] = useState(defaultLessonForm);
   const [addingLesson, setAddingLesson] = useState(false);
   const [lessonError, setLessonError] = useState("");
+
+  // Lesson edit state
+  const [editingLesson, setEditingLesson] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", youtubeUrl: "", group: "", description: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
 
   // Video source toggle
   const [videoSource, setVideoSource] = useState<"youtube" | "cloudinary">("youtube");
@@ -244,6 +251,41 @@ export default function AdminCoursesPage() {
     }
   }
 
+  function startEdit(lesson: Lesson) {
+    setEditingLesson(lesson._id);
+    setEditForm({
+      title: lesson.title,
+      youtubeUrl: lesson.youtubeVideoId ? `https://youtu.be/${lesson.youtubeVideoId}` : "",
+      group: lesson.group || "",
+      description: lesson.description || "",
+    });
+    setEditError("");
+  }
+
+  async function saveEdit(e: { preventDefault(): void }, courseId: string, lessonId: string) {
+    e.preventDefault();
+    setEditError("");
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/admin/lessons/${lessonId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editForm.title,
+          youtubeUrl: editForm.youtubeUrl || undefined,
+          group: editForm.group || null,
+          description: editForm.description,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setEditError(json.error || "Failed to save."); return; }
+      setEditingLesson(null);
+      await fetchLessons(courseId);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   async function deleteLesson(courseId: string, lessonId: string) {
     if (!confirm("Delete this lesson?")) return;
     await fetch(`/api/admin/courses/${courseId}`, {
@@ -386,44 +428,112 @@ export default function AdminCoursesPage() {
                       ) : (
                         <div className="divide-y divide-border">
                           {(lessons[course._id] || []).map((lesson, idx) => (
-                            <div key={lesson._id} className="flex items-center justify-between px-5 py-3 bg-muted/20">
-                              <div className="flex items-center gap-3">
-                                {lesson.cloudinaryVideoUrl ? (
-                                  <div className="relative w-12 h-9 rounded-md overflow-hidden bg-black shrink-0">
-                                    <img
-                                      src={getCloudinaryThumb(lesson.cloudinaryVideoUrl)}
-                                      alt=""
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                                    />
-                                    <div className="absolute bottom-0 right-0 bg-blue-600 rounded-tl px-1 py-0.5">
-                                      <Cloud className="h-2.5 w-2.5 text-white" />
+                            <div key={lesson._id}>
+                              <div className="flex items-center justify-between px-5 py-3 bg-muted/20">
+                                <div className="flex items-center gap-3">
+                                  {lesson.cloudinaryVideoUrl ? (
+                                    <div className="relative w-12 h-9 rounded-md overflow-hidden bg-black shrink-0">
+                                      <img
+                                        src={getCloudinaryThumb(lesson.cloudinaryVideoUrl)}
+                                        alt=""
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                      />
+                                      <div className="absolute bottom-0 right-0 bg-blue-600 rounded-tl px-1 py-0.5">
+                                        <Cloud className="h-2.5 w-2.5 text-white" />
+                                      </div>
                                     </div>
+                                  ) : lesson.youtubeVideoId ? (
+                                    <img
+                                      src={`https://img.youtube.com/vi/${lesson.youtubeVideoId}/default.jpg`}
+                                      alt=""
+                                      className="w-12 h-9 object-cover rounded-md bg-black"
+                                    />
+                                  ) : (
+                                    <span className="w-6 h-6 rounded-full bg-secondary/10 text-secondary text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                                  )}
+                                  <div>
+                                    <p className="text-sm font-medium text-foreground">{lesson.title}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {lesson.cloudinaryVideoUrl
+                                        ? <span className="text-blue-500 font-medium">Cloudinary</span>
+                                        : lesson.youtubeVideoId && <span className="font-mono">{lesson.youtubeVideoId}</span>
+                                      }
+                                      {lesson.duration > 0 && ` · ${formatDuration(lesson.duration)}`}
+                                    </p>
                                   </div>
-                                ) : lesson.youtubeVideoId ? (
-                                  <img
-                                    src={`https://img.youtube.com/vi/${lesson.youtubeVideoId}/default.jpg`}
-                                    alt=""
-                                    className="w-12 h-9 object-cover rounded-md bg-black"
-                                  />
-                                ) : (
-                                  <span className="w-6 h-6 rounded-full bg-secondary/10 text-secondary text-xs font-bold flex items-center justify-center">{idx + 1}</span>
-                                )}
-                                <div>
-                                  <p className="text-sm font-medium text-foreground">{lesson.title}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {lesson.cloudinaryVideoUrl
-                                      ? <span className="text-blue-500 font-medium">Cloudinary</span>
-                                      : lesson.youtubeVideoId && <span className="font-mono">{lesson.youtubeVideoId}</span>
-                                    }
-                                    {lesson.duration > 0 && ` · ${formatDuration(lesson.duration)}`}
-                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => editingLesson === lesson._id ? setEditingLesson(null) : startEdit(lesson)}
+                                    className="p-1.5 rounded-lg text-muted-foreground hover:text-secondary hover:bg-secondary/10 transition-colors"
+                                    title="Edit lesson"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button onClick={() => deleteLesson(course._id, lesson._id)}
+                                    className="p-1.5 rounded-lg text-danger/60 hover:text-danger hover:bg-danger/10 transition-colors">
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
                                 </div>
                               </div>
-                              <button onClick={() => deleteLesson(course._id, lesson._id)}
-                                className="p-1.5 rounded-lg text-danger/60 hover:text-danger hover:bg-danger/10 transition-colors">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+
+                              {/* Inline edit form */}
+                              {editingLesson === lesson._id && (
+                                <form
+                                  onSubmit={(e) => saveEdit(e, course._id, lesson._id)}
+                                  className="px-5 py-4 bg-secondary/5 border-t border-secondary/20 space-y-3"
+                                >
+                                  {editError && (
+                                    <p className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">{editError}</p>
+                                  )}
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="text-xs font-medium text-muted-foreground block mb-1">Title</label>
+                                      <input
+                                        value={editForm.title}
+                                        onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                                        required
+                                        className="w-full bg-white border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-xs font-medium text-muted-foreground block mb-1">Group / Section name</label>
+                                      <input
+                                        value={editForm.group}
+                                        onChange={(e) => setEditForm((f) => ({ ...f, group: e.target.value }))}
+                                        placeholder="e.g. Part 3: DM Sales Closing"
+                                        className="w-full bg-white border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-medium text-muted-foreground block mb-1">YouTube URL</label>
+                                    <input
+                                      value={editForm.youtubeUrl}
+                                      onChange={(e) => setEditForm((f) => ({ ...f, youtubeUrl: e.target.value }))}
+                                      placeholder="https://youtu.be/..."
+                                      className="w-full bg-white border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30"
+                                    />
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="submit"
+                                      disabled={savingEdit}
+                                      className="bg-secondary text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-secondary-dark transition-colors disabled:opacity-60"
+                                    >
+                                      {savingEdit ? "Saving…" : "Save changes"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => { setEditingLesson(null); setEditError(""); }}
+                                      className="bg-muted text-muted-foreground text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-border transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </form>
+                              )}
                             </div>
                           ))}
                         </div>

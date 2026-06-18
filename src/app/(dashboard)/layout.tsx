@@ -35,7 +35,12 @@ function EmailBanner() {
     if (resendState !== "idle") return;
     setResendState("sending");
     try {
-      const res = await fetch("/api/auth/resend-verification", { method: "POST" });
+      const email = session?.user?.email;
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       if (res.ok) setResendState("sent");
       else setResendState("idle");
     } catch { setResendState("idle"); }

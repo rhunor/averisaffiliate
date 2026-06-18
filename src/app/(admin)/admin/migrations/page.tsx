@@ -26,6 +26,13 @@ const migrations: Migration[] = [
     endpoint: "/api/admin/migrate/diagnose",
   },
   {
+    id: "lesson10-part2-cloudinary",
+    title: "Lesson 10 Part 2 → Cloudinary Video",
+    description:
+      "Replaces the YouTube video on 'Part 2 — Practical Sales Closing' (Lesson 10: Sales Closing) with the Cloudinary video link.",
+    endpoint: "/api/admin/migrate/lesson10-part2-cloudinary",
+  },
+  {
     id: "fix-arrangement",
     title: "Fix Lesson Arrangement",
     description:

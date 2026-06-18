@@ -26,6 +26,13 @@ const migrations: Migration[] = [
     endpoint: "/api/admin/migrate/diagnose",
   },
   {
+    id: "june19-updates",
+    title: "June 19 Updates",
+    description:
+      "Updates the Lesson 12 Google Drive resource link, and adds Lesson 1 Part 2 (YouTube) while converting the existing Lesson 1 Cloudinary video to Part 1 — all in Affiliate Marketing.",
+    endpoint: "/api/admin/migrate/june19-updates",
+  },
+  {
     id: "lesson10-part2-cloudinary",
     title: "Lesson 10 Part 2 → Cloudinary Video",
     description:

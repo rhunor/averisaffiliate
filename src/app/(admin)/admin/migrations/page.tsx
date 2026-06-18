@@ -26,6 +26,13 @@ const migrations: Migration[] = [
     endpoint: "/api/admin/migrate/diagnose",
   },
   {
+    id: "fix-arrangement",
+    title: "Fix Lesson Arrangement",
+    description:
+      "Moves DM Sales Closing into Lesson 10: Sales Closing as Part 3, moves Conclusion before Bonus Lessons, and creates Bonus 4 with the Cloudinary video (removing it from the wrong Bonus 1 position).",
+    endpoint: "/api/admin/migrate/fix-arrangement",
+  },
+  {
     id: "cloudinary-lessons",
     title: "Add Cloudinary Videos to Lessons",
     description:

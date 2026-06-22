@@ -274,6 +274,37 @@ export async function sendCommissionEmail(params: {
   if (error) throw new Error(`Resend: ${error.message}`);
 }
 
+export async function sendCommissionSettledEmail(params: {
+  email: string;
+  firstName: string;
+  amount: number;
+}) {
+  const appUrl = APP_URL;
+  const { email, firstName, amount } = params;
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `₦${amount.toLocaleString()} is now available to withdraw | ${APP_NAME}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+      ${header(appUrl)}
+      <div style="padding:20px;">
+      <div style="background:linear-gradient(138deg,#0a2e1a 0%,#1a5235 48%,#2ec97a 100%);border-radius:12px;padding:28px;margin:20px 0;text-align:center;">
+        <p style="color:rgba(255,255,255,0.7);margin:0 0 6px;font-size:13px;">YOUR COMMISSION IS READY</p>
+        <h2 style="color:#fff;margin:0 0 4px;font-size:32px;font-weight:900;">₦${amount.toLocaleString()}</h2>
+        <p style="color:rgba(255,255,255,0.8);margin:0;font-size:14px;">Available to withdraw now</p>
+      </div>
+      <div style="background:#f5f8fa;border-radius:12px;padding:24px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;">Hi <strong style="color:#122F38;">${firstName}</strong>, your affiliate commission has been settled and is now available in your wallet.</p>
+        <p style="color:#555;line-height:1.6;">You can request a withdrawal anytime from your dashboard.</p>
+        ${btn(`${appUrl}/dashboard/withdrawals`, "Withdraw Now →")}
+      </div>
+      ${footer()}
+      </div>
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
 export async function sendWithdrawalRequestEmail(params: {
   email: string;
   firstName: string;

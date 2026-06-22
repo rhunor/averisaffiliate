@@ -3,6 +3,7 @@ import crypto from "crypto";
 import dbConnect from "@/lib/db";
 import PendingSignup from "@/models/PendingSignup";
 import User from "@/models/User";
+import Transaction from "@/models/Transaction";
 import { verifyCharge } from "@/lib/korapay";
 import { sendPaidSignupLinkEmail, sendPendingCommissionEmail } from "@/lib/email";
 import { generateOrderId } from "@/lib/utils";
@@ -72,7 +73,21 @@ export async function GET(req: NextRequest) {
             productName: "Averis Academy",
           });
 
-          // Store flag + orderId so register-paid reuses the same orderId and skips resending
+          // Create pending Transaction now so commission appears in affiliate dashboard immediately.
+          // referralId/sourceUserId are null until the buyer finishes registration.
+          await Transaction.create({
+            userId: referrer._id,
+            type: "commission",
+            amount: siteConfig.commission.newSubscription,
+            status: "pending",
+            referralId: null,
+            sourceUserId: null,
+            paymentReference: updated.paymentReference,
+            orderId,
+            description: `50% commission — ${updated.firstName} ${updated.lastName} subscribed`,
+          });
+
+          // Store flag + orderId so register-paid updates this Transaction and skips resending
           updated.commissionEmailSent = true;
           updated.commissionOrderId = orderId;
           await updated.save();

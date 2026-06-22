@@ -66,45 +66,58 @@ export async function POST(req: NextRequest) {
     pending.used = true;
     await pending.save();
 
-    // Credit affiliate commission
+    // Credit affiliate commission — wrapped in its own try/catch so welcome email always fires
     if (pending.affiliateUserId) {
-      const referrer = await User.findById(pending.affiliateUserId);
-      if (referrer) {
-        // Reuse the orderId from payment time so commission records match the email already sent
-        const orderId = pending.commissionOrderId || generateOrderId();
+      try {
+        const referrer = await User.findById(pending.affiliateUserId);
+        if (referrer) {
+          const orderId = pending.commissionOrderId || generateOrderId();
 
-        const referral = await Referral.create({
-          referrerId: referrer._id,
-          referredUserId: user._id,
-          productId: null,
-          status: "active",
-          commissionAmount: siteConfig.commission.newSubscription,
-          isRenewal: false,
-        });
-
-        await Transaction.create({
-          userId: referrer._id,
-          type: "commission",
-          amount: siteConfig.commission.newSubscription,
-          status: "pending",
-          referralId: referral._id,
-          sourceUserId: user._id,
-          paymentReference: pending.paymentReference,
-          orderId,
-          description: `50% commission — ${pending.firstName} ${pending.lastName} subscribed`,
-        });
-
-        // Email was already sent at payment time — only send now if it failed then
-        if (!pending.commissionEmailSent) {
-          sendPendingCommissionEmail({
-            affiliateEmail: referrer.email,
-            affiliateName: `${referrer.firstName} ${referrer.lastName}`,
-            buyerName: `${pending.firstName} ${pending.lastName}`,
+          const referral = await Referral.create({
+            referrerId: referrer._id,
+            referredUserId: user._id,
+            productId: null,
+            status: "active",
             commissionAmount: siteConfig.commission.newSubscription,
-            orderId,
-            productName: "Averis Academy",
-          }).catch(console.error);
+            isRenewal: false,
+          });
+
+          // If Transaction was pre-created at payment time, just attach the real IDs.
+          // Otherwise create it fresh (fallback for signups before this fix was deployed).
+          const existingTx = await Transaction.findOneAndUpdate(
+            { orderId, type: "commission", userId: referrer._id },
+            { $set: { referralId: referral._id, sourceUserId: user._id } }
+          );
+
+          if (!existingTx) {
+            await Transaction.create({
+              userId: referrer._id,
+              type: "commission",
+              amount: siteConfig.commission.newSubscription,
+              status: "pending",
+              referralId: referral._id,
+              sourceUserId: user._id,
+              paymentReference: pending.paymentReference,
+              orderId,
+              description: `50% commission — ${pending.firstName} ${pending.lastName} subscribed`,
+            });
+          }
+
+          // Email was already sent at payment time — only send now if it failed then
+          if (!pending.commissionEmailSent) {
+            sendPendingCommissionEmail({
+              affiliateEmail: referrer.email,
+              affiliateName: `${referrer.firstName} ${referrer.lastName}`,
+              buyerName: `${pending.firstName} ${pending.lastName}`,
+              commissionAmount: siteConfig.commission.newSubscription,
+              orderId,
+              productName: "Averis Academy",
+            }).catch(console.error);
+          }
         }
+      } catch (commissionErr) {
+        console.error("[register-paid] commission creation failed:", commissionErr);
+        // non-fatal — welcome email still sends below
       }
     }
 

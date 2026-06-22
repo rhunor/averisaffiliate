@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlayCircle, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { PlayCircle, CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MigrationResult {
@@ -72,6 +72,28 @@ const migrations: Migration[] = [
 export default function MigrationsPage() {
   const [running, setRunning] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, MigrationResult>>({});
+  const [welcomeEmail, setWelcomeEmail] = useState("");
+  const [welcomeRunning, setWelcomeRunning] = useState(false);
+  const [welcomeResult, setWelcomeResult] = useState<MigrationResult | null>(null);
+
+  async function sendWelcome() {
+    if (!welcomeEmail.trim() || welcomeRunning) return;
+    setWelcomeRunning(true);
+    setWelcomeResult(null);
+    try {
+      const res = await fetch("/api/admin/tools/resend-welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: welcomeEmail.trim() }),
+      });
+      const data = await res.json();
+      setWelcomeResult({ success: res.ok && data.success, results: data.results, error: data.error });
+    } catch {
+      setWelcomeResult({ success: false, error: "Network error — check connection and try again." });
+    } finally {
+      setWelcomeRunning(false);
+    }
+  }
 
   async function runMigration(migration: Migration) {
     if (running) return;
@@ -107,6 +129,64 @@ export default function MigrationsPage() {
           Run one-time data migrations. Each is safe to run multiple times — already-done steps are skipped.
         </p>
       </div>
+
+      {/* Email tools */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Mail className="h-4 w-4 text-secondary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-base">Resend Welcome Email</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manually send the welcome + referral link email to a user who didn&apos;t receive it after signup.
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          <div className="flex gap-2">
+            <input
+              type="email"
+              placeholder="user@email.com"
+              value={welcomeEmail}
+              onChange={(e) => setWelcomeEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendWelcome()}
+              className="flex-1 bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary/30"
+            />
+            <button
+              onClick={sendWelcome}
+              disabled={welcomeRunning || !welcomeEmail.trim()}
+              className="flex items-center gap-2 bg-secondary text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-secondary-dark transition-colors disabled:opacity-60"
+            >
+              {welcomeRunning ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
+              ) : (
+                <><Mail className="h-4 w-4" /> Send</>
+              )}
+            </button>
+          </div>
+          {welcomeResult && (
+            <div className={`rounded-xl p-3 text-sm ${welcomeResult.error ? "bg-danger/10 border border-danger/20" : "bg-muted/50 border border-border"}`}>
+              {welcomeResult.error ? (
+                <div className="flex items-center gap-2 text-danger font-medium">
+                  <XCircle className="h-4 w-4 shrink-0" /> {welcomeResult.error}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-success font-semibold">
+                    <CheckCircle className="h-4 w-4" /> Done
+                  </div>
+                  {(welcomeResult.results || []).map((line, i) => (
+                    <p key={i} className="font-mono text-xs text-success">{line}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="space-y-4">
         {migrations.map((migration) => {

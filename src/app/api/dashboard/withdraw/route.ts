@@ -5,7 +5,7 @@ import User from "@/models/User";
 import Transaction from "@/models/Transaction";
 import Withdrawal from "@/models/Withdrawal";
 import { resolveAccount } from "@/lib/korapay";
-import { sendWithdrawalRequestEmail } from "@/lib/email";
+import { sendWithdrawalRequestEmail, sendAdminWithdrawalNotificationEmail } from "@/lib/email";
 import { siteConfig } from "@/config/site";
 import { compareNames } from "@/lib/utils";
 
@@ -109,6 +109,16 @@ export async function POST(req: NextRequest) {
     sendWithdrawalRequestEmail({
       email: user.email,
       firstName: user.firstName,
+      amount,
+      bankName: withdrawal.bankName,
+      accountNumber,
+      accountName,
+      withdrawalId: withdrawal._id.toString(),
+    }).catch(console.error);
+
+    sendAdminWithdrawalNotificationEmail({
+      affiliateName: `${user.firstName} ${user.lastName}`,
+      affiliateEmail: user.email,
       amount,
       bankName: withdrawal.bankName,
       accountNumber,

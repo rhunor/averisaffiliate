@@ -369,7 +369,7 @@ export async function sendAdminWithdrawalNotificationEmail(params: {
   accountName: string;
   withdrawalId: string;
 }) {
-  const adminEmail = process.env.ADMIN_EMAIL || "hello@averisacademy.com";
+  const adminEmail = process.env.ADMIN_EMAIL || "Averislimited@gmail.com";
   const appUrl = APP_URL;
   const { affiliateName, affiliateEmail, amount, bankName, accountNumber, accountName, withdrawalId } = params;
 

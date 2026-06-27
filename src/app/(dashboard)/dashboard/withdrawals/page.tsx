@@ -139,7 +139,7 @@ export default function WithdrawalsPage() {
       const json = await res.json();
       if (!res.ok) { setError(json.error || "Withdrawal failed."); return; }
 
-      setSuccess(`Withdrawal request submitted! Your ₦${amt.toLocaleString()} will be processed within 2 business days. You'll get an email when it's sent.`);
+      setSuccess(`Withdrawal initiated! Your ₦${amt.toLocaleString()} has been sent to your bank and should arrive within minutes. You'll receive an email confirmation shortly.`);
       setAmount(""); setBankCode(""); setBankName(""); setBankSearch(""); setAccountNumber("");
       setShowForm(false);
       loadData();
@@ -169,10 +169,10 @@ export default function WithdrawalsPage() {
       </div>
 
       {/* Processing time disclaimer */}
-      <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
-        <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 bg-success/10 border border-success/20 rounded-xl px-4 py-3">
+        <AlertCircle className="h-4 w-4 text-success shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
-          Withdrawals are processed <strong>manually</strong> and may take up to <strong>24 hours</strong>. You will receive an email confirmation once your money has been sent.
+          Withdrawals are processed <strong>automatically</strong> and typically arrive in your bank account within <strong>minutes</strong>. You will receive an email confirmation once your money has been sent.
         </p>
       </div>
 
@@ -316,7 +316,7 @@ export default function WithdrawalsPage() {
                 disabled={submitBlocked}
                 className="w-full bg-secondary hover:bg-secondary-dark text-primary font-bold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm"
               >
-                {submitting ? "Sending to your bank…" : "Withdraw now"}
+                {submitting ? "Processing withdrawal…" : "Withdraw now"}
               </button>
 
               <p className="text-xs text-muted-foreground text-center">

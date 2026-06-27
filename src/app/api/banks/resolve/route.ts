@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { resolveAccount } from "@/lib/korapay";
+import { resolvePaystackAccount } from "@/lib/paystack";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Bank code and 10-digit account number required." }, { status: 400 });
     }
 
-    const result = await resolveAccount(String(accountNumber), String(bankCode));
+    const result = await resolvePaystackAccount(String(accountNumber), String(bankCode));
     return NextResponse.json({ accountName: result.accountName });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

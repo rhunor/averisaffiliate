@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import Transaction from "@/models/Transaction";
 import Withdrawal from "@/models/Withdrawal";
-import { resolveAccount } from "@/lib/korapay";
-import { sendWithdrawalRequestEmail, sendAdminWithdrawalNotificationEmail } from "@/lib/email";
+import {
+  resolvePaystackAccount,
+  createTransferRecipient,
+  initiateTransfer,
+} from "@/lib/paystack";
+import { sendAdminWithdrawalNotificationEmail } from "@/lib/email";
 import { siteConfig } from "@/config/site";
 import { compareNames } from "@/lib/utils";
 
@@ -34,7 +39,7 @@ export async function POST(req: NextRequest) {
     const user = await User.findById(userId);
     if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
 
-    // Block if there's already a pending or processing withdrawal
+    // Block if there is already a pending or processing withdrawal
     const activeWithdrawal = await Withdrawal.findOne({
       userId,
       status: { $in: ["pending", "processing"] },
@@ -71,15 +76,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Attempt account name resolution — warn only, never block
+    // Resolve account name from Paystack (backend verification)
     let accountName: string = `${user.firstName} ${user.lastName}`;
     let nameVerified = false;
     try {
-      const resolved = await resolveAccount(accountNumber, bankCode);
+      const resolved = await resolvePaystackAccount(accountNumber, bankCode);
       accountName = resolved.accountName;
       nameVerified = true;
     } catch (resolveErr) {
-      console.warn("[withdraw] Account resolution failed for bank", bankCode, "—", resolveErr instanceof Error ? resolveErr.message : resolveErr);
+      console.warn("[withdraw] Paystack account resolution failed:", resolveErr instanceof Error ? resolveErr.message : resolveErr);
     }
 
     if (nameVerified) {
@@ -95,7 +100,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Save withdrawal as pending — admin will process manually
+    // Create Paystack transfer recipient
+    let recipientCode: string;
+    try {
+      recipientCode = await createTransferRecipient({
+        name: accountName,
+        accountNumber,
+        bankCode,
+      });
+    } catch (recipientErr) {
+      const msg = recipientErr instanceof Error ? recipientErr.message : String(recipientErr);
+      console.error("[withdraw] Recipient creation failed:", msg);
+      return NextResponse.json(
+        { error: "Could not verify your bank account with our payment processor. Please check your details and try again." },
+        { status: 400 }
+      );
+    }
+
+    // Generate a unique idempotency reference (stored before calling Paystack so retries are safe)
+    const transferReference = crypto.randomUUID().toLowerCase();
+
+    // Save withdrawal record first — if Paystack call fails we mark it failed
     const withdrawal = await Withdrawal.create({
       userId,
       amount,
@@ -104,18 +129,40 @@ export async function POST(req: NextRequest) {
       accountNumber,
       accountName,
       status: "pending",
+      transferReference,
+      paystackRecipientCode: recipientCode,
     });
 
-    sendWithdrawalRequestEmail({
-      email: user.email,
-      firstName: user.firstName,
-      amount,
-      bankName: withdrawal.bankName,
-      accountNumber,
-      accountName,
-      withdrawalId: withdrawal._id.toString(),
-    }).catch(console.error);
+    // Initiate the Paystack transfer
+    try {
+      const { transferCode } = await initiateTransfer({
+        amountNaira: amount,
+        recipientCode,
+        reference: transferReference,
+        reason: "Averis Academy affiliate payout",
+      });
 
+      withdrawal.transferCode = transferCode;
+      withdrawal.status = "processing";
+      await withdrawal.save();
+    } catch (transferErr) {
+      // Mark the withdrawal failed immediately so the user can try again
+      withdrawal.status = "failed";
+      withdrawal.rejectionReason = transferErr instanceof Error ? transferErr.message : "Transfer initiation failed";
+      await withdrawal.save();
+
+      const msg = transferErr instanceof Error ? transferErr.message : String(transferErr);
+      console.error("[withdraw] Paystack transfer failed:", msg);
+
+      // Surface a user-friendly version of common Paystack errors
+      const userMsg = msg.toLowerCase().includes("insufficient")
+        ? "Our payment processor has insufficient funds at this time. Please contact support."
+        : "Transfer could not be initiated. Please try again or contact support.";
+
+      return NextResponse.json({ error: userMsg }, { status: 400 });
+    }
+
+    // Admin notification (fire-and-forget)
     sendAdminWithdrawalNotificationEmail({
       affiliateName: `${user.firstName} ${user.lastName}`,
       affiliateEmail: user.email,
@@ -129,6 +176,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, withdrawal });
   } catch (err) {
     console.error("[withdraw]", err);
-    return NextResponse.json({ error: "Withdrawal failed." }, { status: 500 });
+    return NextResponse.json({ error: "Withdrawal failed. Please try again." }, { status: 500 });
   }
 }

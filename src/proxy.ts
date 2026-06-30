@@ -4,8 +4,16 @@ import { NextResponse } from "next/server";
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
+  const isApi = pathname.startsWith("/api/");
 
-  const isOnDashboard = pathname.startsWith("/dashboard");
+  // Covers both the dashboard page shell AND the data/content APIs it calls —
+  // a session that isn't paid up must not reach either one. Previously only
+  // the page route was gated, so a request straight to /api/dashboard or
+  // /api/academy/* with a valid-but-inactive session returned full data.
+  const isOnDashboard =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/api/dashboard") ||
+    pathname.startsWith("/api/academy");
   const isOnAdmin = pathname.startsWith("/admin");
   const isOnAuth =
     pathname.startsWith("/login") ||
@@ -19,12 +27,21 @@ export default auth((req) => {
   }
 
   if (isOnDashboard && !isLoggedIn) {
+    if (isApi) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
   if (isOnDashboard && isLoggedIn) {
     const sessionUser = req.auth?.user as unknown as Record<string, unknown>;
-    if (sessionUser?.isActive === false) {
+    // Fail closed: anything other than a literal `true` (missing, undefined,
+    // null) is treated as not active, instead of only catching `=== false`.
+    if (!sessionUser?.isActive) {
+      if (isApi) {
+        return NextResponse.json(
+          { error: "Your subscription is not active. Please complete payment to access this." },
+          { status: 403 }
+        );
+      }
       return NextResponse.redirect(new URL("/pending-payment", req.nextUrl));
     }
   }
@@ -44,6 +61,8 @@ export default auth((req) => {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/api/dashboard/:path*",
+    "/api/academy/:path*",
     "/admin/:path*",
     "/login",
     "/register",

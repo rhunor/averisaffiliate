@@ -16,6 +16,13 @@ import { compareNames } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
+    if (process.env.PAYSTACK_TRANSFERS_ENABLED === "false") {
+      return NextResponse.json(
+        { error: "Withdrawals are temporarily unavailable while we upgrade our payment system. Please check back in a few hours." },
+        { status: 503 }
+      );
+    }
+
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 

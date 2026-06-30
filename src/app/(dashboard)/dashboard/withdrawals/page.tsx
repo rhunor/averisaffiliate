@@ -169,10 +169,10 @@ export default function WithdrawalsPage() {
       </div>
 
       {/* Processing time disclaimer */}
-      <div className="flex items-start gap-3 bg-success/10 border border-success/20 rounded-xl px-4 py-3">
-        <AlertCircle className="h-4 w-4 text-success shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
+        <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
-          Withdrawals are processed <strong>automatically</strong> and typically arrive in your bank account within <strong>minutes</strong>. You will receive an email confirmation once your money has been sent.
+          <strong>Withdrawals are temporarily unavailable</strong> as we upgrade our payment system for faster, automatic payouts. We appreciate your patience — this will be resolved shortly.
         </p>
       </div>
 

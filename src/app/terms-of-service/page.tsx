@@ -43,7 +43,7 @@ export default function TermsOfService() {
 
         <Section title="3. Subscription & Payments">
           <p>The current subscription fee is ₦35,000 for 6 months of access. Renewal is ₦30,000 for another 6 months. Prices may change with reasonable notice. All payments are processed securely through Korapay.</p>
-          <p>Subscriptions are non-refundable once access has been granted. If you experience a technical issue with payment, contact support immediately at <a href="mailto:hello@averisacademy.com" className="text-[#40D457] underline">hello@averisacademy.com</a>.</p>
+          <p>Subscriptions are non-refundable once access has been granted. If you experience a technical issue with payment, contact support immediately at <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] underline">Averislimited@gmail.com</a>.</p>
         </Section>
 
         <Section title="4. Affiliate Programme">
@@ -75,7 +75,7 @@ export default function TermsOfService() {
         </Section>
 
         <Section title="10. Contact">
-          <p>For questions about these terms, contact us at: <a href="mailto:hello@averisacademy.com" className="text-[#40D457] underline">hello@averisacademy.com</a> or via WhatsApp: <a href="https://wa.me/2348085300040" className="text-[#40D457] underline">+234 808 530 0040</a></p>
+          <p>For questions about these terms, contact us at: <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] underline">Averislimited@gmail.com</a> or via WhatsApp: <a href="https://wa.me/2348085300040" className="text-[#40D457] underline">+234 808 530 0040</a></p>
         </Section>
       </main>
 

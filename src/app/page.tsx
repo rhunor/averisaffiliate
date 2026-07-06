@@ -961,7 +961,7 @@ function Footer() {
         <div className="border-t border-white/8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/30 text-xs">© 2026 Averis Global Limited. All rights reserved.</p>
           <a
-            href="mailto:hello@averisacademy.com"
+            href="mailto:Averislimited@gmail.com"
             className="text-[#40D457]/70 hover:text-[#40D457] text-xs font-semibold transition-colors"
           >
             Contact Support →

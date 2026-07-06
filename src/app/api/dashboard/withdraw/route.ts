@@ -163,8 +163,8 @@ export async function POST(req: NextRequest) {
 
       // Surface a user-friendly version of common Paystack errors
       const userMsg = msg.toLowerCase().includes("insufficient")
-        ? "Our payment processor has insufficient funds at this time. Please contact support."
-        : "Transfer could not be initiated. Please try again or contact support.";
+        ? "Our payment processor has insufficient funds at this time. Please email Averislimited@gmail.com."
+        : "Transfer could not be initiated. Please try again or email Averislimited@gmail.com.";
 
       return NextResponse.json({ error: userMsg }, { status: 400 });
     }

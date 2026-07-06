@@ -115,7 +115,7 @@ async function handleAverisReinvite(ctx: BotContext) {
     });
   } catch {
     await ctx.editMessageText(
-      `${EMOJI.WARNING} Could not generate invite link. Please try again or contact support.`,
+      `${EMOJI.WARNING} Could not generate invite link. Please try again or email Averislimited@gmail.com.`,
       { parse_mode: "HTML", reply_markup: mainMenuKeyboard(true) }
     );
   }

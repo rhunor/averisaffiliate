@@ -57,8 +57,8 @@ function CheckEmailContent() {
 
       <p className="text-gray-400 text-xs">
         Need help?{" "}
-        <a href="mailto:hello@averisacademy.com" className="text-[#40D457] font-semibold hover:underline">
-          hello@averisacademy.com
+        <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] font-semibold hover:underline">
+          Averislimited@gmail.com
         </a>
       </p>
     </div>

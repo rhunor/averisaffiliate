@@ -168,14 +168,6 @@ export default function WithdrawalsPage() {
         <p className="text-sm text-muted-foreground mt-0.5">Withdraw your earnings directly to your bank account</p>
       </div>
 
-      {/* Processing time disclaimer */}
-      <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
-        <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-        <p className="text-sm text-foreground">
-          <strong>Withdrawals are temporarily unavailable</strong> as we upgrade our payment system for faster, automatic payouts. We appreciate your patience — this will be resolved shortly.
-        </p>
-      </div>
-
       {/* Bank support info */}
       <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground text-xs">Supported banks</p>

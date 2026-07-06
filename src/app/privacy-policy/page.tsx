@@ -35,7 +35,7 @@ export default function PrivacyPolicy() {
 
         <Section title="1. Who We Are">
           <p>Averis Academy is operated by Averis Global Limited. We provide a wealth creation platform that helps Africans build online income and investment portfolios. This Privacy Policy explains how we collect, use, and protect your personal information when you use our platform at averisacademy.com.</p>
-          <p>If you have questions, contact us at: <a href="mailto:hello@averisacademy.com" className="text-[#40D457] underline">hello@averisacademy.com</a></p>
+          <p>If you have questions, contact us at: <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] underline">Averislimited@gmail.com</a></p>
         </Section>
 
         <Section title="2. Information We Collect">
@@ -80,7 +80,7 @@ export default function PrivacyPolicy() {
         </Section>
 
         <Section title="7. Your Rights">
-          <p>You have the right to access, correct, or delete your personal data. Contact us at <a href="mailto:hello@averisacademy.com" className="text-[#40D457] underline">hello@averisacademy.com</a> to make a request.</p>
+          <p>You have the right to access, correct, or delete your personal data. Contact us at <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] underline">Averislimited@gmail.com</a> to make a request.</p>
         </Section>
 
         <Section title="8. Changes to This Policy">

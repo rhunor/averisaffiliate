@@ -54,12 +54,10 @@ function RegisterForm() {
           <a href="/login" className="text-[#40D457] font-semibold hover:underline">Sign In here</a>
         </p>
         <a
-          href="https://wa.me/2348085300040"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="mailto:Averislimited@gmail.com"
           className="inline-block bg-[#122F38] text-white rounded-xl py-3 px-6 font-semibold text-sm hover:bg-[#1a4050] transition-colors"
         >
-          Contact Support for Access
+          Email Us for Access
         </a>
       </div>
     );

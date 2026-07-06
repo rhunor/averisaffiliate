@@ -348,7 +348,7 @@ export async function sendWithdrawalRequestEmail(params: {
           </table>
         </div>
         <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px;margin:16px 0;">
-          <p style="color:#856404;font-size:13px;margin:0;"><strong>⚠ If you did not request this withdrawal</strong>, cancel it immediately from your dashboard or contact support.</p>
+          <p style="color:#856404;font-size:13px;margin:0;"><strong>⚠ If you did not request this withdrawal</strong>, cancel it immediately from your dashboard or email Averislimited@gmail.com.</p>
         </div>
         ${btn(`${appUrl}/dashboard/withdrawals`, "View / Cancel Withdrawal →")}
         <p style="color:#aaa;font-size:11px;text-align:center;margin-top:12px;">Reference: ${withdrawalId}</p>
@@ -497,7 +497,7 @@ export async function sendBankDetailsChangedEmail(params: {
           </table>
         </div>
         <div style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:8px;padding:14px;margin:16px 0;">
-          <p style="color:#721c24;font-size:13px;margin:0;"><strong>If you did not make this change</strong>, your account may be compromised. Change your password immediately and contact support.</p>
+          <p style="color:#721c24;font-size:13px;margin:0;"><strong>If you did not make this change</strong>, your account may be compromised. Change your password immediately and email Averislimited@gmail.com.</p>
         </div>
         <div style="text-align:center;margin:20px 0 0;">
           <a href="${appUrl}/dashboard/settings" style="background:#dc3545;color:white;padding:12px 28px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">Secure My Account →</a>
@@ -640,6 +640,85 @@ export async function sendSubscriptionExpiryEmail(params: {
             : "renew now to keep your access and affiliate earnings uninterrupted. Renewal is ₦30,000 for another 6 months."
         }</p>
         ${btn(`${appUrl}/dashboard/subscription`, "Renew Subscription →")}
+      </div>
+      ${footer()}
+      </div>
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
+export async function sendSpecialAccessInstructionsEmail(email: string, registrationLink: string) {
+  const appUrl = APP_URL;
+  const videoUrl = SETUP_VIDEO_URL;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `You've been granted special access to Averis Academy`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+      ${header(appUrl)}
+      <div style="padding:20px;">
+      <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
+        <p style="font-size:32px;margin:0;">🎁</p>
+        <h2 style="color:#fff;margin:10px 0 6px;font-size:24px;">You've been invited!</h2>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">You have been granted <strong style="color:#40D457;">free lifetime access</strong> to Averis Academy.</p>
+      </div>
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;">To get started, watch the short video below which shows you how to create your account, then click the button to complete your registration.</p>
+        <div style="text-align:center;margin:20px 0;">
+          <a href="${videoUrl}" style="display:inline-block;text-decoration:none;">
+            <div style="background:#1a3a52;padding:40px 60px;border-radius:10px;text-align:center;">
+              <div style="width:60px;height:60px;background:#40D457;border-radius:50%;display:inline-block;line-height:60px;margin-bottom:10px;">
+                <span style="font-size:28px;color:#122F38;">▶</span>
+              </div>
+              <p style="color:#fff;font-weight:bold;margin:8px 0 0;font-size:15px;">Watch Setup Video</p>
+              <p style="color:rgba(255,255,255,0.6);font-size:12px;margin:4px 0 0;">Click to watch how to create your account</p>
+            </div>
+          </a>
+        </div>
+        ${btn(registrationLink, "Create My Account →")}
+        <p style="color:#888;font-size:12px;text-align:center;margin-top:8px;">This link is personal to you. Do not share it.</p>
+      </div>
+      ${footer()}
+      </div>
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
+export async function sendBotActivationEmail(email: string, firstName: string) {
+  const appUrl = APP_URL;
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || "averisacademybot";
+  const botLink = `https://t.me/${botUsername}`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `Account created — one last step to complete your access`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+      ${header(appUrl)}
+      <div style="padding:20px;">
+      <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
+        <p style="font-size:32px;margin:0;">✅</p>
+        <h2 style="color:#fff;margin:10px 0 6px;font-size:24px;">Account created, ${firstName}!</h2>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">Almost there — complete your Telegram verification below.</p>
+      </div>
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;">Your Averis Academy account is ready. To gain access to the community group and course materials, you need to verify your membership via our Telegram bot.</p>
+        <div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;margin:16px 0;">
+          <p style="color:#122F38;font-weight:bold;margin:0 0 10px;font-size:15px;">How to complete your access:</p>
+          <ol style="color:#555;font-size:14px;line-height:1.8;margin:0;padding-left:20px;">
+            <li>Open Telegram and search for <strong>@${botUsername}</strong></li>
+            <li>Send the bot a message — just say <strong>/start</strong></li>
+            <li>The bot will verify your account and send you the Averis Academy group links</li>
+          </ol>
+        </div>
+        <div style="margin-top:20px;padding:20px;background:#1a3a52;border-radius:10px;text-align:center;">
+          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Open the Averis Academy Bot</p>
+          <a href="${botLink}" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;margin-top:10px;">Open Bot on Telegram →</a>
+        </div>
+        <p style="color:#aaa;font-size:12px;text-align:center;margin-top:16px;">You can also log into your dashboard at <a href="${appUrl}/login" style="color:#2d7f8f;">${appUrl}/login</a></p>
       </div>
       ${footer()}
       </div>

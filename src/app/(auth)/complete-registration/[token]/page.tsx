@@ -79,8 +79,8 @@ export default function CompleteRegistrationPage() {
           </p>
           <p className="text-gray-400 text-sm">
             Need help?{" "}
-            <a href="mailto:hello@averisacademy.com" className="text-[#40D457] font-semibold hover:underline">
-              Contact support
+            <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] font-semibold hover:underline">
+              Averislimited@gmail.com
             </a>
           </p>
         </div>

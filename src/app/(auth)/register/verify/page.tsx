@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 function VerifyContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
+  const isBatch2 = searchParams.get("batch") === "2";
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
   const [error, setError] = useState("");
@@ -25,6 +26,26 @@ function VerifyContent() {
     } finally {
       setResending(false);
     }
+  }
+
+  if (isBatch2) {
+    return (
+      <div className="glass rounded-2xl p-8">
+        <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="h-8 w-8 text-secondary-bright" />
+        </div>
+        <h1 className="text-xl font-bold text-white mb-2">Account created!</h1>
+        <p className="text-white/60 text-sm mb-6">
+          Check your email at <strong className="text-white">{email}</strong> for instructions on how to complete your access via Telegram.
+        </p>
+        <p className="text-white/40 text-xs mb-4">
+          You&apos;ll be able to log in and join the Averis Academy community once you&apos;ve completed the Telegram step in your email.
+        </p>
+        <Link href="/login" className="block mt-2 text-sm text-secondary-bright hover:underline">
+          Go to login
+        </Link>
+      </div>
+    );
   }
 
   return (

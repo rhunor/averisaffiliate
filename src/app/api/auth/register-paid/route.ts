@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     if (!pending) {
       return NextResponse.json({
-        error: "This signup link is invalid, has already been used, or has expired. Please contact support.",
+        error: "This signup link is invalid, has already been used, or has expired. Please email Averislimited@gmail.com.",
       }, { status: 400 });
     }
 

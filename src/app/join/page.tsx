@@ -4,10 +4,10 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  payment_failed: "Your payment could not be verified. Please try again or contact support.",
+  payment_failed: "Your payment could not be verified. Please try again or email Averislimited@gmail.com.",
   missing_reference: "The payment reference is missing. Please start the process again.",
-  not_found: "We could not find a registration record for this payment. Please contact support.",
-  server_error: "Something went wrong on our end. Please contact support.",
+  not_found: "We could not find a registration record for this payment. Please email Averislimited@gmail.com.",
+  server_error: "Something went wrong on our end. Please email Averislimited@gmail.com.",
 };
 
 function JoinContent() {
@@ -48,10 +48,10 @@ function JoinContent() {
       )}
 
       <a
-        href="mailto:hello@averisacademy.com"
+        href="mailto:Averislimited@gmail.com"
         className="inline-block bg-[#122F38] text-white rounded-xl py-3 px-6 font-semibold text-sm hover:bg-[#1a4050] transition-colors"
       >
-        Contact Support
+        Email Averislimited@gmail.com
       </a>
 
       <p className="mt-5 text-gray-400 text-xs">

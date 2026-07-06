@@ -12,8 +12,11 @@ function RegisterLifetimeForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("token") || "";
+  const prefillEmail = searchParams.get("email") || "";
+  const batch = searchParams.get("batch") || "";
+  const isBatch2 = batch === "2";
 
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: prefillEmail, password: "" });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -22,7 +25,7 @@ function RegisterLifetimeForm() {
     return (
       <div className="text-center py-6">
         <p className="text-red-500 text-sm mb-4">Invalid or missing invite session.</p>
-        <a href="/invite" className="text-[#40D457] font-semibold text-sm hover:underline">Go back and enter your code</a>
+        <a href={isBatch2 ? "/invite2" : "/invite"} className="text-[#40D457] font-semibold text-sm hover:underline">Go back and enter your code</a>
       </div>
     );
   }
@@ -35,7 +38,7 @@ function RegisterLifetimeForm() {
       const res = await fetch("/api/auth/register-lifetime", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, inviteToken }),
+        body: JSON.stringify({ ...form, inviteToken, batch: isBatch2 ? 2 : undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -43,7 +46,11 @@ function RegisterLifetimeForm() {
         else setErrors({ root: data.error || "Registration failed." });
         return;
       }
-      router.push(`/register/verify?email=${encodeURIComponent(form.email)}&lifetime=1`);
+      if (isBatch2) {
+        router.push(`/register/verify?email=${encodeURIComponent(form.email)}&batch=2`);
+      } else {
+        router.push(`/register/verify?email=${encodeURIComponent(form.email)}&lifetime=1`);
+      }
     } catch {
       setErrors({ root: "Something went wrong. Please try again." });
     } finally {
@@ -83,7 +90,15 @@ function RegisterLifetimeForm() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
-          <input type="email" placeholder="you@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={`${inputCls} ${errors.email ? "border-red-400" : ""}`} required />
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={(e) => !prefillEmail && setForm({ ...form, email: e.target.value })}
+            readOnly={!!prefillEmail}
+            className={`${inputCls} ${errors.email ? "border-red-400" : ""} ${prefillEmail ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
+            required
+          />
           {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
         </div>
 

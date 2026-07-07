@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         isEmailVerified: true,
       });
 
-      await sendBotActivationEmail(email, firstName.trim());
+      await sendBotActivationEmail(email, firstName.trim(), referralCode);
     } else {
       const verificationToken = generateSecureToken();
       const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);

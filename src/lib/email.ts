@@ -687,10 +687,10 @@ export async function sendSpecialAccessInstructionsEmail(email: string, registra
   if (error) throw new Error(`Resend: ${error.message}`);
 }
 
-export async function sendBotActivationEmail(email: string, firstName: string) {
+export async function sendBotActivationEmail(email: string, firstName: string, referralCode: string) {
   const appUrl = APP_URL;
   const botUsername = process.env.TELEGRAM_BOT_USERNAME || "averisacademybot";
-  const botLink = `https://t.me/${botUsername}`;
+  const botDeepLink = `https://t.me/${botUsername}?start=averis_link_${referralCode}`;
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
@@ -702,21 +702,21 @@ export async function sendBotActivationEmail(email: string, firstName: string) {
       <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
         <p style="font-size:32px;margin:0;">✅</p>
         <h2 style="color:#fff;margin:10px 0 6px;font-size:24px;">Account created, ${firstName}!</h2>
-        <p style="color:rgba(255,255,255,0.8);margin:0;">Almost there — complete your Telegram verification below.</p>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">Almost there — tap the button below to complete your access.</p>
       </div>
       <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
-        <p style="color:#555;line-height:1.6;margin-top:0;">Your Averis Academy account is ready. To gain access to the community group and course materials, you need to verify your membership via our Telegram bot.</p>
+        <p style="color:#555;line-height:1.6;margin-top:0;">Your Averis Academy account is ready. Tap the button below to open the Telegram bot — it will automatically verify your account and send you the group invite links.</p>
         <div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;margin:16px 0;">
-          <p style="color:#122F38;font-weight:bold;margin:0 0 10px;font-size:15px;">How to complete your access:</p>
+          <p style="color:#122F38;font-weight:bold;margin:0 0 10px;font-size:15px;">Important — use this exact button:</p>
           <ol style="color:#555;font-size:14px;line-height:1.8;margin:0;padding-left:20px;">
-            <li>Open Telegram and search for <strong>@${botUsername}</strong></li>
-            <li>Send the bot a message — just say <strong>/start</strong></li>
-            <li>The bot will verify your account and send you the Averis Academy group links</li>
+            <li>Tap <strong>"Join Community via Bot"</strong> below — do not search for the bot manually</li>
+            <li>When Telegram opens, press <strong>Start</strong></li>
+            <li>The bot will verify your account and send you your group invite links immediately</li>
           </ol>
         </div>
         <div style="margin-top:20px;padding:20px;background:#1a3a52;border-radius:10px;text-align:center;">
-          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Open the Averis Academy Bot</p>
-          <a href="${botLink}" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;margin-top:10px;">Open Bot on Telegram →</a>
+          <p style="color:#fff;font-weight:bold;margin:0 0 6px;font-size:15px;">Join Community via Bot</p>
+          <a href="${botDeepLink}" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;margin-top:10px;">Join Community via Bot →</a>
         </div>
         <p style="color:#aaa;font-size:12px;text-align:center;margin-top:16px;">You can also log into your dashboard at <a href="${appUrl}/login" style="color:#2d7f8f;">${appUrl}/login</a></p>
       </div>

@@ -107,12 +107,25 @@ export function registerStartHandlers(bot: Bot<BotContext>) {
       return;
     }
 
+    const daysLeft = status.daysLeft!;
+    const isLifetime = daysLeft > 5000;
+
+    if (isLifetime) {
+      await ctx.reply(
+        `🎁 <b>Lifetime Access</b>\n\n` +
+          `Hi <b>${status.firstName}</b>!\n\n` +
+          `You have <b>lifetime access</b> to Averis Academy — your account will never expire.\n\n` +
+          `Keep sharing your affiliate link to earn commissions!`,
+        { parse_mode: "HTML" }
+      );
+      return;
+    }
+
     const expiryStr = status.expiryDate!.toLocaleDateString("en-NG", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
-    const daysLeft = status.daysLeft!;
     const urgency = daysLeft <= 3 ? "\u{1F534}" : daysLeft <= 15 ? "⚠️" : "\u{1F7E2}";
 
     await ctx.reply(

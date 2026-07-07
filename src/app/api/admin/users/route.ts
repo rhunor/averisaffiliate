@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
     const [users, total] = await Promise.all([
       User.find(query)
-        .select("firstName lastName email isActive isEmailVerified role referralCode createdAt subscriptionExpiresAt bankDetails")
+        .select("firstName lastName email isActive isEmailVerified role referralCode createdAt subscriptionExpiresAt bankDetails isLifetime inviteBatch telegramLinked")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)

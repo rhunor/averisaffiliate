@@ -89,8 +89,9 @@ export async function handleAverisJoin(
   user.telegramLinked = true;
   await user.save();
 
-  const expiryDate =
-    user.subscriptionExpiresAt ?? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+  const expiryDate = user.isLifetime
+    ? new Date(2099, 0, 1)
+    : (user.subscriptionExpiresAt ?? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000));
 
   // Create or update AverisSubscriber (used for group management + reminders)
   const existing = await AverisSubscriber.findOne({ telegramId });
@@ -133,17 +134,21 @@ export async function handleAverisJoin(
 
     let message =
       `✅ <b>Welcome to Averis Academy!</b>\n\n` +
-      `Hi <b>${user.firstName}</b>! your telegram account has just been linked to your averis academy account to enable you access the communities.\n\n` +
-      `\u{1F4AC} <b>Next step — Join Averis Community Group:</b>\n${groupLink}\n\n`;
+      `Hi <b>${user.firstName}</b>! Your Telegram account has been linked to your Averis Academy account.\n\n` +
+      `\u{1F4AC} <b>Join the Averis Community Group:</b>\n${groupLink}\n\n`;
 
     if (channelLink) {
       message += `\u{1F4E2} <b>Join the Announcement Channel:</b>\n${channelLink}\n\n`;
     }
 
-    message +=
-      `⚠️ These links are single-use. Join now before they expire!\n\n` +
-      `If you're having issues joining the community, send us an email at admin@averisacademy.com\n\n` +
-      `Your subscription is active until <b>${expiryStr}</b>.`;
+    message += `⚠️ These links are single-use. Join now before they expire!\n\n`;
+    message += `If you're having issues joining the community, send us an email at Averislimited@gmail.com\n\n`;
+
+    if (user.isLifetime) {
+      message += `🎁 You have <b>lifetime access</b> — your account will never expire.`;
+    } else {
+      message += `Your subscription is active until <b>${expiryStr}</b>.`;
+    }
 
     await bot.api.sendMessage(Number(telegramId), message, { parse_mode: "HTML" });
     return { success: true, message: "Joined successfully." };

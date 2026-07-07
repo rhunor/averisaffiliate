@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Search, Users, CheckCircle, XCircle, Shield, ShieldOff } from "lucide-react";
+import { Search, Users, CheckCircle, XCircle, Shield, ShieldOff, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
@@ -17,6 +17,9 @@ interface User {
   referralCode: string;
   createdAt: string;
   subscriptionExpiresAt: string | null;
+  isLifetime: boolean;
+  inviteBatch: number | null;
+  telegramLinked: boolean;
 }
 
 export default function AdminUsersPage() {
@@ -28,6 +31,7 @@ export default function AdminUsersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [botLinkResult, setBotLinkResult] = useState<{ id: string; ok: boolean; msg: string } | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
@@ -62,6 +66,22 @@ export default function AdminUsersPage() {
         const { user } = await res.json();
         setUsers((prev) => prev.map((u) => u._id === userId ? { ...u, isActive: user.isActive } : u));
       }
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function sendBotLink(userId: string) {
+    setActionLoading(userId + "_bot");
+    setBotLinkResult(null);
+    try {
+      const res = await fetch("/api/admin/tools/resend-bot-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      setBotLinkResult({ id: userId, ok: res.ok, msg: data.message || data.error || "Done" });
     } finally {
       setActionLoading(null);
     }
@@ -122,7 +142,7 @@ export default function AdminUsersPage() {
                 <thead className="bg-muted/50">
                   <tr>
                     {["Name", "Email", "Code", "Status", "Joined", "Actions"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -131,7 +151,11 @@ export default function AdminUsersPage() {
                     <tr key={user._id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
                         <p className="font-medium text-foreground">{user.firstName} {user.lastName}</p>
-                        {user.role === "admin" && <Badge variant="info" className="text-xs mt-0.5">Admin</Badge>}
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {user.role === "admin" && <Badge variant="info" className="text-xs">Admin</Badge>}
+                          {user.isLifetime && <Badge variant="success" className="text-xs">Lifetime</Badge>}
+                          {user.isLifetime && !user.telegramLinked && <Badge variant="warning" className="text-xs">No Telegram</Badge>}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
                       <td className="px-4 py-3 font-mono text-xs text-secondary">{user.referralCode}</td>
@@ -142,7 +166,7 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(user.createdAt)}</td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <button
                             onClick={() => toggleActive(user._id)}
                             disabled={actionLoading === user._id + "_active"}
@@ -163,6 +187,23 @@ export default function AdminUsersPage() {
                           >
                             {user.role === "admin" ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
                           </button>
+                          {user.isLifetime && (
+                            <button
+                              onClick={() => sendBotLink(user._id)}
+                              disabled={actionLoading === user._id + "_bot"}
+                              title="Resend bot deep link email"
+                              className="p-1.5 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading === user._id + "_bot"
+                                ? <div className="h-4 w-4 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+                                : <Send className="h-4 w-4" />}
+                            </button>
+                          )}
+                          {botLinkResult?.id === user._id && (
+                            <span className={`text-xs font-medium ${botLinkResult.ok ? "text-success" : "text-danger"}`}>
+                              {botLinkResult.ok ? "✓ Sent" : "✗ Failed"}
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>

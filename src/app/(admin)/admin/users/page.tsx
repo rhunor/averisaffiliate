@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Search, Users, CheckCircle, XCircle, Shield, ShieldOff, Send } from "lucide-react";
+import { Search, Users, CheckCircle, XCircle, Shield, ShieldOff, Send, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
@@ -32,6 +32,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [botLinkResult, setBotLinkResult] = useState<{ id: string; ok: boolean; msg: string } | null>(null);
+  const [welcomeResult, setWelcomeResult] = useState<{ id: string; ok: boolean } | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
@@ -66,6 +67,21 @@ export default function AdminUsersPage() {
         const { user } = await res.json();
         setUsers((prev) => prev.map((u) => u._id === userId ? { ...u, isActive: user.isActive } : u));
       }
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function resendWelcome(userId: string, email: string) {
+    setActionLoading(userId + "_welcome");
+    setWelcomeResult(null);
+    try {
+      const res = await fetch("/api/admin/tools/resend-welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      setWelcomeResult({ id: userId, ok: res.ok });
     } finally {
       setActionLoading(null);
     }
@@ -187,6 +203,21 @@ export default function AdminUsersPage() {
                           >
                             {user.role === "admin" ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
                           </button>
+                          <button
+                            onClick={() => resendWelcome(user._id, user.email)}
+                            disabled={actionLoading === user._id + "_welcome"}
+                            title="Resend welcome email"
+                            className="p-1.5 rounded-lg bg-warning/10 text-warning hover:bg-warning/20 transition-colors disabled:opacity-50"
+                          >
+                            {actionLoading === user._id + "_welcome"
+                              ? <div className="h-4 w-4 rounded-full border-2 border-warning border-t-transparent animate-spin" />
+                              : <Mail className="h-4 w-4" />}
+                          </button>
+                          {welcomeResult?.id === user._id && (
+                            <span className={`text-xs font-medium ${welcomeResult.ok ? "text-success" : "text-danger"}`}>
+                              {welcomeResult.ok ? "✓ Sent" : "✗ Failed"}
+                            </span>
+                          )}
                           {user.isLifetime && (
                             <button
                               onClick={() => sendBotLink(user._id)}

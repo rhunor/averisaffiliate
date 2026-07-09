@@ -139,7 +139,11 @@ export async function POST(req: NextRequest) {
       description: "Averis Academy 6-Month Subscription",
     });
 
-    sendWelcomeEmail(user.email, user.firstName, user.referralCode).catch(console.error);
+    try {
+      await sendWelcomeEmail(user.email, user.firstName, user.referralCode);
+    } catch (emailErr) {
+      console.error("[register-paid] welcome email failed:", emailErr);
+    }
 
     return NextResponse.json({ success: true, email: user.email }, { status: 201 });
   } catch (err) {

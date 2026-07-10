@@ -13,6 +13,7 @@ import {
 import { sendAdminWithdrawalNotificationEmail } from "@/lib/email";
 import { siteConfig } from "@/config/site";
 import { compareNames } from "@/lib/utils";
+import { autoSettleUserCommissions } from "@/lib/settleCommissions";
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,6 +46,9 @@ export async function POST(req: NextRequest) {
     const userId = sessionUser.id as string;
     const user = await User.findById(userId);
     if (!user) return NextResponse.json({ error: "User not found." }, { status: 404 });
+
+    // Settle overdue commissions so the balance reflects the correct available amount
+    await autoSettleUserCommissions(userId).catch(() => {});
 
     // Block if there is already a pending or processing withdrawal
     const activeWithdrawal = await Withdrawal.findOne({

@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import Transaction from "@/models/Transaction";
 import "@/models/Product"; // register Product model so populate("productId") works
 import mongoose from "mongoose";
+import { autoSettleUserCommissions } from "@/lib/settleCommissions";
 
 export async function GET() {
   try {
@@ -14,6 +15,9 @@ export async function GET() {
     const userId = new mongoose.Types.ObjectId(sessionUser.id as string);
 
     await dbConnect();
+
+    // Settle any overdue commissions before returning so balance is immediately accurate
+    await autoSettleUserCommissions(userId).catch(() => {});
 
     const transactions = await Transaction.find({ userId, type: { $in: ["commission", "renewal_commission"] } })
       .sort({ createdAt: -1 })

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Transaction from "@/models/Transaction";
+import User from "@/models/User";
+import { sendCommissionSettledEmail } from "@/lib/email";
 
-// Runs daily at 00:05 WAT (23:05 UTC previous day): 5 23 * * *
-// Marks pending commissions from previous day as completed (D+1 settlement)
+// Runs every 6 hours: 0 */6 * * *
+// Marks pending commissions older than 24 hours as completed and notifies affiliates
 
 async function handler(req: NextRequest) {
   const cronSecret = req.headers.get("x-cron-secret") || req.headers.get("authorization")?.replace("Bearer ", "");
@@ -14,18 +16,41 @@ async function handler(req: NextRequest) {
   try {
     await dbConnect();
 
-    const now = new Date();
-    // Settle all pending commissions older than 24 hours
-    const settleBefore = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const settleBefore = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // Fetch before updating so we know who to email
+    const toSettle = await Transaction.find({
+      type: "commission",
+      status: "pending",
+      createdAt: { $lt: settleBefore },
+    }).lean();
+
+    if (toSettle.length === 0) {
+      return NextResponse.json({ settled: 0, settledBefore: settleBefore.toISOString() });
+    }
 
     const result = await Transaction.updateMany(
-      {
-        type: "commission",
-        status: "pending",
-        createdAt: { $lt: settleBefore },
-      },
+      { type: "commission", status: "pending", createdAt: { $lt: settleBefore } },
       { $set: { status: "completed" } }
     );
+
+    // Group by userId and send one settlement email per affiliate
+    const userTotals = new Map<string, number>();
+    for (const tx of toSettle) {
+      const uid = tx.userId.toString();
+      userTotals.set(uid, (userTotals.get(uid) ?? 0) + tx.amount);
+    }
+
+    const userIds = Array.from(userTotals.keys());
+    const users = await User.find({ _id: { $in: userIds } }, "firstName email").lean();
+    for (const u of users) {
+      const uid = u._id.toString();
+      sendCommissionSettledEmail({
+        email: u.email,
+        firstName: u.firstName,
+        amount: userTotals.get(uid) ?? 0,
+      }).catch((e) => console.error("[cron/settle-commissions] email failed:", e));
+    }
 
     return NextResponse.json({
       settled: result.modifiedCount,

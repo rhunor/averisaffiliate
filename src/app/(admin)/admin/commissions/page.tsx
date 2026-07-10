@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, Mail, AlertCircle, Info, Trash2 } from "lucide-react";
+import { CheckCircle, Mail, AlertCircle, Info, Trash2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 
-type Mode = "credit" | "resend" | "reverse";
+type Mode = "credit" | "resend" | "reverse" | "settle";
 
 interface Result {
   success: boolean;
@@ -36,6 +36,24 @@ export default function AdminCommissionsPage() {
   // Reverse form
   const [reverseId, setReverseId] = useState("");
   const [reverseConfirm, setReverseConfirm] = useState(false);
+
+  // Settle state
+  const [settleResult, setSettleResult] = useState<{ success: boolean; results?: string[]; error?: string } | null>(null);
+  const [settleLoading, setSettleLoading] = useState(false);
+
+  async function handleSettle() {
+    setSettleLoading(true);
+    setSettleResult(null);
+    try {
+      const res = await fetch("/api/admin/settle-commissions", { method: "POST" });
+      const data = await res.json();
+      setSettleResult({ success: res.ok, results: data.results, error: data.error });
+    } catch {
+      setSettleResult({ success: false, error: "Network error — please try again." });
+    } finally {
+      setSettleLoading(false);
+    }
+  }
 
   // Resend-only form
   const [resendEmail, setResendEmail] = useState("");
@@ -170,6 +188,15 @@ export default function AdminCommissionsPage() {
         >
           <Trash2 className="h-4 w-4" />
           Reverse Commission
+        </button>
+        <button
+          onClick={() => { setMode("settle"); setResult(null); setSettleResult(null); }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+            mode === "settle" ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-border"
+          }`}
+        >
+          <Clock className="h-4 w-4" />
+          Settle Overdue
         </button>
       </div>
 
@@ -382,6 +409,32 @@ export default function AdminCommissionsPage() {
                 {loading ? "Sending…" : "Resend Commission Email"}
               </button>
             </form>
+          </CardContent>
+        </Card>
+      ) : mode === "settle" ? (
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-foreground">Settle Overdue Commissions</h2>
+            <p className="text-xs text-muted-foreground">
+              Marks all pending commissions older than 24 hours as completed and sends each affiliate a settlement email. This runs automatically every 6 hours via cron — use this to settle immediately.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {settleResult && (
+              <div className={`rounded-xl px-4 py-3 border text-sm space-y-1 ${settleResult.success ? "bg-success/10 border-success/20" : "bg-danger/10 border-danger/20"}`}>
+                {settleResult.results?.map((line, i) => (
+                  <p key={i} className={line.startsWith("✓") ? "text-success font-medium" : "text-muted-foreground"}>{line}</p>
+                ))}
+                {settleResult.error && <p className="text-danger">{settleResult.error}</p>}
+              </div>
+            )}
+            <button
+              onClick={handleSettle}
+              disabled={settleLoading}
+              className="w-full py-3 bg-primary text-white font-semibold text-sm rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {settleLoading ? "Settling…" : "Settle All Overdue Commissions Now"}
+            </button>
           </CardContent>
         </Card>
       ) : (

@@ -11,6 +11,12 @@ export const siteConfig = {
     newSubscription: 17_500,
     renewal: 15_000,
   },
+  forex: {
+    price: 50_000,
+    commission: 25_000, // 50% of price
+    productName: "Forex Income Blueprint",
+    slug: "forex-income-blueprint",
+  },
   minWithdrawal: 10_000,
   referralCodePrefix: "AVR",
   links: {

@@ -683,6 +683,68 @@ export async function sendSpecialAccessInstructionsEmail(email: string, registra
   if (error) throw new Error(`Resend: ${error.message}`);
 }
 
+export async function sendForexCourseAccessEmail(params: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  orderId: string;
+}) {
+  const appUrl = APP_URL;
+  const { email, firstName, lastName, orderId } = params;
+  const courseUrl = process.env.FOREX_COURSE_ACCESS_URL || "";
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `Forex Income Blueprint — Your purchase is confirmed!`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+      ${header(appUrl)}
+      <div style="padding:20px;">
+      <div style="background:linear-gradient(138deg,#070f1a 0%,#0d2a1a 48%,#0a3318 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
+        <p style="font-size:32px;margin:0;">🎉</p>
+        <h2 style="color:#fff;margin:10px 0 6px;font-size:22px;">Payment Confirmed, ${firstName}!</h2>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">Welcome to the Forex Income Blueprint.</p>
+      </div>
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;">Hi <strong>${firstName} ${lastName}</strong>, your purchase of the <strong>Forex Income Blueprint</strong> by Nwanneka Caleb has been successfully confirmed.</p>
+        <div style="background:white;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #e2e8f0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Product</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;color:#333;font-size:13px;">Forex Income Blueprint</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#888;font-size:13px;">Amount Paid</td>
+              <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;color:#0a3318;">₦50,000</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;color:#888;font-size:13px;">Order ID</td>
+              <td style="padding:10px 0;text-align:right;font-family:monospace;font-size:12px;color:#555;">${orderId}</td>
+            </tr>
+          </table>
+        </div>
+        ${courseUrl
+          ? `<p style="color:#555;line-height:1.6;">Click the button below to access your course:</p>
+             ${btn(courseUrl, "Access Forex Income Blueprint →")}
+             <p style="color:#888;font-size:12px;text-align:center;">Save this email — this is your permanent access link.</p>`
+          : `<div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:16px;margin:16px 0;text-align:center;">
+               <p style="color:#2e7d32;font-weight:bold;margin:0 0 6px;">Your access is being prepared</p>
+               <p style="color:#388e3c;font-size:13px;margin:0;">Caleb's team will send you your course access link within <strong>24 hours</strong>. Keep an eye on your inbox (and spam folder).</p>
+             </div>`
+        }
+        <p style="color:#555;line-height:1.6;margin-top:16px;">In the meantime, join the Averis Academy Telegram community to connect with other students and get early updates:</p>
+        <div style="text-align:center;margin:16px 0;">
+          <a href="https://t.me/averis_academy" style="background:#40D457;color:#122F38;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">Join Averis Telegram →</a>
+        </div>
+        <p style="color:#888;font-size:12px;margin-top:20px;">Questions? Email us at <a href="mailto:Averislimited@gmail.com" style="color:#2d7f8f;">Averislimited@gmail.com</a></p>
+      </div>
+      ${footer()}
+      </div>
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
 export async function sendBotActivationEmail(email: string, firstName: string, referralCode: string) {
   const appUrl = APP_URL;
   const botUsername = process.env.TELEGRAM_BOT_USERNAME || "averisacademybot";

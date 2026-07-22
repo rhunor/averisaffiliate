@@ -186,6 +186,11 @@ export function generateSignupRef(): string {
   return `AVR-SIGNUP-${Date.now()}-${random}`;
 }
 
+export function generateForexRef(): string {
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `AVR-FOREX-${Date.now()}-${random}`;
+}
+
 export function generatePayoutRef(withdrawalId: string): string {
   return `WTH-${withdrawalId}`;
 }

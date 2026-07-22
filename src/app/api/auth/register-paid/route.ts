@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const referralCode = await generateUniqueReferralCode();
-    const sixMonths = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+    const twelveMonths = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
     const user = await User.create({
       firstName: pending.firstName,
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       hasPaidSignup: true,
       isActive: true,
       isEmailVerified: true,
-      subscriptionExpiresAt: sixMonths,
+      subscriptionExpiresAt: twelveMonths,
       signupPaymentRef: pending.paymentReference,
     });
 
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     // Sync bot subscriber record
     await AverisSubscriber.findOneAndUpdate(
       { averisUserId: user._id.toString() },
-      { expiryDate: sixMonths, status: "active", removedAt: null, remindersSent: [] },
+      { expiryDate: twelveMonths, status: "active", removedAt: null, remindersSent: [] },
       { upsert: true }
     ).catch(() => {});
 
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
       status: "completed",
       paymentReference: pending.paymentReference,
       orderId: generateOrderId(),
-      description: "Averis Academy 6-Month Subscription",
+      description: "Averis Academy 12-Month Subscription",
     });
 
     try {

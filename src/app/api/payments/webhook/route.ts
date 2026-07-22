@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
       ? ((productRecord?.renewalCommissionAmount as number) ?? siteConfig.commission.renewal)
       : ((productRecord?.commissionAmount as number) ?? siteConfig.commission.newSubscription);
 
-    const sixMonths = 180 * 24 * 60 * 60 * 1000;
+    const twelveMonths = 365 * 24 * 60 * 60 * 1000;
 
     // ── RENEWAL ─────────────────────────────────────────────────────────────
     if (isRenewal) {
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       const currentExpiry = user.subscriptionExpiresAt
         ? new Date(Math.max(user.subscriptionExpiresAt.getTime(), now.getTime()))
         : now;
-      const newExpiry = new Date(currentExpiry.getTime() + sixMonths);
+      const newExpiry = new Date(currentExpiry.getTime() + twelveMonths);
 
       user.isActive = true;
       user.subscriptionExpiresAt = newExpiry;
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
         status: "completed",
         paymentReference: reference,
         orderId,
-        description: "Averis Academy 6-Month Renewal",
+        description: "Averis Academy 12-Month Renewal",
       });
 
       await AverisSubscriber.findOneAndUpdate(
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date();
-    const newExpiry = new Date(now.getTime() + sixMonths);
+    const newExpiry = new Date(now.getTime() + twelveMonths);
 
     user.isActive = true;
     user.hasPaidSignup = true;
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
       status: "completed",
       paymentReference: reference,
       orderId,
-      description: "Averis Academy 6-Month Subscription",
+      description: "Averis Academy 12-Month Subscription",
     });
 
     if (user.referredBy) {

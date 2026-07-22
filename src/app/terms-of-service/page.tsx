@@ -38,11 +38,11 @@ export default function TermsOfService() {
         </Section>
 
         <Section title="2. The Platform">
-          <p>Averis Academy is a two-phase wealth creation platform. Phase 1 provides digital marketing and affiliate income training. Phase 2 (Averis Wealth Club) provides investment education. Access is granted upon payment of the subscription fee and is valid for 6 months from activation.</p>
+          <p>Averis Academy is a two-phase wealth creation platform. Phase 1 provides digital marketing and affiliate income training. Phase 2 (Averis Wealth Club) provides investment education. Access is granted upon payment of the subscription fee and is valid for 12 months from activation.</p>
         </Section>
 
         <Section title="3. Subscription & Payments">
-          <p>The current subscription fee is ₦35,000 for 6 months of access. Renewal is ₦30,000 for another 6 months. Prices may change with reasonable notice. All payments are processed securely through Korapay.</p>
+          <p>The current subscription fee is ₦35,000 for 12 months of access. Renewal is ₦30,000 for another 12 months. Prices may change with reasonable notice. All payments are processed securely through Korapay.</p>
           <p>Subscriptions are non-refundable once access has been granted. If you experience a technical issue with payment, contact support immediately at <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] underline">Averislimited@gmail.com</a>.</p>
         </Section>
 

@@ -38,6 +38,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           isActive: user.isActive,
           isEmailVerified: !!user.isEmailVerified,
           profileImage: user.profileImage || null,
+          isLifetime: !!user.isLifetime,
+          subscriptionExpiresAt: user.subscriptionExpiresAt ? user.subscriptionExpiresAt.toISOString() : null,
         };
       },
     }),
@@ -52,6 +54,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (token as Record<string, unknown>).isActive = u.isActive;
         (token as Record<string, unknown>).isEmailVerified = u.isEmailVerified;
         (token as Record<string, unknown>).profileImage = u.profileImage ?? null;
+        (token as Record<string, unknown>).isLifetime = u.isLifetime ?? false;
+        (token as Record<string, unknown>).subscriptionExpiresAt = u.subscriptionExpiresAt ?? null;
       }
       if (trigger === "update") {
         const s = session as Record<string, unknown> | null;
@@ -68,6 +72,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (dbUser) {
             (token as Record<string, unknown>).isEmailVerified = !!dbUser.isEmailVerified;
             (token as Record<string, unknown>).isActive = dbUser.isActive;
+            (token as Record<string, unknown>).isLifetime = !!(dbUser.isLifetime);
+            (token as Record<string, unknown>).subscriptionExpiresAt = dbUser.subscriptionExpiresAt
+              ? (dbUser.subscriptionExpiresAt as Date).toISOString()
+              : null;
             // Only overwrite profileImage from DB if the caller didn't supply it
             if (s?.profileImage === undefined) {
               (token as Record<string, unknown>).profileImage = (dbUser.profileImage as string) ?? null;
@@ -90,6 +98,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         s.isActive = tok.isActive as boolean;
         s.isEmailVerified = tok.isEmailVerified as boolean;
         s.profileImage = (tok.profileImage as string) ?? null;
+        s.isLifetime = (tok.isLifetime as boolean) ?? false;
+        s.subscriptionExpiresAt = (tok.subscriptionExpiresAt as string) ?? null;
       }
       return session;
     },

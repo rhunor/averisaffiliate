@@ -7,6 +7,8 @@ declare module "next-auth" {
     referralCode: string;
     isActive: boolean;
     isEmailVerified: boolean;
+    isLifetime: boolean;
+    subscriptionExpiresAt: string | null;
   }
 
   interface Session {
@@ -16,6 +18,8 @@ declare module "next-auth" {
       referralCode: string;
       isActive: boolean;
       isEmailVerified: boolean;
+      isLifetime: boolean;
+      subscriptionExpiresAt: string | null;
     };
   }
 }
@@ -26,5 +30,7 @@ declare module "next-auth/jwt" {
     referralCode: string;
     isActive: boolean;
     isEmailVerified: boolean;
+    isLifetime: boolean;
+    subscriptionExpiresAt: string | null;
   }
 }

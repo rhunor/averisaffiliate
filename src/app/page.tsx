@@ -234,10 +234,10 @@ function HeroVisual() {
 
 /* ─── Hero ─── */
 function Hero() {
-  const tags = [
-    { label: "Phase 1: Make Money", color: "bg-[#40D457]/15 text-[#40D457] border-[#40D457]/20" },
-    { label: "Phase 2: Grow Wealth", color: "bg-white/8 text-white/70 border-white/10" },
-  ];
+  // const tags = [
+  //   { label: "Phase 1: Make Money", color: "bg-[#40D457]/15 text-[#40D457] border-[#40D457]/20" },
+  //   { label: "Phase 2: Grow Wealth", color: "bg-white/8 text-white/70 border-white/10" },
+  // ];
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden gradient-hero pt-16">
@@ -259,7 +259,7 @@ function Hero() {
               className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-6 border border-white/10"
             >
               <span className="w-2 h-2 rounded-full bg-[#40D457] animate-pulse shrink-0" />
-              <span className="text-white/65 text-xs font-semibold uppercase tracking-widest">100+ Africans Building Wealth</span>
+              <span className="text-white/65 text-xs font-semibold uppercase tracking-widest">1000+ Africans Building Wealth</span>
             </motion.div>
 
             {/* Headline */}
@@ -281,8 +281,8 @@ function Hero() {
               transition={{ duration: 0.65, delay: 0.2 }}
               className="text-sm sm:text-base md:text-lg text-white/50 leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0"
             >
-              Averis Academy is a wealth creation platform. We teach you to build real income selling digital products online,{" "}
-              <span className="text-[#40D457] font-semibold">then show you how to invest that income</span> to build generational wealth.
+              Averis Academy is a wealth creation platform, we help everyday people build sustainable online income through proven digital business systems,{" "}
+              <span className="text-[#40D457] font-semibold">then teach them how to turn that income </span>into long-term wealth.
             </motion.p>
 
             {/* CTAs */}
@@ -304,7 +304,7 @@ function Hero() {
             </motion.div>
 
             {/* Tag pills */}
-            <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
+            {/* <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
               {tags.map((tag, i) => (
                 <motion.span
                   key={tag.label}
@@ -316,7 +316,7 @@ function Hero() {
                   {tag.label}
                 </motion.span>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* ── RIGHT: hero photo ── */}
@@ -345,15 +345,15 @@ function Hero() {
 
 /* ─── Stats bar ─── */
 function StatsBar() {
-  const stats = [
-    { value: 100, prefix: "", suffix: "+", label: "Active Members" },
-    { value: 2, prefix: "", suffix: "", label: "Wealth Phases" },
-  ];
+  // const stats = [
+  //   { value: 100, prefix: "", suffix: "+", label: "Active Members" },
+  //   { value: 2, prefix: "", suffix: "", label: "Wealth Phases" },
+  // ];
 
   return (
     <section className="bg-[#091820] border-y border-white/8">
       <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="flex items-center justify-center gap-16 sm:gap-24 md:gap-40">
+        {/* <div className="flex items-center justify-center gap-16 sm:gap-24 md:gap-40">
           {stats.map((s, i) => (
             <FadeUp key={s.label} delay={i * 0.08} className="text-center">
               <p className="text-3xl md:text-4xl font-black text-white mb-1">
@@ -362,7 +362,7 @@ function StatsBar() {
               <p className="text-white/45 text-sm font-medium">{s.label}</p>
             </FadeUp>
           ))}
-        </div>
+        </div> */}
       </div>
     </section>
   );
@@ -440,7 +440,7 @@ function ChooseYourPath() {
     {
       name: "Digital Income Blueprint",
       status: "live",
-      desc: "This income stream is for those who want to build a profitable digital product business online. Create their own product with Ai or start out as an affiliate — we will give you a hot selling product to promote and earn from Day 1.",
+      desc: "This income stream is for those who want to build a profitable digital product business online. Create their own product with Ai or start out as an affiliate, we will give you a hot selling product to promote and earn from Day 1.",
       href: "/login",
     },
     {
@@ -478,7 +478,7 @@ function ChooseYourPath() {
             Choose Your <span className="gradient-text">Path to Wealth.</span>
           </h2>
           <p className="text-[#5f7268] text-base max-w-2xl mx-auto leading-relaxed">
-            Every income stream on Averis Academy is taught by a verified educator with a track record and documented results in the specific field. At Averis Academy, we simply give you the best.
+            Every income stream on Averis Academy is designed to help you build a real online income, learn directly from educators with proven results and choose the income model that fits your goals.
           </p>
         </FadeUp>
 
@@ -690,7 +690,7 @@ function Testimonials() {
 /* ─── Values ─── */
 function Values() {
   const vals = [
-    { icon: "/Iconography/Human.svg", title: "Accessibility", desc: "World-class wealth education made affordable for every African, regardless of background or location." },
+    { icon: "/Iconography/Human.svg", title: "Accessibility", desc: "World-class income education made affordable for every African, regardless of background or location." },
     { icon: "/Iconography/Shield.svg", title: "Integrity", desc: "We value our users and we are always committed to giving them the best and helping them scale their income." },
     { icon: "/Iconography/Pointer.svg", title: "Execution", desc: "We don't just teach theory; we ensure our users take action through our accountability system that turns learning into online income." },
     { icon: "/Iconography/Community.svg", title: "Community", desc: "Join a network of serious Africans building wealth together. We don't just train you; we grow with you." },
@@ -752,7 +752,7 @@ function CTABanner() {
             Your Wealth Journey<br /><span className="gradient-text">Starts Here.</span>
           </h2>
           <p className="text-white/55 text-lg mb-10 max-w-xl mx-auto">
-            Join 200+ Africans learning to make money online and build wealth with Averis Academy.
+            Join 100+ Africans learning to make money online and build wealth with Averis Academy.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/login" className="relative overflow-hidden group bg-[#40D457] hover:bg-[#2eb847] text-[#122F38] font-bold text-base px-10 py-4 rounded-2xl transition-all hover:shadow-[0_0_50px_rgba(64,212,87,0.4)] flex items-center justify-center gap-2">
@@ -764,7 +764,7 @@ function CTABanner() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#40D457]">
                 <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.24 13.748l-2.95-.924c-.64-.203-.654-.64.136-.95l11.52-4.44c.532-.194.998.13.616.814z"/>
               </svg>
-              Join Telegram
+              Join our Telegram Channel
             </a>
           </div>
         </FadeUp>

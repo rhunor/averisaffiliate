@@ -68,7 +68,7 @@ async function handleAverisRenew(ctx: BotContext) {
   await ctx.editMessageText(
     `\u{1F504} <b>Renew Your Averis Academy Subscription</b>\n\n` +
       `Current expiry: <b>${expiryStr}</b>\n` +
-      `Renewal price: <b>₦30,000</b> for another 6 months\n\n` +
+      `Renewal price: <b>₦30,000</b> for another 12 months\n\n` +
       `Tap the button below to complete your renewal. Your subscription extends automatically after payment is confirmed.`,
     {
       parse_mode: "HTML",

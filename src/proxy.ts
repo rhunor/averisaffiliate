@@ -44,6 +44,18 @@ export default auth((req) => {
       }
       return NextResponse.redirect(new URL("/pending-payment", req.nextUrl));
     }
+    // Block expired non-lifetime users even if isActive is still true in their token
+    const isLifetime = sessionUser?.isLifetime as boolean | undefined;
+    const subscriptionExpiresAt = sessionUser?.subscriptionExpiresAt as string | null | undefined;
+    if (!isLifetime && subscriptionExpiresAt && new Date(subscriptionExpiresAt) < new Date()) {
+      if (isApi) {
+        return NextResponse.json(
+          { error: "Your subscription has expired. Please renew to continue." },
+          { status: 403 }
+        );
+      }
+      return NextResponse.redirect(new URL("/pending-payment?expired=1", req.nextUrl));
+    }
   }
 
   if (isOnAdmin) {

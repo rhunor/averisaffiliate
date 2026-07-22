@@ -140,8 +140,8 @@ export default function ProductsPage() {
   // Averis Academy is always the first product — uses the user's own referral link
   const averisAcademyProduct = useMemo<Product>(() => ({
     _id: "__averis_academy__",
-    name: "Averis Academy",
-    description: "Africa's premier wealth creation platform. Make money, invest it, and build generational wealth.",
+    name: "Digital Income Blueprint ",
+    description: "Build a profitable online business by creating your own digital products with Ai and selling it or selling other peoples product as an affiliate",
     imageUrl: null,
     price: siteConfig.signupFee,
     commissionAmount: siteConfig.commission.newSubscription,
@@ -154,7 +154,7 @@ export default function ProductsPage() {
   const forexProduct = useMemo<Product>(() => ({
     _id: "__forex_income_blueprint__",
     name: "Forex Income Blueprint",
-    description: "Nwanneka Caleb's 2-Step Structure + Liquidity trading system. One-time purchase, lifetime access.",
+    description: "Build a profitable online income trading the forex market with Forex Income Blueprint by Averis Academy",
     imageUrl: null,
     price: siteConfig.forex.price,
     commissionAmount: siteConfig.forex.commission,

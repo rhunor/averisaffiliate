@@ -91,7 +91,7 @@ export async function handleAverisJoin(
 
   const expiryDate = user.isLifetime
     ? new Date(2099, 0, 1)
-    : (user.subscriptionExpiresAt ?? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000));
+    : (user.subscriptionExpiresAt ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000));
 
   // Create or update AverisSubscriber (used for group management + reminders)
   const existing = await AverisSubscriber.findOne({ telegramId });
@@ -208,6 +208,11 @@ export async function processTelegramExpiry(): Promise<{ expired: number; remind
     if (daysLeft <= 0) {
       sub.status = "expired";
       await sub.save();
+
+      // Mark user inactive so middleware blocks dashboard access
+      if (sub.averisUserId) {
+        await User.findByIdAndUpdate(sub.averisUserId, { isActive: false }).catch(() => {});
+      }
 
       // Remove from Telegram group
       if (GROUP_ID) {

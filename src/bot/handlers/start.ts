@@ -47,7 +47,7 @@ async function showHelp(ctx: BotContext) {
     `The bot verifies your payment and sends you a single-use invite link to the Averis Academy community group.\n\n` +
     `<b>4. Renewal reminders</b>\n` +
     `You'll receive automatic reminders 30, 15, 7, 3 and 1 day before your subscription expires.\n\n` +
-    `<b>Renewal price:</b> ₦30,000 for another 6 months\n\n` +
+    `<b>Renewal price:</b> ₦30,000 for another 12 months\n\n` +
     `Need help? Contact support: <a href="https://wa.me/2348085300040">WhatsApp</a>`;
 
   if (ctx.callbackQuery) {

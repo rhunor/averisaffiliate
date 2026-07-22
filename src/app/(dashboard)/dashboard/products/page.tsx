@@ -52,17 +52,19 @@ function ShareModal({ product, onClose }: { product: Product; onClose: () => voi
         </div>
 
         {/* Commission badges */}
-        <div className="grid grid-cols-2 gap-2 mb-5">
+        <div className={`grid gap-2 mb-5 ${product.renewalCommissionAmount > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
           <div className="bg-success/8 border border-success/20 rounded-xl p-3 text-center">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Commission per sale</p>
             <p className="font-black text-success text-xl">50%</p>
             <p className="text-xs text-success font-semibold">{formatCurrency(product.commissionAmount)}</p>
           </div>
-          <div className="bg-secondary/8 border border-secondary/20 rounded-xl p-3 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Subscription commission</p>
-            <p className="font-black text-secondary text-xl">50%</p>
-            <p className="text-xs text-secondary font-semibold">{formatCurrency(product.renewalCommissionAmount)}</p>
-          </div>
+          {product.renewalCommissionAmount > 0 && (
+            <div className="bg-secondary/8 border border-secondary/20 rounded-xl p-3 text-center">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Subscription commission</p>
+              <p className="font-black text-secondary text-xl">50%</p>
+              <p className="text-xs text-secondary font-semibold">{formatCurrency(product.renewalCommissionAmount)}</p>
+            </div>
+          )}
         </div>
 
         {/* Link */}
@@ -148,7 +150,20 @@ export default function ProductsPage() {
     referralLink: referralCode ? `${appUrl}/join/${referralCode}` : "",
   }), [referralCode, appUrl]);
 
-  const products = useMemo(() => [averisAcademyProduct, ...dbProducts], [averisAcademyProduct, dbProducts]);
+  // Forex Income Blueprint — one-time product with its own affiliate URL
+  const forexProduct = useMemo<Product>(() => ({
+    _id: "__forex_income_blueprint__",
+    name: "Forex Income Blueprint",
+    description: "Nwanneka Caleb's 2-Step Structure + Liquidity trading system. One-time purchase, lifetime access.",
+    imageUrl: null,
+    price: siteConfig.forex.price,
+    commissionAmount: siteConfig.forex.commission,
+    renewalCommissionAmount: 0,
+    slug: "forex-income-blueprint",
+    referralLink: referralCode ? `${appUrl}/forex-income-blueprint/${referralCode}` : "",
+  }), [referralCode, appUrl]);
+
+  const products = useMemo(() => [averisAcademyProduct, forexProduct, ...dbProducts], [averisAcademyProduct, forexProduct, dbProducts]);
 
   function copyLink(id: string, link: string) {
     navigator.clipboard.writeText(link);
@@ -189,25 +204,29 @@ export default function ProductsPage() {
                     <Badge variant="info" className="bg-white/20 text-white border-white/30 text-[10px] font-bold">
                       Sale 50%
                     </Badge>
-                    <Badge variant="info" className="bg-white/20 text-white border-white/30 text-[10px] font-bold">
-                      Sub 50%
-                    </Badge>
+                    {product.renewalCommissionAmount > 0 && (
+                      <Badge variant="info" className="bg-white/20 text-white border-white/30 text-[10px] font-bold">
+                        Sub 50%
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-5 space-y-4">
                 {/* Commission info */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid gap-3 ${product.renewalCommissionAmount > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
                   <div className="bg-success/5 border border-success/20 rounded-xl p-3 text-center">
                     <p className="text-xs text-muted-foreground">Commission per sale</p>
                     <p className="font-black text-success text-base">50%</p>
                     <p className="text-xs font-bold text-success">{formatCurrency(product.commissionAmount)}</p>
                   </div>
-                  <div className="bg-secondary/5 border border-secondary/20 rounded-xl p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Subscription commission</p>
-                    <p className="font-black text-secondary text-base">50%</p>
-                    <p className="text-xs font-bold text-secondary">{formatCurrency(product.renewalCommissionAmount)}</p>
-                  </div>
+                  {product.renewalCommissionAmount > 0 && (
+                    <div className="bg-secondary/5 border border-secondary/20 rounded-xl p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Subscription commission</p>
+                      <p className="font-black text-secondary text-base">50%</p>
+                      <p className="text-xs font-bold text-secondary">{formatCurrency(product.renewalCommissionAmount)}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Referral link */}

@@ -34,57 +34,93 @@ export default function PrivacyPolicy() {
         <p className="text-sm text-gray-400 mb-10">Last updated: June 2026</p>
 
         <Section title="1. Who We Are">
-          <p>Averis Academy is operated by Averis Global Limited. We provide a wealth creation platform that helps Africans build online income and investment portfolios. This Privacy Policy explains how we collect, use, and protect your personal information when you use our platform at averisacademy.com.</p>
-          <p>If you have questions, contact us at: <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] underline">Averislimited@gmail.com</a></p>
+          <p>Averis Academy is operated by Averis Global Limited, a company registered in Nigeria. We provide a wealth creation platform that helps Africans build sustainable online income through proven digital business systems.</p>
+          <p>This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our platform at averisacademy.com.</p>
+          <p>If you have questions about this policy, contact us at: <a href="mailto:admin@averisacademy.com" className="text-[#40D457] underline">admin@averisacademy.com</a></p>
         </Section>
 
         <Section title="2. Information We Collect">
-          <p><strong>Account information:</strong> Your name, email address, and password when you register.</p>
-          <p><strong>Payment information:</strong> Payment is processed by Korapay. We do not store card details. We receive confirmation of successful transactions.</p>
-          <p><strong>Bank details:</strong> Bank name, account number, and verified account name, used solely to process your withdrawal requests.</p>
-          <p><strong>Profile photo:</strong> If you upload one, it is stored on Cloudinary and displayed on your account.</p>
-          <p><strong>Telegram ID:</strong> If you link your Telegram account to join our community group.</p>
-          <p><strong>Usage data:</strong> Pages visited, course progress, and affiliate link activity, used to improve the platform.</p>
+          <p>We collect the following information when you use Averis Academy:</p>
+          <p><strong>Account information:</strong> your full name, email address, and password when you register.</p>
+          <p><strong>Payment information:</strong> payments are processed securely by Korapay. We do not store your card details. We receive only confirmation of successful transactions.</p>
+          <p><strong>Bank details:</strong> your bank name, account number, and verified account name, used solely to process your withdrawal requests.</p>
+          <p><strong>Profile photo:</strong> if you upload one, it is stored on Cloudinary and displayed on your account profile.</p>
+          <p><strong>Telegram ID:</strong> if you link your Telegram account to join our income stream communities.</p>
+          <p><strong>Usage data:</strong> pages visited, course or product progress, affiliate link activity, and login history, used to improve the platform experience.</p>
         </Section>
 
         <Section title="3. How We Use Your Information">
-          <p>We use your information to:</p>
+          <p>We use your personal information to:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
-            <li>Operate and maintain your account</li>
-            <li>Process payments and withdrawals</li>
-            <li>Track affiliate sales and credit commissions</li>
-            <li>Send you account notifications and subscription reminders</li>
-            <li>Add you to the Averis Academy Telegram community</li>
-            <li>Improve our courses and platform</li>
+            <li>Create and manage your Averis Academy account</li>
+            <li>Process payments and subscription renewals</li>
+            <li>Track affiliate sales and credit commissions to your account wallet</li>
+            <li>Process your withdrawal requests to your verified bank account</li>
+            <li>Add you to the relevant Averis Academy community (Telegram or WhatsApp) for your chosen income stream</li>
+            <li>Send you account notifications, subscription reminders, and platform updates</li>
+            <li>Improve our income stream products, trainings, and platform features</li>
           </ul>
-          <p>We do not sell or rent your personal information to third parties.</p>
+          <p>We do not sell, rent, or trade your personal information to any third parties for marketing purposes.</p>
         </Section>
 
         <Section title="4. Data Sharing">
-          <p>We share your data with the following trusted third parties only as necessary:</p>
+          <p>We share your data with the following trusted service providers only as necessary to operate the platform:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
-            <li><strong>Korapay</strong>: payment processing</li>
-            <li><strong>Resend</strong>: transactional email delivery</li>
-            <li><strong>Cloudinary</strong>: profile photo storage</li>
-            <li><strong>MongoDB Atlas</strong>: secure database hosting</li>
-            <li><strong>Vercel</strong>: platform hosting</li>
+            <li><strong>Korapay:</strong> secure payment processing and withdrawal transfers</li>
+            <li><strong>Resend:</strong> transactional email delivery (account notifications, receipts)</li>
+            <li><strong>Cloudinary:</strong> profile photo storage and delivery</li>
+            <li><strong>MongoDB Atlas:</strong> secure encrypted database hosting</li>
+            <li><strong>Vercel:</strong> platform hosting and deployment</li>
           </ul>
+          <p>All third-party providers are bound by their own privacy and security policies. We do not share your data with any other parties.</p>
         </Section>
 
-        <Section title="5. Data Retention">
-          <p>We retain your account data for as long as your account is active. If you request account deletion, we will remove your personal data within 30 days, except where we are required to retain it for legal or financial compliance purposes.</p>
+        <Section title="5. Cookies and Tracking">
+          <p>Averis Academy uses essential cookies to keep you logged into your account and maintain your session. We may also use analytics tools to understand how users interact with the platform so we can improve it.</p>
+          <p>You can disable cookies in your browser settings, but doing so may affect your ability to log in or use certain platform features.</p>
         </Section>
 
-        <Section title="6. Security">
-          <p>We protect your data using industry-standard security measures including encrypted passwords (bcrypt), HTTPS, and secure database access controls. However, no system is 100% secure. Please use a strong, unique password for your account.</p>
+        <Section title="6. Data Retention">
+          <p>We retain your account data for as long as your account remains active on the platform. If you request deletion of your account, we will remove your personal data within 30 days, except where we are legally or financially required to retain certain records.</p>
         </Section>
 
-        <Section title="7. Your Rights">
-          <p>You have the right to access, correct, or delete your personal data. Contact us at <a href="mailto:Averislimited@gmail.com" className="text-[#40D457] underline">Averislimited@gmail.com</a> to make a request.</p>
+        <Section title="7. Data Security">
+          <p>We protect your information using industry-standard security measures including:</p>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li>Encrypted passwords using bcrypt hashing</li>
+            <li>HTTPS encryption for all data transmitted to and from the platform</li>
+            <li>Secure, access-controlled database hosting via MongoDB Atlas</li>
+          </ul>
+          <p>While we take reasonable steps to protect your data, no system is completely secure. We encourage you to use a strong, unique password for your Averis Academy account and to keep it confidential.</p>
         </Section>
 
-        <Section title="8. Changes to This Policy">
-          <p>We may update this Privacy Policy from time to time. We will notify you of significant changes via email or a notice on the platform.</p>
+        <Section title="8. Your Rights">
+          <p>As a user of Averis Academy, you have the right to:</p>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li>Access the personal data we hold about you</li>
+            <li>Request correction of inaccurate data</li>
+            <li>Request deletion of your account and associated data</li>
+            <li>Withdraw consent for data processing where applicable</li>
+          </ul>
+          <p>To exercise any of these rights, contact us at <a href="mailto:admin@averisacademy.com" className="text-[#40D457] underline">admin@averisacademy.com</a>. We will respond within 14 business days.</p>
+        </Section>
+
+        <Section title="9. Children's Privacy">
+          <p>Averis Academy is not intended for use by anyone under the age of 18. We do not knowingly collect personal information from minors. If we become aware that a user is under 18, we will terminate their account and delete their data.</p>
+        </Section>
+
+        <Section title="10. Changes to This Policy">
+          <p>We may update this Privacy Policy from time to time as our platform evolves. When we make significant changes, we will notify you via email or a prominent notice on the platform. The &ldquo;Last updated&rdquo; date at the top of this policy reflects the most recent revision.</p>
+          <p>Continued use of Averis Academy after changes are posted constitutes your acceptance of the updated policy.</p>
+        </Section>
+
+        <Section title="11. Contact Us">
+          <p>For any questions, concerns, or requests related to this Privacy Policy, please contact:</p>
+          <ul className="list-none space-y-1 ml-2">
+            <li>Email: <a href="mailto:admin@averisacademy.com" className="text-[#40D457] underline">admin@averisacademy.com</a></li>
+            <li>WhatsApp: <a href="https://wa.me/2349025644878" className="text-[#40D457] underline">+234 902 564 4878</a></li>
+            <li>Platform: <a href="https://averisacademy.com" className="text-[#40D457] underline">averisacademy.com</a></li>
+          </ul>
         </Section>
       </main>
 

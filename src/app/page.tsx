@@ -439,31 +439,26 @@ function ChooseYourPath() {
   const courses = [
     {
       name: "Digital Income Blueprint",
-      status: "live",
       desc: "This income stream is for those who want to build a profitable digital product business online. Create their own product with Ai or start out as an affiliate, we will give you a hot selling product to promote and earn from Day 1.",
-      href: "/login",
+      href: "/digital-income-blueprint",
     },
     {
       name: "Forex Income Blueprint",
-      status: "live",
       desc: "This income stream is for people who want to learn to trade profitably with a proven system from an Averis verified educator with consistent documented results and build a stable forex income.",
       href: "/forex-income-blueprint",
     },
     {
       name: "YouTube Income Blueprint",
-      status: "soon",
       desc: "Build a faceless YouTube business with Ai that generates you consistent profit every month and brand deals, we show you exactly how to do it in the YouTube income machine.",
       href: "/login",
     },
     {
       name: "Amazon KDP Income Blueprint",
-      status: "soon",
       desc: "Learn how to build an Amazon Kindle direct publishing business that makes you active and passive income globally even while you sleep.",
       href: "/login",
     },
     {
       name: "Crypto Income Blueprint",
-      status: "soon",
       desc: "Build long term wealth through smart cryptocurrency trading and investing, learn how to build a crypto business that generates you income every month from our Averis crypto educator.",
       href: "/login",
     },
@@ -478,7 +473,7 @@ function ChooseYourPath() {
             Choose Your <span className="gradient-text">Path to Wealth.</span>
           </h2>
           <p className="text-[#5f7268] text-base max-w-2xl mx-auto leading-relaxed">
-            Every income stream on Averis Academy is designed to help you build a real online income, learn directly from educators with proven results and choose the income model that fits your goals.
+            Every income stream on Averis Academy is designed to help you build a real online income, learn directly from educators with proven results and choose the income model that fits your goals. Below are our income streams.
           </p>
         </FadeUp>
 
@@ -488,37 +483,24 @@ function ChooseYourPath() {
               <motion.div
                 whileHover={{ y: -5, boxShadow: "0 24px 60px rgba(18,47,56,0.1)" }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className={`bg-white border rounded-3xl p-7 h-full flex flex-col ${
-                  c.status === "live" ? "border-[#40D457]/30" : "border-[#deeae5]"
-                }`}
+                className="bg-white border border-[#deeae5] rounded-3xl p-7 h-full flex flex-col"
               >
-                <div className="mb-4">
-                  {c.status === "live" ? (
-                    <span className="inline-flex items-center gap-1.5 bg-[#40D457]/10 border border-[#40D457]/20 text-[#40D457] text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#40D457] animate-pulse" />
-                      Live Now
-                    </span>
-                  ) : (
-                    <span className="inline-block bg-gray-100 border border-gray-200 text-gray-400 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
-                      Coming Soon
-                    </span>
-                  )}
-                </div>
                 <h3 className="text-xl font-bold text-[#122F38] mb-3 leading-tight">{c.name}</h3>
                 <p className="text-[#5f7268] text-sm leading-relaxed flex-1 mb-6">{c.desc}</p>
                 <Link
                   href={c.href}
-                  className={`block text-center py-3 rounded-xl font-bold text-sm transition-all ${
-                    c.status === "live"
-                      ? "bg-[#122F38] hover:bg-[#1a4050] text-white"
-                      : "bg-[#f4f8f6] border border-[#deeae5] text-[#122F38] hover:border-[#40D457]/40 hover:text-[#40D457]"
-                  }`}
+                  className="block text-center py-3 rounded-xl font-bold text-sm transition-all bg-[#122F38] hover:bg-[#1a4050] text-white"
                 >
                   Get Started →
                 </Link>
               </motion.div>
             </FadeUp>
           ))}
+
+          {/* And many more */}
+          <div className="col-span-full text-center py-4">
+            <p className="text-2xl md:text-3xl font-black text-[#122F38]">And Many More...</p>
+          </div>
 
           {/* More Coming */}
           <FadeUp delay={courses.length * 0.08}>
@@ -605,11 +587,11 @@ function Features() {
 /* ─── Testimonials ─── */
 function Testimonials() {
   const testimonials = [
-    { name: "Emmanuel O.", location: "Lagos", text: "I joined with zero experience. By Week 4 I made my first ₦50,000. By Month 3 I'm consistently earning ₦400,000 per month. The accountability system is what made the difference; I couldn't slack even when I wanted to.", stars: 5 },
-    { name: "Chidinma A.", location: "Abuja", text: "Every other course gave me information. Averis gave me results. The weekly calls keep you accountable, the community keeps you motivated, and the system actually works in Nigeria. I made back my ₦35,000 in 10 days.", stars: 5 },
-    { name: "Tunde B.", location: "Port Harcourt", text: "What separates Averis is the two-phase system. I'm not just making money; I'm learning to invest it. For the first time I have a real financial plan, not just a hustle. That's the difference between income and wealth.", stars: 5 },
-    { name: "Aisha M.", location: "Kano", text: "As a stay-at-home mum, this is the perfect platform. I work 2 hours a day, earn consistent income from affiliate sales, and now I'm learning how to invest it properly through the Wealth Club.", stars: 5 },
-    { name: "Rotimi K.", location: "Ibadan", text: "Most courses teach you to hustle forever. Averis teaches you to build: first an income, then a portfolio. I have a real financial plan for the first time in my life.", stars: 5 },
+    { name: "Debby", location: "DIB Community", text: "Good morning sir, I just make money again. I have made ₦87,500 since I joined 3 days ago. This is real and I'm so grateful for this community.", stars: 5 },
+    { name: "Laura", location: "DIB Community", text: "Your girl just made over ₦200K in 7 days 😳 If not for my schedule, I would have done even more. I can't believe I was sleeping on this. The system is simple and it works.", stars: 5 },
+    { name: "Favour", location: "DIB Community", text: "I just withdrew ₦130,000 from my partner account. This is more than my two months salary. God bless Coach Caleb for me. I don't have to wait for salary again.", stars: 5 },
+    { name: "Martina Nwosu", location: "Twitter/X", text: "Joining Digital Income Blueprint is one of the good decisions I took. I have learnt a lot about affiliate marketing. The process is simplified and our coach is always ready to help us out.", stars: 5 },
+    { name: "Qudus", location: "DIB Community", text: "I still can't believe I generated close to 20 leads in one overnight session. This leveraging strategy is really working like mad. Thank you so much Coach Caleb.", stars: 5 },
   ];
 
   const [index, setIndex] = useState(0);

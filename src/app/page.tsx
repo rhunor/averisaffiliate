@@ -225,7 +225,7 @@ function HeroVisual() {
         </div>
         <div className="min-w-0">
           <p className="text-[#122F38] text-[11px] font-bold leading-tight">New Commission Alert!</p>
-          <p className="text-[#555] text-[10px] leading-snug">You just earned ₦17,500 from a new subscriber</p>
+          <p className="text-[#555] text-[10px] leading-snug">You just earned ₦25,000 from a new subscriber</p>
         </div>
       </motion.div>
     </motion.div>
@@ -506,7 +506,7 @@ function ChooseYourPath() {
           <FadeUp delay={courses.length * 0.08}>
             <div className="border-2 border-dashed border-[#deeae5] rounded-3xl p-7 flex flex-col items-center justify-center text-center min-h-[280px]">
               <div className="text-5xl font-black text-[#deeae5] mb-4 leading-none">+</div>
-              <h3 className="text-lg font-bold text-[#5f7268] mb-3">More Coming</h3>
+              {/* <h3 className="text-lg font-bold text-[#5f7268] mb-3">More Coming</h3> */}
               <p className="text-[#5f7268] text-sm leading-relaxed max-w-[220px]">
                 As new ways to build income online emerge, Averis brings in the best educators and adds them to the platform to help you build more income streams on the internet.
               </p>
@@ -734,7 +734,7 @@ function CTABanner() {
             Your Wealth Journey<br /><span className="gradient-text">Starts Here.</span>
           </h2>
           <p className="text-white/55 text-lg mb-10 max-w-xl mx-auto">
-            Join 100+ Africans learning to make money online and build wealth with Averis Academy.
+            Join 1000+ Africans learning to make money online and build wealth with Averis Academy.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/login" className="relative overflow-hidden group bg-[#40D457] hover:bg-[#2eb847] text-[#122F38] font-bold text-base px-10 py-4 rounded-2xl transition-all hover:shadow-[0_0_50px_rgba(64,212,87,0.4)] flex items-center justify-center gap-2">

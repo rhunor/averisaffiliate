@@ -49,15 +49,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check for an active pending signup for this email
-    const existingPending = await PendingSignup.findOne({
+    // If this email already has a PAID+unused pending signup, the link was already sent.
+    // Check separately from the unpaid check so we don't block a retry after a failed payment.
+    const paidPending = await PendingSignup.findOne({
       email: emailNorm,
+      paid: true,
       used: false,
       expiresAt: { $gt: new Date() },
     });
-
-    // If already paid but not used → signup link was already sent
-    if (existingPending?.paid) {
+    if (paidPending) {
       return NextResponse.json(
         {
           error:
@@ -90,29 +90,22 @@ export async function POST(req: NextRequest) {
       redirectUrl,
     });
 
-    // Upsert: update the existing unpaid record or create a fresh one.
-    // Using findOneAndUpdate avoids a race between two concurrent requests
-    // both finding "no existing" and both trying to create.
-    if (existingPending) {
-      existingPending.paymentReference = reference;
-      existingPending.affiliateUserId = affiliateUserId;
-      existingPending.firstName = firstNameTrim;
-      existingPending.lastName = lastNameTrim;
-      existingPending.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      await existingPending.save();
-    } else {
-      await PendingSignup.create({
-        email: emailNorm,
-        firstName: firstNameTrim,
-        lastName: lastNameTrim,
-        affiliateUserId,
-        paymentReference: reference,
-        paid: false,
-        used: false,
-        amount: siteConfig.signupFee,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      });
-    }
+    // Always create a fresh PendingSignup for each checkout attempt.
+    // We never overwrite an existing record's paymentReference — doing so would orphan
+    // any in-progress Korapay checkout that still carries the old reference. Each checkout
+    // gets its own document so verify/webhook can find it by reference regardless of how
+    // many times the user reopened the payment form.
+    await PendingSignup.create({
+      email: emailNorm,
+      firstName: firstNameTrim,
+      lastName: lastNameTrim,
+      affiliateUserId,
+      paymentReference: reference,
+      paid: false,
+      used: false,
+      amount: siteConfig.signupFee,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
 
     return NextResponse.json({ checkoutUrl, reference });
   } catch (err) {

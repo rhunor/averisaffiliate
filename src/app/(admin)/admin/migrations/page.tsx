@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlayCircle, CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
+import { PlayCircle, CheckCircle, XCircle, Loader2, Mail, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MigrationResult {
@@ -76,6 +76,15 @@ export default function MigrationsPage() {
   const [welcomeRunning, setWelcomeRunning] = useState(false);
   const [welcomeResult, setWelcomeResult] = useState<MigrationResult | null>(null);
 
+  // Recover lost payment
+  const [recoverRef, setRecoverRef] = useState("");
+  const [recoverEmail, setRecoverEmail] = useState("");
+  const [recoverFirst, setRecoverFirst] = useState("");
+  const [recoverLast, setRecoverLast] = useState("");
+  const [recoverAffiliate, setRecoverAffiliate] = useState("");
+  const [recoverRunning, setRecoverRunning] = useState(false);
+  const [recoverResult, setRecoverResult] = useState<{ success: boolean; message?: string; error?: string } | null>(null);
+
   async function sendWelcome() {
     if (!welcomeEmail.trim() || welcomeRunning) return;
     setWelcomeRunning(true);
@@ -92,6 +101,31 @@ export default function MigrationsPage() {
       setWelcomeResult({ success: false, error: "Network error — check connection and try again." });
     } finally {
       setWelcomeRunning(false);
+    }
+  }
+
+  async function recoverPayment() {
+    if (!recoverRef.trim() || !recoverEmail.trim() || !recoverFirst.trim() || !recoverLast.trim() || recoverRunning) return;
+    setRecoverRunning(true);
+    setRecoverResult(null);
+    try {
+      const res = await fetch("/api/admin/tools/recover-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          korapayReference: recoverRef.trim(),
+          email: recoverEmail.trim(),
+          firstName: recoverFirst.trim(),
+          lastName: recoverLast.trim(),
+          affiliateCode: recoverAffiliate.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      setRecoverResult({ success: res.ok && data.success, message: data.message, error: data.error });
+    } catch {
+      setRecoverResult({ success: false, error: "Network error — check connection and try again." });
+    } finally {
+      setRecoverRunning(false);
     }
   }
 
@@ -181,6 +215,86 @@ export default function MigrationsPage() {
                   {(welcomeResult.results || []).map((line, i) => (
                     <p key={i} className="font-mono text-xs text-success">{line}</p>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recover lost payment */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-danger/10 flex items-center justify-center shrink-0 mt-0.5">
+              <RefreshCw className="h-4 w-4 text-danger" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-base">Recover Lost Payment</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                For users who paid on Korapay but never received their signup link. Paste the Korapay reference from your dashboard and fill in the buyer&apos;s details.
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input
+              type="text"
+              placeholder="Korapay reference (AVR-SIGNUP-…)"
+              value={recoverRef}
+              onChange={(e) => setRecoverRef(e.target.value)}
+              className="sm:col-span-2 bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-danger/30"
+            />
+            <input
+              type="email"
+              placeholder="Buyer email"
+              value={recoverEmail}
+              onChange={(e) => setRecoverEmail(e.target.value)}
+              className="bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-danger/30"
+            />
+            <input
+              type="text"
+              placeholder="Affiliate code (e.g. AVR-8MKXBQ)"
+              value={recoverAffiliate}
+              onChange={(e) => setRecoverAffiliate(e.target.value)}
+              className="bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-danger/30"
+            />
+            <input
+              type="text"
+              placeholder="First name"
+              value={recoverFirst}
+              onChange={(e) => setRecoverFirst(e.target.value)}
+              className="bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-danger/30"
+            />
+            <input
+              type="text"
+              placeholder="Last name"
+              value={recoverLast}
+              onChange={(e) => setRecoverLast(e.target.value)}
+              className="bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-danger/30"
+            />
+          </div>
+          <button
+            onClick={recoverPayment}
+            disabled={recoverRunning || !recoverRef.trim() || !recoverEmail.trim() || !recoverFirst.trim() || !recoverLast.trim()}
+            className="flex items-center gap-2 bg-danger text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-danger/90 transition-colors disabled:opacity-60"
+          >
+            {recoverRunning ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Recovering…</>
+            ) : (
+              <><RefreshCw className="h-4 w-4" /> Recover &amp; Send Signup Link</>
+            )}
+          </button>
+          {recoverResult && (
+            <div className={`rounded-xl p-3 text-sm ${recoverResult.error ? "bg-danger/10 border border-danger/20" : "bg-muted/50 border border-border"}`}>
+              {recoverResult.error ? (
+                <div className="flex items-center gap-2 text-danger font-medium">
+                  <XCircle className="h-4 w-4 shrink-0" /> {recoverResult.error}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-success font-semibold">
+                  <CheckCircle className="h-4 w-4 shrink-0" /> {recoverResult.message}
                 </div>
               )}
             </div>

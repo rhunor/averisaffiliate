@@ -6,7 +6,8 @@ import Referral from "@/models/Referral";
 import Transaction from "@/models/Transaction";
 import Product from "@/models/Product";
 import AverisSubscriber from "@/models/AverisSubscriber";
-import { sendWelcomeEmail, sendPendingCommissionEmail } from "@/lib/email";
+import PendingSignup from "@/models/PendingSignup";
+import { sendWelcomeEmail, sendPendingCommissionEmail, sendPaidSignupLinkEmail } from "@/lib/email";
 import { generateOrderId } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 
@@ -74,7 +75,76 @@ export async function POST(req: NextRequest) {
 
     const user = await User.findOne({ signupPaymentRef: reference });
     if (!user) {
-      console.warn("[webhook] No user found for reference:", reference);
+      // ── PRE-REGISTER NEW SIGNUP ────────────────────────────────────────────
+      // For new signups via /join, no User exists yet — only a PendingSignup.
+      // This is the bank-transfer fallback: if the redirect to /pre-register/verify
+      // fails (user closed the browser, network issue, etc.), the webhook catches it.
+      const pending = await PendingSignup.findOneAndUpdate(
+        { paymentReference: reference, paid: false },
+        {
+          $set: {
+            paid: true,
+            signupToken: crypto.randomBytes(32).toString("hex"),
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+        { new: true }
+      );
+
+      if (!pending) {
+        // Either already processed (idempotent) or genuinely unknown reference.
+        console.warn("[webhook] No user or pending signup found for reference:", reference);
+        return NextResponse.json({ ok: true });
+      }
+
+      // Send the signup link to the buyer
+      await sendPaidSignupLinkEmail({
+        email: pending.email,
+        firstName: pending.firstName,
+        signupToken: pending.signupToken!,
+      });
+
+      // Create pending commission for the affiliate if not already done
+      if (pending.affiliateUserId && !pending.commissionEmailSent) {
+        const referrer = await User.findById(pending.affiliateUserId);
+        if (referrer) {
+          const existingCommission = await Transaction.findOne({
+            paymentReference: reference,
+            type: "commission",
+          });
+
+          if (!existingCommission) {
+            const orderId = generateOrderId();
+
+            await Transaction.create({
+              userId: referrer._id,
+              type: "commission",
+              amount: siteConfig.commission.newSubscription,
+              status: "pending",
+              referralId: null,
+              sourceUserId: null,
+              paymentReference: reference,
+              orderId,
+              description: `50% commission — ${pending.firstName} ${pending.lastName} subscribed`,
+            });
+
+            await PendingSignup.findByIdAndUpdate(pending._id, {
+              $set: { commissionEmailSent: true, commissionOrderId: orderId },
+            });
+
+            sendPendingCommissionEmail({
+              affiliateEmail: referrer.email,
+              affiliateName: `${referrer.firstName} ${referrer.lastName}`,
+              buyerName: `${pending.firstName} ${pending.lastName}`,
+              commissionAmount: siteConfig.commission.newSubscription,
+              orderId,
+              productName: "Averis Academy",
+            }).catch(console.error);
+          }
+        }
+      }
+
+      console.log("[webhook] Pre-register signup processed via webhook for", pending.email, "ref:", reference);
       return NextResponse.json({ ok: true });
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Withdrawal from "@/models/Withdrawal";
+import Transaction from "@/models/Transaction";
 import User from "@/models/User";
 import { verifyPaystackSignature } from "@/lib/paystack";
 import { sendWithdrawalCompletedEmail } from "@/lib/email";
@@ -44,6 +45,24 @@ export async function POST(req: NextRequest) {
       );
 
       if (withdrawal) {
+        // Record in Transaction ledger so the completed withdrawal appears in
+        // the admin Transactions panel and the user's balance is correctly reduced.
+        const alreadyRecorded = await Transaction.findOne({
+          "metadata.withdrawalId": withdrawal._id.toString(),
+          type: "withdrawal",
+          status: "completed",
+        });
+        if (!alreadyRecorded) {
+          await Transaction.create({
+            userId: withdrawal.userId,
+            type: "withdrawal",
+            amount: withdrawal.amount,
+            status: "completed",
+            description: `Withdrawal to ${withdrawal.bankName} — ${withdrawal.accountNumber}`,
+            metadata: { withdrawalId: withdrawal._id.toString(), transferReference: reference, transferCode },
+          });
+        }
+
         const user = await User.findById(withdrawal.userId, "email firstName");
         if (user) {
           sendWithdrawalCompletedEmail({

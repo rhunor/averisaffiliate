@@ -14,7 +14,9 @@ function RegisterLifetimeForm() {
   const inviteToken = searchParams.get("token") || "";
   const prefillEmail = searchParams.get("email") || "";
   const batch = searchParams.get("batch") || "";
-  const isBatch2 = batch === "2";
+  const batchNum = Number(batch) || 1;
+  const isBatch2 = batchNum === 2;
+  const isBatch3 = batchNum === 3;
 
   const [form, setForm] = useState({ firstName: "", lastName: "", email: prefillEmail, password: "" });
   const [showPass, setShowPass] = useState(false);
@@ -25,7 +27,7 @@ function RegisterLifetimeForm() {
     return (
       <div className="text-center py-6">
         <p className="text-red-500 text-sm mb-4">Invalid or missing invite session.</p>
-        <a href={isBatch2 ? "/invite2" : "/invite"} className="text-[#40D457] font-semibold text-sm hover:underline">Go back and enter your code</a>
+        <a href={isBatch3 ? "/invite3" : isBatch2 ? "/invite2" : "/invite"} className="text-[#40D457] font-semibold text-sm hover:underline">Go back and enter your code</a>
       </div>
     );
   }
@@ -38,7 +40,7 @@ function RegisterLifetimeForm() {
       const res = await fetch("/api/auth/register-lifetime", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, inviteToken, batch: isBatch2 ? 2 : undefined }),
+        body: JSON.stringify({ ...form, inviteToken, batch: batchNum > 1 ? batchNum : undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -46,8 +48,8 @@ function RegisterLifetimeForm() {
         else setErrors({ root: data.error || "Registration failed." });
         return;
       }
-      if (isBatch2) {
-        router.push(`/register/verify?email=${encodeURIComponent(form.email)}&batch=2`);
+      if (isBatch2 || isBatch3) {
+        router.push(`/register/verify?email=${encodeURIComponent(form.email)}&batch=${batchNum}`);
       } else {
         router.push(`/register/verify?email=${encodeURIComponent(form.email)}&lifetime=1`);
       }

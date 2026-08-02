@@ -7,6 +7,7 @@ import Transaction from "@/models/Transaction";
 import Product from "@/models/Product";
 import AverisSubscriber from "@/models/AverisSubscriber";
 import PendingSignup from "@/models/PendingSignup";
+import { activateFibSubscription } from "@/bot/services/fibManager";
 import { sendWelcomeEmail, sendPendingCommissionEmail, sendPaidSignupLinkEmail } from "@/lib/email";
 import { generateOrderId } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
@@ -65,6 +66,14 @@ export async function POST(req: NextRequest) {
 
   try {
     await dbConnect();
+
+    // FIB Copy Trade is an independent Telegram-only product — its own
+    // idempotent activation function handles this reference and returns
+    // early, never falling through into the Averis-specific logic below.
+    if (reference.startsWith("FIB-")) {
+      await activateFibSubscription(reference);
+      return NextResponse.json({ ok: true });
+    }
 
     // Idempotency — if this reference was already processed, do nothing
     const existing = await Transaction.findOne({ paymentReference: reference });

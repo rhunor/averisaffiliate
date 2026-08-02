@@ -2,12 +2,22 @@ import { webhookCallback } from "grammy";
 import { getBotInstance } from "@/bot/instance";
 import { registerStartHandlers } from "@/bot/handlers/start";
 import { registerAverisHandlers } from "@/bot/handlers/averis";
+import { registerFibAutoInvite } from "@/bot/handlers/fibAutoInvite";
+import { registerFibAdminHandlers } from "@/bot/handlers/fibAdmin";
+import { registerFibHandlers } from "@/bot/handlers/fib";
 
 export function buildBot() {
   const bot = getBotInstance();
 
+  // Must run before other handlers so a pending FIB invite is delivered
+  // on the subscriber's very next message, but always calls next() so
+  // every handler below still runs exactly as before.
+  registerFibAutoInvite(bot);
+
   registerStartHandlers(bot);
   registerAverisHandlers(bot);
+  registerFibAdminHandlers(bot);
+  registerFibHandlers(bot);
 
   // Set visible bot commands
   bot.api.setMyCommands([

@@ -3,6 +3,7 @@ import type { BotContext } from "@/bot/context";
 import { EMOJI, CALLBACK } from "@/bot/constants";
 import { mainMenuKeyboard, helpKeyboard } from "@/bot/keyboards";
 import { handleAverisJoin, getSubscriptionStatus } from "@/bot/services/groupManager";
+import { activateFibSubscription } from "@/bot/services/fibManager";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
@@ -85,6 +86,25 @@ export function registerStartHandlers(bot: Bot<BotContext>) {
         );
       }
       // On success, handleAverisJoin already sent the invite DM
+      return;
+    }
+
+    // Redirect back from Korapay checkout for a FIB Copy Trade payment
+    if (typeof payload === "string" && payload.startsWith("fib_paid_")) {
+      const reference = payload.replace("fib_paid_", "");
+      const result = await activateFibSubscription(reference);
+
+      if (!result.success) {
+        await ctx.reply(
+          `${EMOJI.WARNING} <b>Payment not confirmed yet.</b>\n\nIf you've just paid, open the \u{1F4C8} FIB Copy Trade Signals menu and tap "I've Paid" in a moment.`,
+          { parse_mode: "HTML" }
+        );
+      } else {
+        await ctx.reply(
+          `✅ <b>Payment confirmed!</b> Your FIB Copy Trade invite link has been sent to you above.`,
+          { parse_mode: "HTML" }
+        );
+      }
       return;
     }
 

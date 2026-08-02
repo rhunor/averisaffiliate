@@ -3,6 +3,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { sendSubscriptionExpiryEmail } from "@/lib/email";
 import { processTelegramExpiry } from "@/bot/services/groupManager";
+import { processFibExpiry } from "@/bot/services/fibManager";
 
 // Runs every 6 hours via vercel cron: 0 */6 * * *
 // Handles: 30d, 15d, 7d, 3d, 24h, 6h reminders + expired deactivation
@@ -101,10 +102,23 @@ async function handler(req: NextRequest) {
       }
     }
 
+    // FIB Copy Trade — independent of the Averis Telegram block above,
+    // its own try/catch so a failure here can never affect Averis or
+    // email processing.
+    let fibStats = { expired: 0, reminders: 0 };
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.FIB_TELEGRAM_CHANNEL_ID) {
+      try {
+        fibStats = await processFibExpiry();
+      } catch (err) {
+        console.error("[cron/expiry] FIB processing failed:", err);
+      }
+    }
+
     return NextResponse.json({
       expired: expiredCount,
       reminders: reminderCount,
       telegram: telegramStats,
+      fib: fibStats,
     });
   } catch (err) {
     console.error("[cron/expiry]", err);

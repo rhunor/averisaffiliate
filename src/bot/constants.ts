@@ -13,4 +13,9 @@ export const CALLBACK = {
   AVERIS_STATUS: "averis_status",
   AVERIS_RENEW: "averis_renew",
   AVERIS_REINVITE: "averis_reinvite",
+  FIB_MENU: "fib_menu",
+  FIB_SUBSCRIBE: "fib_subscribe",
+  FIB_RENEW: "fib_renew",
+  FIB_REINVITE: "fib_reinvite",
+  FIB_VERIFY: "fib_verify",
 } as const;

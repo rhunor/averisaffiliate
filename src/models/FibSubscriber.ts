@@ -3,7 +3,7 @@
  * forex-signals channel — completely independent from AverisSubscriber.
  * Kept as a separate collection (rather than reusing AverisSubscriber) because
  * AverisSubscriber.telegramId has a global unique index, but a person can be
- * subscribed to both the Averis Academy community and FIB Copy Trade at once.
+ * subscribed8 to both the Averis Academy community and FIB Copy Trade at once.
  */
 import mongoose, { Schema, Document, Model } from "mongoose";
 

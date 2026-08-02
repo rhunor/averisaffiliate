@@ -5,7 +5,13 @@ import { manualActivateFibSubscriber } from "@/bot/services/fibManager";
 
 export function registerFibAdminHandlers(bot: Bot<BotContext>) {
   bot.command("addfibsubscriber", async (ctx) => {
-    if (!isFibBotAdmin(ctx)) return;
+    if (!isFibBotAdmin(ctx)) {
+      console.warn(
+        `[bot/fibAdmin] Unauthorized /addfibsubscriber from telegramId=${ctx.from?.id}. ` +
+          `FIB_BOT_ADMIN_IDS=${JSON.stringify(process.env.FIB_BOT_ADMIN_IDS || "")}`
+      );
+      return;
+    }
 
     ctx.session.fibAdminStep = "awaiting_user_id";
     await ctx.reply(

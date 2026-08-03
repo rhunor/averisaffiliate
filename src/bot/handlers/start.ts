@@ -71,6 +71,13 @@ export function registerStartHandlers(bot: Bot<BotContext>) {
   bot.command("start", async (ctx) => {
     const payload = ctx.match;
 
+    // One-time cleanup: this bot chat may still have a legacy persistent
+    // reply keyboard docked at the bottom of the screen (predates this
+    // codebase — this bot has no code that ever sets one). Telegram keeps
+    // it there until a message explicitly clears it, so every /start
+    // strips it before anything else runs.
+    await ctx.reply(`${EMOJI.WAVE}`, { reply_markup: { remove_keyboard: true } });
+
     // Deep link from welcome email: /start averis_link_<referralCode>
     if (typeof payload === "string" && payload.startsWith("averis_link_")) {
       const referralCode = payload.replace("averis_link_", "");

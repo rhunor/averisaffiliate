@@ -5,6 +5,9 @@ import { registerAverisHandlers } from "@/bot/handlers/averis";
 import { registerFibAutoInvite } from "@/bot/handlers/fibAutoInvite";
 import { registerFibAdminHandlers } from "@/bot/handlers/fibAdmin";
 import { registerFibHandlers } from "@/bot/handlers/fib";
+import { registerFibAdminPanelHandlers } from "@/bot/handlers/fibAdminPanel";
+import { registerFibAdminSubscriberHandlers } from "@/bot/handlers/fibAdminSubscribers";
+import { registerFibAdminBroadcastHandlers } from "@/bot/handlers/fibAdminBroadcast";
 
 export function buildBot() {
   const bot = getBotInstance();
@@ -18,6 +21,9 @@ export function buildBot() {
   registerAverisHandlers(bot);
   registerFibAdminHandlers(bot);
   registerFibHandlers(bot);
+  registerFibAdminPanelHandlers(bot);
+  registerFibAdminSubscriberHandlers(bot);
+  registerFibAdminBroadcastHandlers(bot);
 
   // Set visible bot commands
   bot.api.setMyCommands([

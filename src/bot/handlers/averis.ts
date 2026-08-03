@@ -4,6 +4,8 @@ import type { BotContext } from "@/bot/context";
 import { EMOJI, CALLBACK } from "@/bot/constants";
 import { mainMenuKeyboard } from "@/bot/keyboards";
 import { getSubscriptionStatus, generateInviteLink, generateChannelInviteLink } from "@/bot/services/groupManager";
+import { safeEditMessageText } from "@/bot/utils";
+import { isFibBotAdmin } from "@/bot/middleware/auth";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
@@ -40,9 +42,9 @@ async function showAverisStatus(ctx: BotContext) {
         : `Keep sharing your referral link to earn 50% on every sale!`);
   }
 
-  await ctx.editMessageText(text, {
+  await safeEditMessageText(ctx, text, {
     parse_mode: "HTML",
-    reply_markup: mainMenuKeyboard(hasSubscription),
+    reply_markup: mainMenuKeyboard(hasSubscription, isFibBotAdmin(ctx)),
   });
 }
 
@@ -52,9 +54,10 @@ async function handleAverisRenew(ctx: BotContext) {
   const status = await getSubscriptionStatus(telegramId);
 
   if (!status?.isSubscribed) {
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `\u{1F534} <b>No subscription found to renew.</b>\n\nCheck your status first.`,
-      { parse_mode: "HTML", reply_markup: mainMenuKeyboard(false) }
+      { parse_mode: "HTML", reply_markup: mainMenuKeyboard(false, isFibBotAdmin(ctx)) }
     );
     return;
   }
@@ -65,7 +68,8 @@ async function handleAverisRenew(ctx: BotContext) {
     year: "numeric",
   });
 
-  await ctx.editMessageText(
+  await safeEditMessageText(
+    ctx,
     `\u{1F504} <b>Renew Your Averis Academy Subscription</b>\n\n` +
       `Current expiry: <b>${expiryStr}</b>\n` +
       `Renewal price: <b>₦30,000</b> for another 12 months\n\n` +
@@ -86,9 +90,10 @@ async function handleAverisReinvite(ctx: BotContext) {
   const status = await getSubscriptionStatus(telegramId);
 
   if (!status?.isSubscribed) {
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `\u{1F534} <b>No active subscription found.</b>\n\nYou need an active subscription to get a community invite.`,
-      { parse_mode: "HTML", reply_markup: mainMenuKeyboard(false) }
+      { parse_mode: "HTML", reply_markup: mainMenuKeyboard(false, isFibBotAdmin(ctx)) }
     );
     return;
   }
@@ -109,14 +114,15 @@ async function handleAverisReinvite(ctx: BotContext) {
 
     text += `⚠️ These links are single-use. Join immediately!`;
 
-    await ctx.editMessageText(text, {
+    await safeEditMessageText(ctx, text, {
       parse_mode: "HTML",
-      reply_markup: mainMenuKeyboard(true),
+      reply_markup: mainMenuKeyboard(true, isFibBotAdmin(ctx)),
     });
   } catch {
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `${EMOJI.WARNING} Could not generate invite link. Please try again or email Averislimited@gmail.com.`,
-      { parse_mode: "HTML", reply_markup: mainMenuKeyboard(true) }
+      { parse_mode: "HTML", reply_markup: mainMenuKeyboard(true, isFibBotAdmin(ctx)) }
     );
   }
 }

@@ -4,6 +4,8 @@ import { EMOJI, CALLBACK } from "@/bot/constants";
 import { mainMenuKeyboard, helpKeyboard } from "@/bot/keyboards";
 import { handleAverisJoin, getSubscriptionStatus } from "@/bot/services/groupManager";
 import { activateFibSubscription } from "@/bot/services/fibManager";
+import { safeEditMessageText } from "@/bot/utils";
+import { isFibBotAdmin } from "@/bot/middleware/auth";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.averisacademy.com";
 
@@ -23,16 +25,17 @@ async function showMainMenu(ctx: BotContext) {
   const telegramId = ctx.from!.id.toString();
   const status = await getSubscriptionStatus(telegramId);
   const hasSubscription = !!(status?.isSubscribed);
+  const isAdmin = isFibBotAdmin(ctx);
 
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(WELCOME_TEXT, {
+    await safeEditMessageText(ctx, WELCOME_TEXT, {
       parse_mode: "HTML",
-      reply_markup: mainMenuKeyboard(hasSubscription),
+      reply_markup: mainMenuKeyboard(hasSubscription, isAdmin),
     });
   } else {
     await ctx.reply(WELCOME_TEXT, {
       parse_mode: "HTML",
-      reply_markup: mainMenuKeyboard(hasSubscription),
+      reply_markup: mainMenuKeyboard(hasSubscription, isAdmin),
     });
   }
 }
@@ -52,7 +55,7 @@ async function showHelp(ctx: BotContext) {
     `Need help? Contact support: <a href="https://wa.me/2348085300040">WhatsApp</a>`;
 
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(text, {
+    await safeEditMessageText(ctx, text, {
       parse_mode: "HTML",
       reply_markup: helpKeyboard(),
     });

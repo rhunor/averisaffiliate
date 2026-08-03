@@ -13,6 +13,7 @@ import {
   FIB_PRICE,
   APP_URL,
 } from "@/bot/services/fibManager";
+import { safeEditMessageText } from "@/bot/utils";
 
 async function showFibMenu(ctx: BotContext) {
   const telegramId = ctx.from!.id.toString();
@@ -43,7 +44,7 @@ async function showFibMenu(ctx: BotContext) {
   }
 
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(text, { parse_mode: "HTML", reply_markup: fibMenuKeyboard(hasSubscription) });
+    await safeEditMessageText(ctx, text, { parse_mode: "HTML", reply_markup: fibMenuKeyboard(hasSubscription) });
   } else {
     await ctx.reply(text, { parse_mode: "HTML", reply_markup: fibMenuKeyboard(hasSubscription) });
   }
@@ -63,7 +64,8 @@ async function handleFibSubscribe(ctx: BotContext) {
       redirectUrl,
     });
 
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `\u{1F4B3} <b>Subscribe to FIB Copy Trade — ₦${FIB_PRICE.toLocaleString()}</b>\n\n` +
         `Tap below to pay with Korapay. After paying, come back and tap "I've Paid" to confirm.`,
       {
@@ -78,7 +80,8 @@ async function handleFibSubscribe(ctx: BotContext) {
     );
   } catch (err) {
     console.error("[bot/fib] checkout init failed:", err);
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `${EMOJI.WARNING} Could not start checkout. Please try again shortly.`,
       { parse_mode: "HTML", reply_markup: fibMenuKeyboard(false) }
     );
@@ -93,7 +96,8 @@ async function handleFibVerify(ctx: BotContext) {
   const pending = await FibPayment.findOne({ telegramId, status: "pending" }).sort({ createdAt: -1 });
 
   if (!pending) {
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `${EMOJI.WARNING} No pending payment found. Tap Subscribe to start a new one.`,
       { parse_mode: "HTML", reply_markup: fibMenuKeyboard(false) }
     );
@@ -103,7 +107,8 @@ async function handleFibVerify(ctx: BotContext) {
   const result = await activateFibSubscription(pending.reference);
 
   if (!result.success) {
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `⏳ <b>Payment not confirmed yet.</b>\n\nIf you've just paid, wait a moment and tap "I've Paid" again.`,
       {
         parse_mode: "HTML",
@@ -116,7 +121,8 @@ async function handleFibVerify(ctx: BotContext) {
     return;
   }
 
-  await ctx.editMessageText(
+  await safeEditMessageText(
+    ctx,
     `✅ <b>Payment confirmed!</b>\n\nYour FIB Copy Trade invite link has been sent to you above.`,
     { parse_mode: "HTML", reply_markup: fibMenuKeyboard(true) }
   );
@@ -128,7 +134,8 @@ async function handleFibReinvite(ctx: BotContext) {
   const status = await getFibSubscriptionStatus(telegramId);
 
   if (!status?.isSubscribed) {
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `\u{1F534} <b>No active subscription found.</b>`,
       { parse_mode: "HTML", reply_markup: fibMenuKeyboard(false) }
     );
@@ -137,12 +144,14 @@ async function handleFibReinvite(ctx: BotContext) {
 
   try {
     const link = await generateFibInviteLink();
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `\u{1F517} <b>Your FIB Copy Trade Invite</b>\n\n${link}\n\n⚠️ Single-use — join immediately!`,
       { parse_mode: "HTML", reply_markup: fibMenuKeyboard(true) }
     );
   } catch {
-    await ctx.editMessageText(
+    await safeEditMessageText(
+      ctx,
       `${EMOJI.WARNING} Could not generate invite link. Please try again shortly.`,
       { parse_mode: "HTML", reply_markup: fibMenuKeyboard(true) }
     );

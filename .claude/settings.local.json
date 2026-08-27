@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"process.env\" /Users/johnighoshemu/Desktop/code/Primetrex/primetrex-app/src/bot --include=\"*.ts\" | grep -oE 'process\\\\.env\\\\.[A-Z_]+' | sort | uniq)",
+      "Read(//Users/johnighoshemu/Desktop/code/Primetrex/primetrex-app/src/bot/**)",
+      "Bash(find /Users/johnighoshemu/Desktop/code/Primetrex/primetrex-app -name \".env*\" -type f | head -5)",
+      "Read(//Users/johnighoshemu/Desktop/code/Primetrex/primetrex-app/**)",
+      "WebSearch"
+    ]
+  }
+}

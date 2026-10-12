@@ -683,6 +683,46 @@ export async function sendSpecialAccessInstructionsEmail(email: string, registra
   if (error) throw new Error(`Resend: ${error.message}`);
 }
 
+export async function sendCouponRegistrationEmail(email: string, registrationLink: string) {
+  const appUrl = APP_URL;
+  const videoUrl = SETUP_VIDEO_URL;
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `Your Averis Academy coupon has been applied`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+      ${header(appUrl)}
+      <div style="padding:20px;">
+      <div style="background:linear-gradient(138deg,#070f1a 0%,#1a3a52 48%,#1f5f6e 100%);border-radius:12px;padding:30px;margin:20px 0;text-align:center;">
+        <p style="font-size:32px;margin:0;">🎟️</p>
+        <h2 style="color:#fff;margin:10px 0 6px;font-size:24px;">Coupon applied!</h2>
+        <p style="color:rgba(255,255,255,0.8);margin:0;">Your first <strong style="color:#40D457;">12 months of Averis Academy</strong> are fully covered.</p>
+      </div>
+      <div style="background:#f5f8fa;border-radius:12px;padding:30px;margin:20px 0;">
+        <p style="color:#555;line-height:1.6;margin-top:0;">Watch the short video below to see how to create your account, then click the button to complete your registration.</p>
+        <div style="text-align:center;margin:20px 0;">
+          <a href="${videoUrl}" style="display:inline-block;text-decoration:none;">
+            <div style="background:#1a3a52;padding:40px 60px;border-radius:10px;text-align:center;">
+              <div style="width:60px;height:60px;background:#40D457;border-radius:50%;display:inline-block;line-height:60px;margin-bottom:10px;">
+                <span style="font-size:28px;color:#122F38;">▶</span>
+              </div>
+              <p style="color:#fff;font-weight:bold;margin:8px 0 0;font-size:15px;">Watch Setup Video</p>
+              <p style="color:rgba(255,255,255,0.6);font-size:12px;margin:4px 0 0;">Click to watch how to create your account</p>
+            </div>
+          </a>
+        </div>
+        ${btn(registrationLink, "Create My Account →")}
+        <p style="color:#888;font-size:12px;text-align:center;margin-top:8px;">This link is personal to you and expires in 48 hours. Do not share it.</p>
+        <p style="color:#888;font-size:12px;text-align:center;margin-top:8px;">After 12 months, your subscription renews at the standard renewal fee.</p>
+      </div>
+      ${footer()}
+      </div>
+    </div>`,
+  });
+  if (error) throw new Error(`Resend: ${error.message}`);
+}
+
 export async function sendForexCourseAccessEmail(params: {
   email: string;
   firstName: string;

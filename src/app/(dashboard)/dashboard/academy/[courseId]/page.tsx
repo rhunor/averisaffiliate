@@ -1,283 +1,184 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Play, CheckCircle2, ChevronRight, Clock } from "lucide-react";
-import { formatDuration } from "@/lib/utils";
+import { ChevronRight, Play, PlayCircle, Clock, Paperclip, Layers, Smartphone } from "lucide-react";
+import {
+  buildSections,
+  dedupeResources,
+  formatTotal,
+  lessonThumb,
+  type CourseDetail,
+  type CurriculumLesson,
+} from "@/lib/academy";
+import { Curriculum } from "@/components/features/academy/curriculum";
+import { ProgressBar, Reveal, ResourceList, Thumb } from "@/components/features/academy/primitives";
 
-interface Resource { name: string; url: string; }
-
-interface Lesson {
-  _id: string;
-  title: string;
-  description: string;
-  youtubeVideoId: string;
-  cloudinaryVideoUrl: string;
-  duration: number;
-  sortOrder: number;
-  completed: boolean;
-  resources: Resource[];
-  group: string | null;
+function pickResume(lessons: CurriculumLesson[]) {
+  return (
+    lessons.find((l) => l.watchedSeconds > 0 && !l.completed) ??
+    lessons.find((l) => !l.completed) ??
+    lessons[0] ??
+    null
+  );
 }
 
-function getCloudinaryThumb(url: string): string {
-  return url
-    .replace("/video/upload/", "/video/upload/so_0,w_320,h_226,c_fill/")
-    .replace(/\.(mp4|mov|avi|webm|mkv)(\?.*)?$/i, ".jpg");
-}
-
-interface Course {
-  _id: string;
-  title: string;
-  description: string;
-  moduleNumber: number;
-  totalLessons: number;
-  completedLessons: number;
-  progressPct: number;
-  lessons: Lesson[];
-}
-
-interface Section {
-  key: string;
-  title: string;
-  isGroup: boolean;
-  lessons: Lesson[];
-  resources: Resource[];
-  completedCount: number;
-}
-
-const THEMES = [
-  { accent: "#2ec97a", from: "#0a2018", to: "#1a4d35" },
-  { accent: "#f5a623", from: "#2a1a00", to: "#4a3000" },
-  { accent: "#6c9fff", from: "#0a1a30", to: "#1a3060" },
-  { accent: "#d97bff", from: "#1a0a2a", to: "#3a1a50" },
-];
-
-const GROUP_ICON_GRADIENTS = [
-  { from: "#0d2b20", to: "#1a4d35" },
-  { from: "#0a3080", to: "#1877F2" },
-  { from: "#2a1a00", to: "#4a3000" },
-  { from: "#1a0a30", to: "#3a1a50" },
-  { from: "#0a2a30", to: "#1a5060" },
-];
-
-function toSlug(str: string) {
-  return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-}
-
-function buildSections(lessons: Lesson[]): Section[] {
-  const map = new Map<string, Lesson[]>();
-  const order: string[] = [];
-  for (const l of lessons) {
-    const key = l.group ?? l._id;
-    if (!map.has(key)) { map.set(key, []); order.push(key); }
-    map.get(key)!.push(l);
-  }
-  return order.map((key) => {
-    const ls = map.get(key)!;
-    const resources = ls.flatMap((l) => l.resources).filter(
-      (r, i, arr) => arr.findIndex((x) => x.url === r.url) === i
-    );
-    return {
-      key,
-      title: ls[0].group ?? ls[0].title,
-      isGroup: ls[0].group !== null,
-      lessons: ls,
-      resources,
-      completedCount: ls.filter((l) => l.completed).length,
-    };
-  });
+function CourseSkeleton() {
+  return (
+    <div>
+      <div className="-mx-4 -mt-5 bg-primary px-4 pb-10 pt-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pb-14 lg:pt-10">
+        <div className="max-w-2xl space-y-3">
+          <div className="h-3 w-40 rounded bg-white/10" />
+          <div className="h-8 w-4/5 rounded bg-white/10" />
+          <div className="h-4 w-3/5 rounded bg-white/10" />
+        </div>
+      </div>
+      <div className="mt-8 max-w-3xl space-y-3">
+        {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton h-14 rounded-md" />)}
+      </div>
+    </div>
+  );
 }
 
 export default function CoursePage() {
   const { courseId } = useParams<{ courseId: string }>();
   const router = useRouter();
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [course, setCourse] = useState<CourseDetail | null>(null);
 
   useEffect(() => {
     fetch(`/api/academy/${courseId}`)
       .then((r) => r.json())
       .then((d) => { if (d.course) setCourse(d.course); else router.push("/dashboard/academy"); })
-      .finally(() => setLoading(false));
+      .catch(() => router.push("/dashboard/academy"));
   }, [courseId, router]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-7 w-7 border-2 border-secondary border-t-transparent" />
-      </div>
-    );
-  }
+  const sections = useMemo(() => (course ? buildSections(course.lessons) : []), [course]);
 
-  if (!course) return null;
+  if (!course) return <CourseSkeleton />;
 
-  const theme = THEMES[(course.moduleNumber - 1) % THEMES.length];
-  const sections = buildSections(course.lessons);
+  const resume = pickResume(course.lessons);
+  const started = course.lessons.some((l) => l.completed || l.watchedSeconds > 0);
+  const done = course.progressPct === 100;
+  const totalDuration = course.lessons.reduce((s, l) => s + (l.duration || 0), 0);
+  const resources = dedupeResources(course.lessons.flatMap((l) => l.resources));
+  const cover = course.thumbnailUrl || lessonThumb(course.lessons[0], "lg");
+  const resumeHref = resume ? `/dashboard/academy/${courseId}/${resume._id}` : null;
+  const ctaLabel = done ? "Watch again" : started ? "Continue learning" : "Start course";
+  const defaultOpen = resume
+    ? [sections.find((s) => s.lessons.some((l) => l._id === resume._id))?.key].filter(Boolean) as string[]
+    : [];
+
+  const includes = [
+    { icon: PlayCircle, text: `${course.totalLessons} video lesson${course.totalLessons === 1 ? "" : "s"}` },
+    totalDuration > 0 && { icon: Clock, text: `${formatTotal(totalDuration)} of content` },
+    resources.length > 0 && { icon: Paperclip, text: `${resources.length} downloadable resource${resources.length === 1 ? "" : "s"}` },
+    { icon: Smartphone, text: "Watch on mobile and desktop" },
+  ].filter(Boolean) as { icon: typeof Clock; text: string }[];
+
+  const cta = (className: string) =>
+    resumeHref ? (
+      <Link
+        href={resumeHref}
+        className={`inline-flex items-center justify-center gap-2 rounded-md bg-secondary px-5 py-3 text-[15px] font-semibold text-ink transition-colors hover:bg-secondary-light ${className}`}
+      >
+        <Play className="h-4 w-4 fill-current" />
+        {ctaLabel}
+      </Link>
+    ) : null;
 
   return (
-    <div className="animate-fade-in pb-24">
-      {/* Course hero header */}
-      <div
-        className="rounded-2xl overflow-hidden mb-5"
-        style={{ background: `linear-gradient(135deg, ${theme.from}, ${theme.to})` }}
-      >
-        <div className="p-5">
-          <button
-            onClick={() => router.push("/dashboard/academy")}
-            className="flex items-center gap-1.5 text-sm mb-5"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            All Courses
-          </button>
+    <div className="grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-x-10">
+      {/* Hero band. The box-shadow + clip-path pair paints the band full-bleed
+          across the viewport while the content stays on the page grid. */}
+      <section className="-mx-4 -mt-5 bg-primary px-4 pb-8 pt-6 text-white sm:-mx-6 sm:px-6 lg:col-start-1 lg:row-start-1 lg:mx-0 lg:-mt-8 lg:px-0 lg:pb-14 lg:pt-10 lg:[box-shadow:0_0_0_100vmax_#122F38] lg:[clip-path:inset(0_-100vmax)]">
+        <Reveal className="min-w-0">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[13px] text-white/60">
+            <Link href="/dashboard/academy" className="hover:text-white">My learning</Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span className="text-white/80">Module {course.moduleNumber}</span>
+          </nav>
 
-          <span
-            className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3 inline-block"
-            style={{ background: `${theme.accent}22`, color: theme.accent }}
-          >
-            Module {course.moduleNumber}
-          </span>
+          {/* Mobile cover — desktop shows it in the side card */}
+          <Thumb src={cover} className="mt-5 rounded-lg lg:hidden" />
 
-          <h1 className="font-extrabold text-white text-xl leading-tight mb-1">{course.title}</h1>
-          <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.5)" }}>
-            {sections.length} sections · {course.totalLessons} lessons
-          </p>
+          <h1 className="mt-5 max-w-3xl text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] sm:text-[36px]">
+            {course.title}
+          </h1>
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/75 sm:text-[16px]">{course.description}</p>
 
-          <div className="flex justify-between text-xs mb-1.5" style={{ color: "rgba(255,255,255,0.45)" }}>
-            <span>{course.completedLessons} of {course.totalLessons} completed</span>
-            <span>{course.progressPct}%</span>
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13.5px] text-white/70">
+            <span className="flex items-center gap-1.5"><Layers className="h-4 w-4" strokeWidth={1.75} />{sections.length} sections</span>
+            <span className="flex items-center gap-1.5"><PlayCircle className="h-4 w-4" strokeWidth={1.75} />{course.totalLessons} lessons</span>
+            {totalDuration > 0 && <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" strokeWidth={1.75} />{formatTotal(totalDuration)} total</span>}
           </div>
-          <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.12)" }}>
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${course.progressPct}%`, background: theme.accent }}
-            />
+
+          {started && (
+            <div className="mt-6 max-w-md">
+              <ProgressBar value={course.progressPct} tone="dark" />
+              <p className="mt-2 text-[13px] text-white/70">
+                {course.completedLessons} of {course.totalLessons} lessons complete · {course.progressPct}%
+              </p>
+            </div>
+          )}
+
+          {cta("mt-6 w-full sm:w-auto lg:hidden")}
+        </Reveal>
+      </section>
+
+      {/* Side card — spans the hero and body rows so it overlaps the band and stays sticky */}
+      <aside className="relative z-10 hidden lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:block lg:pt-2">
+        <Reveal delay={0.05} className="sticky top-20">
+          <div className="overflow-hidden rounded-xl border border-line bg-white shadow-[0_24px_48px_-24px_rgba(16,36,43,0.35)]">
+            <Thumb src={cover}>
+              {resumeHref && (
+                <Link href={resumeHref} className="group absolute inset-0 flex items-center justify-center bg-ink/10 transition-colors hover:bg-ink/30" aria-label={ctaLabel}>
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-ink shadow-lg transition-transform duration-300 group-hover:scale-110">
+                    <Play className="ml-0.5 h-6 w-6 fill-current" />
+                  </span>
+                </Link>
+              )}
+            </Thumb>
+            <div className="p-5">
+              {resume && (
+                <p className="mb-3 line-clamp-2 text-[13px] text-ink-soft">
+                  <span className="text-ink-faint">{started && !done ? "Up next: " : "First lesson: "}</span>
+                  {resume.title}
+                </p>
+              )}
+              {cta("w-full")}
+              <p className="mt-6 text-[14px] font-semibold text-ink">This course includes</p>
+              <ul className="mt-3 space-y-2.5">
+                {includes.map(({ icon: Icon, text }) => (
+                  <li key={text} className="flex items-center gap-2.5 text-[13.5px] text-ink-soft">
+                    <Icon className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
+                    {text}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
-      </div>
+        </Reveal>
+      </aside>
 
-      {/* Section label */}
-      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3 px-0.5">
-        Course Content
-      </p>
+      {/* Main column */}
+      <div className="min-w-0 space-y-12 pt-8 lg:col-start-1 lg:row-start-2 lg:pt-10">
+        <Reveal delay={0.08}>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-ink">Course content</h2>
+            <p className="text-[13px] text-ink-faint">
+              {sections.length} sections · {course.totalLessons} lessons{totalDuration > 0 ? ` · ${formatTotal(totalDuration)}` : ""}
+            </p>
+          </div>
+          <Curriculum courseId={courseId} sections={sections} defaultOpen={defaultOpen} />
+        </Reveal>
 
-      {/* Sections list */}
-      <div className="flex flex-col gap-2.5">
-        {sections.map((section, idx) => {
-          const isSolo = !section.isGroup;
-          const lesson = section.lessons[0];
-          const isSectionDone = section.completedCount === section.lessons.length && section.lessons.length > 0;
-          const inProgress = section.completedCount > 0 && !isSectionDone;
-
-          if (isSolo) {
-            return (
-              <button
-                key={section.key}
-                onClick={() => router.push(`/dashboard/academy/${courseId}/${lesson._id}`)}
-                className="w-full flex items-center gap-3.5 bg-white rounded-2xl p-3.5 text-left active:scale-[0.985] transition-transform"
-                style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
-              >
-                {/* YouTube thumbnail */}
-                <div
-                  className="shrink-0 relative rounded-xl overflow-hidden bg-gray-900"
-                  style={{ width: 72, height: 52 }}
-                >
-                  <img
-                    src={
-                      lesson.cloudinaryVideoUrl
-                        ? getCloudinaryThumb(lesson.cloudinaryVideoUrl)
-                        : `https://img.youtube.com/vi/${lesson.youtubeVideoId}/mqdefault.jpg`
-                    }
-                    alt=""
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/25">
-                    {isSectionDone ? (
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: theme.accent }}>
-                        <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-                      </div>
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center">
-                        <Play className="h-3 w-3 fill-gray-900 text-gray-900 ml-0.5" />
-                      </div>
-                    )}
-                  </div>
-                  {inProgress && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
-                      <div className="h-full" style={{ width: `${(section.completedCount / section.lessons.length) * 100}%`, background: theme.accent }} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: theme.accent }}>
-                    {lesson.title.match(/^Lesson\s+(\d+):/i)?.[0]?.replace(/:$/, "") ?? `Lesson ${lesson.sortOrder + 1}`}
-                  </div>
-                  <p className={`text-sm font-semibold leading-snug line-clamp-2 ${isSectionDone ? "text-gray-400" : "text-gray-900"}`}>
-                    {lesson.title}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {lesson.duration > 0 && (
-                      <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />{formatDuration(lesson.duration)}
-                      </span>
-                    )}
-                    {isSectionDone && (
-                      <span className="text-[10px] font-semibold" style={{ color: theme.accent }}>✓ Done</span>
-                    )}
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
-              </button>
-            );
-          }
-
-          // Group header
-          const iconGrad = GROUP_ICON_GRADIENTS[idx % GROUP_ICON_GRADIENTS.length];
-          return (
-            <button
-              key={section.key}
-              onClick={() => router.push(`/dashboard/academy/${courseId}/section/${toSlug(section.title)}`)}
-              className="w-full flex items-center gap-3.5 bg-white rounded-2xl p-3.5 text-left active:scale-[0.985] transition-transform"
-              style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
-            >
-              {/* Letter icon */}
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl shrink-0"
-                style={{ background: `linear-gradient(135deg, ${iconGrad.from}, ${iconGrad.to})` }}
-              >
-                {(section.title.match(/:\s*([A-Za-z])/)?.[1] ?? section.title.charAt(0)).toUpperCase()}
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: theme.accent }}>
-                  {section.title.match(/^(Lesson\s+\d+)/i)?.[1] ?? (section.title.toLowerCase().startsWith("bonus") ? "Bonus" : section.title)}
-                </div>
-                <p className="text-sm font-bold text-gray-900 leading-snug">
-                  {section.title.includes(":") ? section.title.split(":").slice(1).join(":").trim() : section.title}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {section.lessons.length} {section.lessons.length === 1 ? "part" : "parts"} · Tap to explore
-                </p>
-              </div>
-
-              {/* Count badge + chevron */}
-              <div className="flex items-center gap-2 shrink-0">
-                <span
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: `${theme.accent}15`, color: theme.accent }}
-                >
-                  {section.completedCount}/{section.lessons.length}
-                </span>
-                <ChevronRight className="h-4 w-4 text-gray-300" />
-              </div>
-            </button>
-          );
-        })}
+        {resources.length > 0 && (
+          <Reveal delay={0.12}>
+            <h2 className="mb-4 text-[22px] font-semibold tracking-[-0.02em] text-ink">Resources</h2>
+            <ResourceList resources={resources} />
+          </Reveal>
+        )}
       </div>
     </div>
   );

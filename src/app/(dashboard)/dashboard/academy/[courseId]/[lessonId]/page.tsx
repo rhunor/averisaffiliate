@@ -1,15 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { buildSections, type CourseDetail, type CurriculumLesson, type Resource } from "@/lib/academy";
-import { Curriculum } from "@/components/features/academy/curriculum";
-import { EASE_OUT, ProgressRing, ResourceList } from "@/components/features/academy/primitives";
-import { VideoPlayer } from "@/components/features/academy/video-player";
+import { ArrowLeft, CheckCircle, FileText, ExternalLink, Link2, ChevronRight, Play } from "lucide-react";
+
+interface LessonResource { name: string; url: string; }
 
 interface LessonDetail {
   _id: string;
@@ -19,7 +14,7 @@ interface LessonDetail {
   youtubeVideoId: string;
   cloudinaryVideoUrl: string;
   duration: number;
-  resources: Resource[];
+  resources: LessonResource[];
   completed: boolean;
   watchedSeconds: number;
   courseTitle: string;
@@ -28,283 +23,370 @@ interface LessonDetail {
   nextLesson: { _id: string; title: string } | null;
 }
 
-type Tab = "content" | "overview" | "resources";
-
-function postProgress(body: { lessonId: string; courseId: string; watchedSeconds?: number; completed?: boolean }) {
-  // `completed` is only sent when it's an explicit change — periodic position
-  // saves must never flip a finished lesson back to unfinished.
-  return fetch("/api/academy/progress", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    keepalive: true,
-  }).catch(() => {});
+declare global {
+  interface Window {
+    YT: {
+      Player: new (
+        el: string | HTMLElement,
+        opts: {
+          videoId: string;
+          playerVars?: Record<string, number | string>;
+          events?: {
+            onReady?: () => void;
+            onStateChange?: (e: { data: number }) => void;
+          };
+        }
+      ) => { destroy(): void };
+      PlayerState: { PLAYING: number; PAUSED: number; ENDED: number };
+    };
+    onYouTubeIframeAPIReady?: () => void;
+  }
 }
 
-function PlayerSkeleton() {
-  return (
-    <div className="-mx-4 -mt-5 sm:-mx-6 lg:-mx-8 lg:-mt-8">
-      <div className="h-12 bg-primary" />
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div>
-          <div className="aspect-video bg-black" />
-          <div className="space-y-3 p-5 lg:p-8">
-            <div className="skeleton h-6 w-2/3 rounded" />
-            <div className="skeleton h-4 w-1/3 rounded" />
-          </div>
-        </div>
-        <div className="hidden space-y-px border-l border-line bg-white p-4 lg:block">
-          {Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-12 rounded" />)}
-        </div>
-      </div>
-    </div>
-  );
+function toSlug(str: string) {
+  return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+}
+
+function getResourceMeta(url: string): { label: string; iconBg: string } {
+  const u = url.toLowerCase();
+  if (u.includes(".pdf") || (u.startsWith("/") && !u.startsWith("//"))) {
+    return { label: "PDF Guide", iconBg: "linear-gradient(135deg,#c0392b,#e74c3c)" };
+  }
+  if (u.includes("drive.google.com")) {
+    return { label: "Google Drive", iconBg: "linear-gradient(135deg,#1a6b3a,#2ec97a)" };
+  }
+  return { label: "External Link", iconBg: "linear-gradient(135deg,#0a3080,#1877F2)" };
+}
+
+function ResourceIcon({ url }: { url: string }) {
+  const u = url.toLowerCase();
+  if (u.includes(".pdf") || (u.startsWith("/") && !u.startsWith("//"))) {
+    return <FileText className="h-5 w-5 text-white" />;
+  }
+  if (u.includes("drive.google.com")) {
+    return <Link2 className="h-5 w-5 text-white" />;
+  }
+  return <ExternalLink className="h-5 w-5 text-white" />;
 }
 
 export default function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
   const router = useRouter();
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
-  const [course, setCourse] = useState<CourseDetail | null>(null);
-  // Mobile has no sidebar, so open on the curriculum tab there (like the Udemy app).
-  // Safe to read the viewport here: the first paint is the skeleton either way.
-  const [tab, setTab] = useState<Tab>(() =>
-    typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches ? "content" : "overview"
-  );
-
-  // Curriculum (with per-lesson progress) — once per course.
-  useEffect(() => {
-    fetch(`/api/academy/${courseId}`)
-      .then((r) => r.json())
-      .then((d) => { if (d.course) setCourse(d.course); })
-      .catch(() => {});
-  }, [courseId]);
+  const [loading, setLoading] = useState(true);
+  const [markingComplete, setMarkingComplete] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "resources" | "next">("overview");
+  const watchedRef = useRef(0);
+  const tickRef = useRef<NodeJS.Timeout | null>(null);
+  const playerRef = useRef<{ destroy(): void } | null>(null);
+  const cloudVideoRef = useRef<HTMLVideoElement>(null);
+  const playerDivId = "yt-player-" + lessonId;
 
   useEffect(() => {
-    let cancelled = false;
     fetch(`/api/academy/${courseId}/${lessonId}`)
       .then((r) => r.json())
       .then((d) => {
-        if (cancelled) return;
-        if (d.lesson) setLesson(d.lesson);
-        else router.push(`/dashboard/academy/${courseId}`);
+        if (d.lesson) {
+          setLesson(d.lesson);
+          watchedRef.current = d.lesson.watchedSeconds || 0;
+        } else {
+          router.push(`/dashboard/academy/${courseId}`);
+        }
       })
-      .catch(() => { if (!cancelled) router.push(`/dashboard/academy/${courseId}`); });
-    return () => { cancelled = true; };
+      .finally(() => setLoading(false));
+
+    return () => {
+      if (tickRef.current) clearInterval(tickRef.current);
+      playerRef.current?.destroy();
+    };
   }, [courseId, lessonId, router]);
 
-  const setCompleted = useCallback((id: string, completed: boolean) => {
-    setCourse((c) => {
-      if (!c) return c;
-      const lessons = c.lessons.map((l) => (l._id === id ? { ...l, completed } : l));
-      const done = lessons.filter((l) => l.completed).length;
-      return { ...c, lessons, completedLessons: done, progressPct: lessons.length ? Math.round((done / lessons.length) * 100) : 0 };
-    });
-    setLesson((l) => (l && l._id === id ? { ...l, completed } : l));
-  }, []);
-
-  const toggleComplete = useCallback((target: Pick<CurriculumLesson, "_id" | "completed">) => {
-    const completed = !target.completed;
-    setCompleted(target._id, completed);
-    postProgress({ lessonId: target._id, courseId, completed });
-  }, [courseId, setCompleted]);
-
-  const onProgress = useCallback((seconds: number) => {
-    postProgress({ lessonId, courseId, watchedSeconds: seconds });
+  const saveProgress = useCallback(async (completed = false) => {
+    try {
+      await fetch("/api/academy/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId, courseId, watchedSeconds: watchedRef.current, completed }),
+      });
+    } catch {}
   }, [lessonId, courseId]);
 
-  const onEnded = useCallback(() => {
-    setCompleted(lessonId, true);
-    postProgress({ lessonId, courseId, completed: true });
-  }, [lessonId, courseId, setCompleted]);
+  const startTick = useCallback(() => {
+    if (tickRef.current) return;
+    tickRef.current = setInterval(() => {
+      watchedRef.current += 5;
+      saveProgress(false);
+    }, 5000);
+  }, [saveProgress]);
 
-  const sections = useMemo(() => (course ? buildSections(course.lessons) : []), [course]);
+  // For Cloudinary video: tick only saves (watchedRef updated via onTimeUpdate)
+  const startCloudTick = useCallback(() => {
+    if (tickRef.current) return;
+    tickRef.current = setInterval(() => {
+      saveProgress(false);
+    }, 5000);
+  }, [saveProgress]);
 
-  // Prefer curriculum order (it's what the learner sees); fall back to the lesson API.
-  const { prev, next, position } = useMemo(() => {
-    const list = course?.lessons ?? [];
-    const i = list.findIndex((l) => l._id === lessonId);
-    if (i === -1) return { prev: lesson?.prevLesson ?? null, next: lesson?.nextLesson ?? null, position: null };
-    return { prev: list[i - 1] ?? null, next: list[i + 1] ?? null, position: { index: i + 1, total: list.length } };
-  }, [course, lessonId, lesson]);
+  const stopTick = useCallback(() => {
+    if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
+    saveProgress(false);
+  }, [saveProgress]);
 
-  const goNext = useCallback(() => { if (next) router.push(`/dashboard/academy/${courseId}/${next._id}`); }, [next, router, courseId]);
-  const goCourse = useCallback(() => router.push(`/dashboard/academy/${courseId}`), [router, courseId]);
+  // YouTube player setup
+  useEffect(() => {
+    if (!lesson?.youtubeVideoId || lesson.cloudinaryVideoUrl) return;
 
-  if (!lesson || lesson._id !== lessonId) return <PlayerSkeleton />;
+    const initPlayer = () => {
+      if (playerRef.current) { playerRef.current.destroy(); playerRef.current = null; }
+      playerRef.current = new window.YT.Player(playerDivId, {
+        videoId: lesson.youtubeVideoId,
+        playerVars: { rel: 0, modestbranding: 1, iv_load_policy: 3, playsinline: 1 },
+        events: {
+          onStateChange: (e) => {
+            if (e.data === window.YT.PlayerState.PLAYING) {
+              startTick();
+            } else if (e.data === window.YT.PlayerState.PAUSED) {
+              stopTick();
+            } else if (e.data === window.YT.PlayerState.ENDED) {
+              stopTick();
+              handleMarkComplete();
+            }
+          },
+        },
+      });
+    };
 
-  const tabs: { key: Tab; label: string; mobileOnly?: boolean }[] = [
-    { key: "content", label: "Course content", mobileOnly: true },
+    if (window.YT?.Player) {
+      initPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayer;
+      if (!document.getElementById("yt-api-script")) {
+        const s = document.createElement("script");
+        s.id = "yt-api-script";
+        s.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(s);
+      }
+    }
+
+    return () => {
+      window.onYouTubeIframeAPIReady = undefined;
+      if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
+      playerRef.current?.destroy();
+      playerRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lesson?.youtubeVideoId, lesson?.cloudinaryVideoUrl, playerDivId]);
+
+  async function handleMarkComplete() {
+    if (markingComplete || lesson?.completed) return;
+    setMarkingComplete(true);
+    await saveProgress(true);
+    setLesson((prev) => prev ? { ...prev, completed: true } : prev);
+    setMarkingComplete(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-secondary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!lesson) return null;
+
+  const backHref = lesson.group
+    ? `/dashboard/academy/${courseId}/section/${toSlug(lesson.group)}`
+    : `/dashboard/academy/${courseId}`;
+
+  const hasResources = lesson.resources.length > 0;
+  const tabs = [
     { key: "overview", label: "Overview" },
-    { key: "resources", label: lesson.resources.length ? `Resources (${lesson.resources.length})` : "Resources" },
-  ];
+    ...(hasResources ? [{ key: "resources", label: `Resources (${lesson.resources.length})` }] : []),
+    { key: "next", label: "Up Next" },
+  ] as { key: "overview" | "resources" | "next"; label: string }[];
 
-  const pct = course?.progressPct ?? 0;
+  const isCloudinary = !!lesson.cloudinaryVideoUrl;
 
   return (
-    <div className="-mx-4 -mt-5 sm:-mx-6 lg:-mx-8 lg:-mt-8">
-      {/* Player header */}
-      <div className="flex h-12 items-center gap-3 bg-primary px-3 text-white sm:px-5">
-        <Link href={`/dashboard/academy/${courseId}`} className="flex min-w-0 items-center gap-2 rounded-md py-1 pr-2 text-[14px] font-medium hover:text-white/80">
-          <ArrowLeft className="h-4 w-4 shrink-0" />
-          <span className="truncate">{lesson.courseTitle}</span>
-        </Link>
-        <div className="ml-auto flex shrink-0 items-center gap-2.5 text-[13px] text-white/75">
-          <ProgressRing value={pct} size={28} />
-          <span className="hidden sm:inline">
-            {course ? `${course.completedLessons} of ${course.totalLessons} complete` : "Your progress"}
-          </span>
-        </div>
+    <div className="animate-fade-in pb-24">
+      {/* Back nav */}
+      <button
+        onClick={() => router.push(backHref)}
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        {lesson.group ?? lesson.courseTitle}
+      </button>
+
+      {/* Video player */}
+      <div className="rounded-2xl overflow-hidden bg-black aspect-video w-full mb-4">
+        {isCloudinary ? (
+          <video
+            ref={cloudVideoRef}
+            src={lesson.cloudinaryVideoUrl}
+            controls
+            playsInline
+            crossOrigin="anonymous"
+            preload="metadata"
+            className="w-full h-full"
+            onPlay={startCloudTick}
+            onPause={stopTick}
+            onEnded={() => { stopTick(); handleMarkComplete(); }}
+            onTimeUpdate={() => {
+              if (cloudVideoRef.current) {
+                watchedRef.current = Math.floor(cloudVideoRef.current.currentTime);
+              }
+            }}
+          />
+        ) : (
+          <div id={playerDivId} className="w-full h-full" />
+        )}
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_380px]">
+      {/* Lesson meta + complete button */}
+      <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
-          {/* Video sticks under the top bar on mobile so it stays in view while browsing tabs */}
-          <div className="sticky top-14 z-20 lg:static">
-            <VideoPlayer
-              key={lesson._id}
-              lesson={lesson}
-              next={next}
-              onProgress={onProgress}
-              onEnded={onEnded}
-              onPlayNext={goNext}
-              onFinishCourse={goCourse}
-            />
-          </div>
-
-          {/* Title + actions */}
-          <div className="border-b border-line bg-white px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
-            <motion.div key={lesson._id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: EASE_OUT }}>
-              {position && (
-                <p className="text-[12.5px] text-ink-faint">
-                  Lesson {position.index} of {position.total}
-                  {lesson.group && <> · {lesson.group}</>}
-                </p>
-              )}
-              <h1 className="mt-1 text-[19px] font-semibold leading-snug tracking-[-0.015em] text-ink sm:text-[24px]">{lesson.title}</h1>
-            </motion.div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => toggleComplete(lesson)}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-md border px-3.5 py-2 text-[13.5px] font-semibold transition-colors",
-                  lesson.completed
-                    ? "border-ink bg-ink text-white hover:bg-primary-light"
-                    : "border-line bg-white text-ink hover:border-ink/40"
-                )}
-                aria-pressed={lesson.completed}
-              >
-                <span className={cn("flex h-4 w-4 items-center justify-center rounded-[3px] border", lesson.completed ? "border-white bg-white text-ink" : "border-ink-faint")}>
-                  {lesson.completed && <Check className="h-3 w-3" strokeWidth={3} />}
-                </span>
-                {lesson.completed ? "Completed" : "Mark as complete"}
-              </button>
-
-              <div className="ml-auto flex items-center gap-2">
-                <button
-                  disabled={!prev}
-                  onClick={() => prev && router.push(`/dashboard/academy/${courseId}/${prev._id}`)}
-                  className="inline-flex items-center gap-1 rounded-md border border-line bg-white px-3 py-2 text-[13.5px] font-semibold text-ink transition-colors hover:border-ink/40 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Previous</span>
-                </button>
-                <button
-                  disabled={!next}
-                  onClick={goNext}
-                  className="inline-flex items-center gap-1 rounded-md bg-ink px-3.5 py-2 text-[13.5px] font-semibold text-white transition-colors hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Next lesson <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="sticky top-[calc(3.5rem+56.25vw)] z-10 border-b border-line bg-white px-4 sm:px-6 lg:static lg:px-8">
-            <div className="no-scrollbar -mb-px flex gap-6 overflow-x-auto" role="tablist">
-              {tabs.map((t) => (
-                <button
-                  key={t.key}
-                  role="tab"
-                  aria-selected={tab === t.key}
-                  onClick={() => setTab(t.key)}
-                  className={cn(
-                    "relative shrink-0 whitespace-nowrap py-3.5 text-[14px] transition-colors",
-                    t.mobileOnly && "lg:hidden",
-                    tab === t.key ? "font-semibold text-ink" : "text-ink-soft hover:text-ink"
-                  )}
-                >
-                  {t.label}
-                  {tab === t.key && (
-                    <motion.span layoutId="lesson-tab" className="absolute inset-x-0 bottom-0 h-[2px] bg-ink" transition={{ type: "spring", stiffness: 500, damping: 40 }} />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="min-h-[40vh] bg-white px-4 py-6 pb-16 sm:px-6 lg:px-8 lg:py-8">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={tab}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2, ease: EASE_OUT }}
-              >
-                {tab === "content" && (
-                  <div className="-mx-4 -mt-6 sm:-mx-6 lg:hidden">
-                    {course ? (
-                      <Curriculum courseId={courseId} sections={sections} currentLessonId={lessonId} onToggleComplete={toggleComplete} variant="sidebar" />
-                    ) : (
-                      <div className="space-y-px p-4">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton h-12 rounded" />)}</div>
-                    )}
-                  </div>
-                )}
-                {tab === "overview" && (
-                  <div className="max-w-3xl">
-                    <h2 className="text-[17px] font-semibold text-ink">About this lesson</h2>
-                    {lesson.description ? (
-                      <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-ink-soft">{lesson.description}</p>
-                    ) : (
-                      <p className="mt-3 text-[15px] text-ink-faint">There&apos;s no written summary for this lesson — everything you need is in the video.</p>
-                    )}
-                    <div className="mt-8 border-t border-line pt-6">
-                      <p className="text-[13px] text-ink-faint">Part of</p>
-                      <Link href={`/dashboard/academy/${courseId}`} className="mt-1 inline-block text-[15px] font-semibold text-ink underline-offset-4 hover:underline">
-                        {lesson.courseTitle}
-                      </Link>
-                    </div>
-                  </div>
-                )}
-                {tab === "resources" && (
-                  <div className="max-w-3xl">
-                    <ResourceList resources={lesson.resources} />
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+          <h1 className="text-base font-extrabold text-foreground leading-snug">{lesson.title}</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{lesson.courseTitle}</p>
         </div>
-
-        {/* Desktop curriculum sidebar */}
-        <aside className="hidden border-l border-line bg-white lg:block">
-          <div className="sticky top-14 flex max-h-[calc(100vh-3.5rem)] flex-col">
-            <div className="flex items-center justify-between border-b border-line px-5 py-4">
-              <h2 className="text-[16px] font-semibold text-ink">Course content</h2>
-              {course && <span className="text-[12.5px] tabular-nums text-ink-faint">{pct}%</span>}
-            </div>
-            <div className="flex-1 overflow-y-auto overscroll-contain">
-              {course ? (
-                <Curriculum courseId={courseId} sections={sections} currentLessonId={lessonId} onToggleComplete={toggleComplete} variant="sidebar" />
-              ) : (
-                <div className="space-y-px p-4">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-12 rounded" />)}</div>
-              )}
-            </div>
-          </div>
-        </aside>
+        <button
+          onClick={handleMarkComplete}
+          disabled={markingComplete || lesson.completed}
+          className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${
+            lesson.completed
+              ? "bg-success/10 text-success cursor-default"
+              : "bg-secondary/10 text-secondary hover:bg-secondary/20"
+          }`}
+        >
+          <CheckCircle className="h-3.5 w-3.5" />
+          {lesson.completed ? "Done" : markingComplete ? "Saving…" : "Mark done"}
+        </button>
       </div>
+
+      {/* Tabs */}
+      <div
+        className="flex bg-white rounded-2xl mb-4 overflow-hidden"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+      >
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className="flex-1 py-3 text-xs font-bold transition-colors relative"
+            style={activeTab === tab.key ? { color: "#2ec97a" } : { color: "#9ca3af" }}
+          >
+            {activeTab === tab.key && (
+              <span className="absolute bottom-0 left-1/4 right-1/4 h-0.5 rounded-full bg-secondary" />
+            )}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview tab */}
+      {activeTab === "overview" && (
+        <div className="bg-white rounded-2xl p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">About This Lesson</p>
+          {lesson.description ? (
+            <p className="text-sm text-gray-600 leading-relaxed">{lesson.description}</p>
+          ) : (
+            <p className="text-sm text-gray-400">No description available.</p>
+          )}
+        </div>
+      )}
+
+      {/* Resources tab */}
+      {activeTab === "resources" && hasResources && (
+        <div className="flex flex-col gap-2.5">
+          {lesson.resources.map((resource, i) => {
+            const meta = getResourceMeta(resource.url);
+            return (
+              <a
+                key={i}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3.5 bg-white rounded-2xl p-4 border border-gray-100 active:scale-[0.98] transition-transform"
+                style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: meta.iconBg }}
+                >
+                  <ResourceIcon url={resource.url} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">
+                    {meta.label}
+                  </div>
+                  <p className="text-sm font-bold text-gray-900 leading-snug">{resource.name}</p>
+                </div>
+                <ExternalLink className="h-4 w-4 text-gray-300 shrink-0" />
+              </a>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Up Next tab */}
+      {activeTab === "next" && (
+        <div className="flex flex-col gap-3">
+          {lesson.nextLesson ? (
+            <button
+              onClick={() => router.push(`/dashboard/academy/${courseId}/${lesson.nextLesson!._id}`)}
+              className="w-full flex items-center gap-3.5 bg-white rounded-2xl p-4 text-left active:scale-[0.985] transition-transform"
+              style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
+            >
+              <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                <Play className="h-5 w-5 text-secondary ml-0.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Up Next</p>
+                <p className="text-sm font-bold text-gray-900 leading-snug line-clamp-2">
+                  {lesson.nextLesson.title}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+            </button>
+          ) : (
+            <div
+              className="flex flex-col items-center justify-center py-8 bg-white rounded-2xl text-center"
+              style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+            >
+              <div className="w-12 h-12 rounded-2xl bg-success/10 flex items-center justify-center mb-3">
+                <CheckCircle className="h-6 w-6 text-success" />
+              </div>
+              <p className="font-bold text-gray-900">All caught up!</p>
+              <p className="text-sm text-gray-400 mt-1">You&apos;ve reached the end of this section.</p>
+              <button
+                onClick={() => router.push(`/dashboard/academy/${courseId}`)}
+                className="mt-4 text-sm font-semibold text-secondary hover:underline"
+              >
+                Back to course
+              </button>
+            </div>
+          )}
+
+          {lesson.prevLesson && (
+            <button
+              onClick={() => router.push(`/dashboard/academy/${courseId}/${lesson.prevLesson!._id}`)}
+              className="w-full flex items-center gap-3.5 bg-white rounded-2xl p-4 text-left active:scale-[0.985] transition-transform"
+              style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                <ArrowLeft className="h-4 w-4 text-gray-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Previous</p>
+                <p className="text-sm font-semibold text-gray-600 leading-snug line-clamp-1">
+                  {lesson.prevLesson.title}
+                </p>
+              </div>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -106,7 +106,9 @@ export default function LessonPage() {
       await fetch("/api/academy/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId, courseId, watchedSeconds: watchedRef.current, completed }),
+        // Only send `completed` when marking done — periodic saves must not
+        // flip an already-completed lesson back to incomplete.
+        body: JSON.stringify({ lessonId, courseId, watchedSeconds: watchedRef.current, ...(completed && { completed: true }) }),
       });
     } catch {}
   }, [lessonId, courseId]);
